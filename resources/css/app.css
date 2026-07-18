@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Inertia NProgress — stronger than default injected styles */
+#nprogress .bar {
+    height: 5px !important;
+    box-shadow:
+        0 0 12px rgba(15, 118, 110, 0.55),
+        0 0 6px rgba(15, 118, 110, 0.35) !important;
+}
+
+#nprogress .peg {
+    box-shadow:
+        0 0 12px #0f766e,
+        0 0 6px #0f766e !important;
+}
+
+#nprogress .spinner {
+    top: 18px !important;
+}
+
+#nprogress .spinner-icon {
+    width: 28px !important;
+    height: 28px !important;
+    border-width: 4px !important;
+    border-top-color: #0f766e !important;
+    border-left-color: #0f766e !important;
+}
