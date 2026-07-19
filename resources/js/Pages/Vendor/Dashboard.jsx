@@ -5,7 +5,7 @@ const vendorBrown = 'bg-[#5c4d3d] text-white';
 
 function PayoutHero({ payout, gross, orderCount, commissionPercent }) {
     return (
-        <div className="rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50 to-white p-6 sm:p-8">
+        <div className="rounded-2xl border border-emerald-200/80 bg-gradient-to-br from-emerald-50 to-white p-4 sm:p-6 lg:p-8">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-800/80">Your earnings</p>
             <p className="mt-2 text-3xl font-bold tracking-tight text-emerald-900 sm:text-4xl">{payout}</p>
             <p className="mt-2 text-sm text-stone-600">
@@ -56,9 +56,9 @@ export default function VendorDashboard({
         <VendorLayout title="Dashboard">
             <Head title="Vendor Dashboard" />
 
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-stone-900">Dashboard</h1>
-                <p className="mt-1 text-stone-600">Welcome back to {shopName}.</p>
+            <div className="mb-6 sm:mb-8">
+                <h1 className="text-xl font-bold text-stone-900 sm:text-2xl">Dashboard</h1>
+                <p className="mt-1 text-sm text-stone-600 sm:text-base">Welcome back to {shopName}.</p>
             </div>
 
             {applicationStatus === 'pending' && (
@@ -80,7 +80,7 @@ export default function VendorDashboard({
                 </div>
             )}
 
-            <section className="mb-8 rounded-2xl border border-stone-200/90 bg-white p-6 shadow-sm">
+            <section className="mb-8 rounded-2xl border border-stone-200/90 bg-white p-4 shadow-sm sm:p-6">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                         <h2 className="text-lg font-bold text-stone-900">Your earnings</h2>
@@ -126,13 +126,53 @@ export default function VendorDashboard({
                         {earnings.recent_sales.length > 0 && (
                             <div>
                                 <h3 className="text-sm font-semibold text-stone-900">Recent sales</h3>
-                                <div className="mt-3 overflow-hidden rounded-xl border border-stone-200">
+
+                                {/* Mobile sale cards */}
+                                <ul className="mt-3 space-y-3 sm:hidden">
+                                    {earnings.recent_sales.map((sale) => (
+                                        <li
+                                            key={`${sale.order_number}-${sale.product_title}`}
+                                            className="rounded-xl border border-stone-200 bg-white p-4"
+                                        >
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-semibold text-stone-900">
+                                                        {sale.order_number}
+                                                    </p>
+                                                    <p className="mt-0.5 truncate text-sm text-stone-600">
+                                                        {sale.product_title}
+                                                    </p>
+                                                </div>
+                                                <span
+                                                    className={`shrink-0 inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+                                                        sale.status === 'settled'
+                                                            ? 'bg-stone-100 text-stone-700'
+                                                            : sale.status === 'released'
+                                                              ? 'bg-emerald-100 text-emerald-800'
+                                                              : 'bg-amber-100 text-amber-900'
+                                                    }`}
+                                                >
+                                                    {sale.status_label}
+                                                </span>
+                                            </div>
+                                            <p className="mt-3 text-base font-semibold text-emerald-800">
+                                                {sale.formatted_payout}
+                                            </p>
+                                            <p className="mt-0.5 text-xs text-stone-500">
+                                                from {sale.formatted_gross} sale
+                                            </p>
+                                        </li>
+                                    ))}
+                                </ul>
+
+                                {/* Desktop / tablet table */}
+                                <div className="mt-3 hidden overflow-hidden rounded-xl border border-stone-200 sm:block">
                                     <table className="min-w-full divide-y divide-stone-200 text-sm">
                                         <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wide text-stone-500">
                                             <tr>
                                                 <th className="px-4 py-3">Order</th>
                                                 <th className="px-4 py-3">Item</th>
-                                                <th className="hidden px-4 py-3 sm:table-cell">Sale price</th>
+                                                <th className="px-4 py-3">Sale price</th>
                                                 <th className="px-4 py-3">You receive</th>
                                                 <th className="px-4 py-3">Status</th>
                                             </tr>
@@ -144,15 +184,10 @@ export default function VendorDashboard({
                                                         {sale.order_number}
                                                     </td>
                                                     <td className="px-4 py-3 text-stone-600">{sale.product_title}</td>
-                                                    <td className="hidden px-4 py-3 text-stone-500 sm:table-cell">
-                                                        {sale.formatted_gross}
-                                                    </td>
+                                                    <td className="px-4 py-3 text-stone-500">{sale.formatted_gross}</td>
                                                     <td className="px-4 py-3">
                                                         <p className="font-semibold text-emerald-800">
                                                             {sale.formatted_payout}
-                                                        </p>
-                                                        <p className="mt-0.5 text-xs text-stone-500 sm:hidden">
-                                                            from {sale.formatted_gross} sale
                                                         </p>
                                                     </td>
                                                     <td className="px-4 py-3">
@@ -200,16 +235,16 @@ export default function VendorDashboard({
                 ))}
             </div>
 
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Link
                     href={route('vendor.inventory.index')}
-                    className={`inline-flex rounded-lg px-5 py-2.5 text-sm font-semibold shadow-sm ${vendorBrown} hover:bg-[#4a3e32]`}
+                    className={`inline-flex w-full items-center justify-center rounded-lg px-5 py-2.5 text-sm font-semibold shadow-sm sm:w-auto ${vendorBrown} hover:bg-[#4a3e32]`}
                 >
                     Manage inventory →
                 </Link>
                 <Link
                     href={route('vendor.orders.index')}
-                    className="inline-flex rounded-lg border border-stone-300 bg-white px-5 py-2.5 text-sm font-semibold text-stone-700 shadow-sm transition hover:bg-stone-50"
+                    className="inline-flex w-full items-center justify-center rounded-lg border border-stone-300 bg-white px-5 py-2.5 text-sm font-semibold text-stone-700 shadow-sm transition hover:bg-stone-50 sm:w-auto"
                 >
                     View orders
                 </Link>

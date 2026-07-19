@@ -4,7 +4,6 @@ import { LogoIcon } from '@/Components/LogoMark';
 import VendorNotificationBell from '@/Components/Vendor/VendorNotificationBell';
 
 const vendorBrown = 'bg-[#5c4d3d] hover:bg-[#4a3e32]';
-const vendorBrownText = 'text-[#5c4d3d]';
 
 function NavIcon({ name, className = 'h-5 w-5' }) {
     const icons = {
@@ -52,10 +51,11 @@ const navItems = [
     { label: 'Customers', href: 'vendor.customers.index', icon: 'customers' },
 ];
 
-function SidebarLink({ item, active }) {
+function SidebarLink({ item, active, onNavigate }) {
     return (
         <Link
             href={route(item.href)}
+            onClick={onNavigate}
             className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
                 active
                     ? 'bg-orange-100 text-[#5c4d3d]'
@@ -68,11 +68,27 @@ function SidebarLink({ item, active }) {
     );
 }
 
+function BottomTabLink({ item, active }) {
+    return (
+        <Link
+            href={route(item.href)}
+            className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1 py-2 text-[10px] font-semibold transition ${
+                active ? 'text-[#5c4d3d]' : 'text-stone-500'
+            }`}
+        >
+            <NavIcon name={item.icon} className="h-5 w-5" />
+            <span className="truncate">{item.label}</span>
+        </Link>
+    );
+}
+
 export default function VendorLayout({ title, children }) {
     const { auth, flash } = usePage().props;
     const user = auth.user;
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const current = route().current() ?? '';
+
+    const closeMobileNav = () => setMobileNavOpen(false);
 
     const isActive = (href) => {
         if (href === 'vendor.dashboard') {
@@ -92,7 +108,7 @@ export default function VendorLayout({ title, children }) {
         <div className="min-h-screen bg-[#f5f4f2] text-stone-900">
             {/* Top bar */}
             <header className="sticky top-0 z-30 border-b border-stone-200/80 bg-white">
-                <div className="flex h-14 items-center gap-4 px-4 lg:px-6">
+                <div className="flex h-14 items-center gap-3 px-3 sm:gap-4 sm:px-4 lg:px-6">
                     <button
                         type="button"
                         className="rounded-lg p-2 text-stone-600 hover:bg-stone-100 lg:hidden"
@@ -103,13 +119,13 @@ export default function VendorLayout({ title, children }) {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
-                    <Link href={route('vendor.inventory.index')} className="flex items-center gap-2">
-                        <LogoIcon className="h-12 w-auto" />
-                        <span className="hidden text-sm font-semibold text-stone-500 sm:inline">
+                    <Link href={route('vendor.dashboard')} className="flex min-w-0 items-center gap-2">
+                        <LogoIcon className="h-8 w-auto shrink-0 sm:h-10 lg:h-12" />
+                        <span className="truncate text-xs font-semibold text-stone-500 sm:text-sm">
                             Vendor Central
                         </span>
                     </Link>
-                    <div className="ml-auto flex items-center gap-2">
+                    <div className="ml-auto flex items-center gap-1 sm:gap-2">
                         <VendorNotificationBell />
                         <Link
                             href={route('profile.edit')}
@@ -127,7 +143,7 @@ export default function VendorLayout({ title, children }) {
                             </svg>
                         </Link>
                         <div
-                            className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white ${vendorBrown}`}
+                            className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white sm:h-9 sm:w-9 ${vendorBrown}`}
                             title={user.name}
                         >
                             {initials}
@@ -145,19 +161,26 @@ export default function VendorLayout({ title, children }) {
                 >
                     <nav className="flex flex-col gap-1 p-4">
                         {navItems.map((item) => (
-                            <SidebarLink key={item.href} item={item} active={isActive(item.href)} />
+                            <SidebarLink
+                                key={item.href}
+                                item={item}
+                                active={isActive(item.href)}
+                                onNavigate={closeMobileNav}
+                            />
                         ))}
                         <div className="mt-6 border-t border-stone-100 pt-4">
                             <Link
                                 href={route('logout')}
                                 method="post"
                                 as="button"
+                                onClick={closeMobileNav}
                                 className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-stone-600 hover:bg-stone-100"
                             >
                                 Log out
                             </Link>
                             <Link
                                 href="/"
+                                onClick={closeMobileNav}
                                 className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-stone-500 hover:bg-stone-100"
                             >
                                 View marketplace
@@ -170,12 +193,12 @@ export default function VendorLayout({ title, children }) {
                     <button
                         type="button"
                         className="fixed inset-0 z-10 bg-black/20 lg:hidden"
-                        onClick={() => setMobileNavOpen(false)}
+                        onClick={closeMobileNav}
                         aria-label="Close navigation"
                     />
                 )}
 
-                <main className="min-h-[calc(100vh-3.5rem)] flex-1 p-4 sm:p-6 lg:p-8">
+                <main className="min-h-[calc(100vh-3.5rem)] flex-1 p-3 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
                     {flash?.success && (
                         <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900" role="status">
                             {flash.success}
@@ -203,6 +226,18 @@ export default function VendorLayout({ title, children }) {
                     {children}
                 </main>
             </div>
+
+            {/* Mobile bottom tab bar */}
+            <nav
+                className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200/80 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden"
+                aria-label="Primary"
+            >
+                <div className="flex items-stretch">
+                    {navItems.map((item) => (
+                        <BottomTabLink key={item.href} item={item} active={isActive(item.href)} />
+                    ))}
+                </div>
+            </nav>
         </div>
     );
 }

@@ -67,7 +67,7 @@ function OrderCard({ order, onFulfill, fulfillingId }) {
                         type="button"
                         onClick={() => onFulfill(order.order_id)}
                         disabled={isFulfilling}
-                        className="h-fit shrink-0 rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:opacity-50"
+                        className="h-fit w-full shrink-0 rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-stone-800 disabled:opacity-50 sm:w-auto"
                     >
                         {isFulfilling ? 'Saving…' : 'Ready for pickup'}
                     </button>
@@ -124,8 +124,8 @@ export default function VendorOrdersIndex({ shopName, orders, counts }) {
             <Head title="Orders" />
 
             <div className="mb-6">
-                <h1 className="text-2xl font-bold text-stone-900">Orders</h1>
-                <p className="mt-1 text-stone-600">Paid orders containing items from {shopName}.</p>
+                <h1 className="text-xl font-bold text-stone-900 sm:text-2xl">Orders</h1>
+                <p className="mt-1 text-sm text-stone-600 sm:text-base">Paid orders containing items from {shopName}.</p>
             </div>
 
             {flash?.success && (

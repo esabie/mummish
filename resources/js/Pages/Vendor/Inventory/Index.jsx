@@ -11,7 +11,28 @@ const tabs = [
     { key: 'low_stock', label: 'Low Stock', countKey: 'low_stock', activeClass: 'bg-red-100 text-red-800' },
 ];
 
-function StockBar({ product }) {
+function ProductThumb({ product, size = 'h-12 w-12' }) {
+    return (
+        <div className={`${size} shrink-0 overflow-hidden rounded-lg bg-stone-100`}>
+            {product.image_url ? (
+                <img src={product.image_url} alt="" className="h-full w-full object-cover" />
+            ) : (
+                <div className="flex h-full w-full items-center justify-center text-stone-400">
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1}
+                            d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"
+                        />
+                    </svg>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function StockBar({ product, className = 'min-w-[120px]' }) {
     let barColor = 'bg-emerald-600';
     if (product.is_out_of_stock) {
         barColor = 'bg-stone-300';
@@ -20,7 +41,7 @@ function StockBar({ product }) {
     }
 
     return (
-        <div className="min-w-[120px]">
+        <div className={className}>
             <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold tabular-nums text-stone-800">{product.stock_quantity}</span>
                 {product.is_low_stock && (
@@ -55,6 +76,50 @@ function CategoryPill({ label }) {
         <span className="inline-flex rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-medium text-sky-800">
             {label}
         </span>
+    );
+}
+
+function ProductCard({ product, selected, onToggle }) {
+    return (
+        <article className="border-b border-stone-100 p-4 last:border-b-0">
+            <div className="flex gap-3">
+                <input
+                    type="checkbox"
+                    className="mt-1 rounded border-stone-300 text-[#5c4d3d] focus:ring-[#5c4d3d]"
+                    checked={selected}
+                    onChange={onToggle}
+                    aria-label={`Select ${product.title}`}
+                />
+                <ProductThumb product={product} size="h-16 w-16" />
+                <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                            <Link
+                                href={route('vendor.inventory.edit', product.id)}
+                                className="font-semibold text-stone-900 hover:text-[#5c4d3d] hover:underline"
+                            >
+                                {product.title}
+                            </Link>
+                            <p className="text-xs text-stone-500">SKU: {product.sku}</p>
+                        </div>
+                        <p className="shrink-0 text-sm font-semibold text-stone-800">{product.price}</p>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <CategoryPill label={product.category_label} />
+                        <StatusPill label={product.status_label} status={product.status} />
+                    </div>
+                    <div className="mt-3">
+                        <StockBar product={product} className="w-full max-w-[200px]" />
+                    </div>
+                    <Link
+                        href={route('vendor.inventory.edit', product.id)}
+                        className="mt-3 inline-block text-sm font-medium text-[#5c4d3d] hover:underline"
+                    >
+                        Edit
+                    </Link>
+                </div>
+            </div>
+        </article>
     );
 }
 
@@ -101,13 +166,31 @@ export default function VendorInventoryIndex({
 
     const allSelected = products.data.length > 0 && selected.length === products.data.length;
 
+    const addProductButton = listingLimit?.can_add ? (
+        <Link
+            href={route('vendor.inventory.create')}
+            className={`inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm transition sm:w-auto ${vendorBrown}`}
+        >
+            <span className="text-lg leading-none">+</span> Add New Product
+        </Link>
+    ) : (
+        <button
+            type="button"
+            disabled
+            className={`inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto ${vendorBrown}`}
+            title="Listing limit reached or application not approved"
+        >
+            <span className="text-lg leading-none">+</span> Add New Product
+        </button>
+    );
+
     return (
         <VendorLayout title="Inventory Management">
             <Head title="Inventory Management" />
 
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-stone-900">Inventory Management</h1>
+                    <h1 className="text-xl font-bold tracking-tight text-stone-900 sm:text-2xl">Inventory Management</h1>
                     <p className="mt-1 text-sm text-stone-600">
                         Manage your product listings and monitor stock levels across {shopName || 'your shop'}.
                     </p>
@@ -118,27 +201,11 @@ export default function VendorInventoryIndex({
                         </p>
                     )}
                 </div>
-                {listingLimit?.can_add ? (
-                    <Link
-                        href={route('vendor.inventory.create')}
-                        className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm transition ${vendorBrown}`}
-                    >
-                        <span className="text-lg leading-none">+</span> Add New Product
-                    </Link>
-                ) : (
-                    <button
-                        type="button"
-                        disabled
-                        className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 ${vendorBrown}`}
-                        title="Listing limit reached or application not approved"
-                    >
-                        <span className="text-lg leading-none">+</span> Add New Product
-                    </button>
-                )}
+                {addProductButton}
             </div>
 
             <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
-                <form onSubmit={applySearch} className="relative flex-1">
+                <form onSubmit={applySearch} className="relative w-full flex-1">
                     <svg
                         className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-stone-400"
                         fill="none"
@@ -156,11 +223,11 @@ export default function VendorInventoryIndex({
                         type="search"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search products by name, SKU, or category..."
+                        placeholder="Search by name, SKU, or category..."
                         className="w-full rounded-lg border border-stone-200 bg-white py-2.5 pl-10 pr-4 text-sm shadow-sm placeholder:text-stone-400 focus:border-[#5c4d3d] focus:outline-none focus:ring-1 focus:ring-[#5c4d3d]"
                     />
                 </form>
-                <div className="flex gap-2">
+                <div className="hidden gap-2 lg:flex">
                     <button
                         type="button"
                         className="inline-flex items-center gap-2 rounded-lg border border-stone-200 bg-white px-4 py-2.5 text-sm font-medium text-stone-700 shadow-sm hover:bg-stone-50"
@@ -192,27 +259,29 @@ export default function VendorInventoryIndex({
                 </div>
             </div>
 
-            <div className="mb-4 flex flex-wrap gap-2">
-                {tabs.map((tab) => {
-                    const isActive = filters.tab === tab.key || (tab.key === 'all' && !filters.tab);
-                    const count = counts[tab.countKey] ?? 0;
-                    return (
-                        <button
-                            key={tab.key}
-                            type="button"
-                            onClick={() => switchTab(tab.key)}
-                            className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
-                                isActive ? tab.activeClass : 'bg-white text-stone-600 ring-1 ring-stone-200 hover:bg-stone-50'
-                            }`}
-                        >
-                            {tab.label} ({count})
-                        </button>
-                    );
-                })}
+            <div className="-mx-3 mb-4 overflow-x-auto px-3 sm:mx-0 sm:overflow-visible sm:px-0">
+                <div className="flex w-max gap-2 sm:w-auto sm:flex-wrap">
+                    {tabs.map((tab) => {
+                        const isActive = filters.tab === tab.key || (tab.key === 'all' && !filters.tab);
+                        const count = counts[tab.countKey] ?? 0;
+                        return (
+                            <button
+                                key={tab.key}
+                                type="button"
+                                onClick={() => switchTab(tab.key)}
+                                className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-semibold transition ${
+                                    isActive ? tab.activeClass : 'bg-white text-stone-600 ring-1 ring-stone-200 hover:bg-stone-50'
+                                }`}
+                            >
+                                {tab.label} ({count})
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
 
             <div className="overflow-hidden rounded-xl border border-stone-200/80 bg-white shadow-sm">
-                <div className="flex items-center justify-between border-b border-stone-100 px-4 py-3">
+                <div className="flex flex-col gap-2 border-b border-stone-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                     <label className="flex items-center gap-2 text-sm text-stone-600">
                         <input
                             type="checkbox"
@@ -235,7 +304,27 @@ export default function VendorInventoryIndex({
                     </p>
                 </div>
 
-                <div className="overflow-x-auto">
+                {/* Mobile card list */}
+                <div className="lg:hidden">
+                    {products.data.length === 0 ? (
+                        <div className="px-4 py-16 text-center text-stone-500">
+                            <p className="font-medium text-stone-700">No products yet</p>
+                            <p className="mt-1 text-sm">Add your first product to start selling on Mummish.</p>
+                        </div>
+                    ) : (
+                        products.data.map((product) => (
+                            <ProductCard
+                                key={product.id}
+                                product={product}
+                                selected={selected.includes(product.id)}
+                                onToggle={() => toggleOne(product.id)}
+                            />
+                        ))
+                    )}
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden overflow-x-auto lg:block">
                     <table className="min-w-full text-left text-sm">
                         <thead className="border-b border-stone-100 bg-stone-50/80 text-xs font-semibold uppercase tracking-wide text-stone-500">
                             <tr>
@@ -271,26 +360,7 @@ export default function VendorInventoryIndex({
                                         </td>
                                         <td className="px-4 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-stone-100">
-                                                    {product.image_url ? (
-                                                        <img
-                                                            src={product.image_url}
-                                                            alt=""
-                                                            className="h-full w-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        <div className="flex h-full w-full items-center justify-center text-stone-400">
-                                                            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path
-                                                                    strokeLinecap="round"
-                                                                    strokeLinejoin="round"
-                                                                    strokeWidth={1}
-                                                                    d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"
-                                                                />
-                                                            </svg>
-                                                        </div>
-                                                    )}
-                                                </div>
+                                                <ProductThumb product={product} />
                                                 <div>
                                                     <Link
                                                         href={route('vendor.inventory.edit', product.id)}
@@ -328,8 +398,8 @@ export default function VendorInventoryIndex({
                 </div>
 
                 {products.last_page > 1 && (
-                    <div className="flex items-center justify-between border-t border-stone-100 px-4 py-3">
-                        <div className="flex gap-1">
+                    <div className="flex flex-col gap-3 border-t border-stone-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="hidden flex-wrap gap-1 sm:flex">
                             {products.links.map((link, i) => {
                                 if (link.label.includes('Previous') || link.label.includes('Next')) {
                                     return null;
@@ -356,24 +426,32 @@ export default function VendorInventoryIndex({
                                 );
                             })}
                         </div>
-                        <div className="flex gap-2">
-                            {products.prev_page_url && (
+                        <div className="flex w-full gap-2 sm:w-auto">
+                            {products.prev_page_url ? (
                                 <Link
                                     href={products.prev_page_url}
                                     preserveScroll
-                                    className="rounded-lg border border-stone-200 px-3 py-1.5 text-sm font-medium text-stone-700 hover:bg-stone-50"
+                                    className="flex-1 rounded-lg border border-stone-200 px-3 py-2 text-center text-sm font-medium text-stone-700 hover:bg-stone-50 sm:flex-none sm:py-1.5"
                                 >
                                     Previous
                                 </Link>
+                            ) : (
+                                <span className="flex-1 rounded-lg border border-stone-100 px-3 py-2 text-center text-sm font-medium text-stone-300 sm:hidden">
+                                    Previous
+                                </span>
                             )}
-                            {products.next_page_url && (
+                            {products.next_page_url ? (
                                 <Link
                                     href={products.next_page_url}
                                     preserveScroll
-                                    className="rounded-lg border border-stone-200 px-3 py-1.5 text-sm font-medium text-stone-700 hover:bg-stone-50"
+                                    className="flex-1 rounded-lg border border-stone-200 px-3 py-2 text-center text-sm font-medium text-stone-700 hover:bg-stone-50 sm:flex-none sm:py-1.5"
                                 >
                                     Next
                                 </Link>
+                            ) : (
+                                <span className="flex-1 rounded-lg border border-stone-100 px-3 py-2 text-center text-sm font-medium text-stone-300 sm:hidden">
+                                    Next
+                                </span>
                             )}
                         </div>
                     </div>
