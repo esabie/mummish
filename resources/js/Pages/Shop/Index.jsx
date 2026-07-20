@@ -409,7 +409,7 @@ export default function ShopIndex({
                                 )}
                             </h1>
                             <p className="mt-1 text-sm text-stone-600 sm:text-base">
-                                Thoughtfully crafted treasures for little explorers.
+                                Thoughtfully crafted items for little explorers.
                             </p>
                         </div>
                         <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">

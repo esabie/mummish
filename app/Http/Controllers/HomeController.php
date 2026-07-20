@@ -6,7 +6,6 @@ use App\Enums\VendorApplicationStatus;
 use App\Http\Requests\StoreVendorApplicationRequest;
 use App\Models\Product;
 use App\Models\VendorApplication;
-use App\Support\AppLog;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,12 +16,6 @@ class HomeController extends Controller
         $categories = $this->shopByCategories();
         $featuredStores = $this->featuredStores();
         $popularProducts = $this->popularProducts();
-
-        AppLog::info('[Home] Homepage rendered.', [
-            'category_count' => count($categories),
-            'featured_store_count' => count($featuredStores),
-            'popular_product_count' => count($popularProducts),
-        ]);
 
         return Inertia::render('Welcome', [
             'categories' => $categories,

@@ -25,17 +25,6 @@ class ShopController extends Controller
         $sort = $this->validSort((string) $request->query('sort', 'newest'));
         $perPage = max(1, min((int) config('marketplace.shop_per_page', 12), 48));
 
-        AppLog::info('[Shop] Catalog index requested.', [
-            'search_query' => $query !== '' ? $query : null,
-            'category' => $category,
-            'price_max_ghs' => $priceMaxGhs > 0 ? $priceMaxGhs : null,
-            'eco_only' => $ecoOnly,
-            'maker_id' => $makerId > 0 ? $makerId : null,
-            'condition' => $condition,
-            'sort' => $sort,
-            'per_page' => $perPage,
-        ]);
-
         $filterOptions = $this->shopFilterOptions();
         $priceCeiling = $filterOptions['price_ceiling'];
         $priceMaxCents = $priceMaxGhs > 0 && $priceMaxGhs < $priceCeiling
@@ -54,13 +43,6 @@ class ShopController extends Controller
             ->shopSort($sort, $query !== '')
             ->paginate($perPage)
             ->withQueryString();
-
-        AppLog::debug('[Shop] Catalog index results.', [
-            'result_count' => $paginator->total(),
-            'current_page' => $paginator->currentPage(),
-            'last_page' => $paginator->lastPage(),
-            'item_ids' => $paginator->getCollection()->pluck('id')->all(),
-        ]);
 
         return Inertia::render('Shop/Index', [
             'search_query' => $query,
@@ -102,18 +84,11 @@ class ShopController extends Controller
             ->pluck('stock_quantity', 'id')
             ->map(fn ($qty) => (int) $qty);
 
-        AppLog::debug('[Shop] Cart stock lookup.', [
-            'requested_product_ids' => $productIds->all(),
-            'resolved_stock_count' => $stocks->count(),
-        ]);
-
         return response()->json(['stocks' => $stocks]);
     }
 
     public function show(int $id): Response
     {
-        AppLog::info('[Shop] Product detail requested.', ['product_id' => $id]);
-
         $product = Product::query()
             ->visibleInShop()
             ->with(['user.vendorApplication'])
@@ -124,13 +99,6 @@ class ShopController extends Controller
 
             abort(404);
         }
-
-        AppLog::debug('[Shop] Product detail resolved.', [
-            'product_id' => $product->id,
-            'vendor_user_id' => $product->user_id,
-            'status' => $product->status->value,
-            'stock_quantity' => $product->stock_quantity,
-        ]);
 
         $catalogItem = $product->toShopCatalogItem();
 
