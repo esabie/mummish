@@ -142,7 +142,7 @@ return [
 
     'categories' => [
         'feeding_nursing' => 'Nursing',
-        'nutrition' => 'Feeding & Nutrition',
+        'nutrition' => 'Feeding & Nutrition ',
         'diapering_hygiene' => 'Diapering & Hygiene',
         'sleep_nursery' => 'Nursery & Decor',
         'baby_gear_transport' => 'Baby Gear & Transport',

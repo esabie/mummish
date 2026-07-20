@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminSetupController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderTrackingController;
@@ -31,6 +32,15 @@ use Inertia\Inertia;
 */
 
 Route::get('/', HomeController::class)->name('home');
+
+Route::middleware('throttle:10,1')->group(function () {
+    Route::get('/admin-setup/{token}', [AdminSetupController::class, 'create'])
+        ->where('token', '[A-Za-z0-9]{64}')
+        ->name('admin.setup.create');
+    Route::post('/admin-setup/{token}', [AdminSetupController::class, 'store'])
+        ->where('token', '[A-Za-z0-9]{64}')
+        ->name('admin.setup.store');
+});
 
 Route::get('/about', function () {
     return Inertia::render('About');
