@@ -9,6 +9,9 @@ use Throwable;
 class AppLog
 {
     private static ?string $requestId = null;
+    private const MAX_STRING_LENGTH = 1000;
+    private const MAX_ARRAY_ITEMS = 25;
+    private const MAX_DEPTH = 4;
 
     /**
      * @var list<string>
@@ -77,19 +80,9 @@ class AppLog
     {
         self::error($message, array_merge($context, [
             'exception' => $exception::class,
-            'exception_message' => $exception->getMessage(),
+            'exception_message' => self::limitString($exception->getMessage()),
             'exception_file' => $exception->getFile(),
             'exception_line' => $exception->getLine(),
-            'exception_trace' => collect($exception->getTrace())
-                ->take(12)
-                ->map(fn (array $frame) => sprintf(
-                    '%s%s%s()',
-                    $frame['class'] ?? '',
-                    $frame['type'] ?? '',
-                    $frame['function'] ?? 'unknown'
-                ))
-                ->values()
-                ->all(),
         ]));
     }
 
@@ -139,16 +132,61 @@ class AppLog
                 continue;
             }
 
-            if (is_array($value)) {
-                $sanitized[$key] = self::sanitizeContext($value);
-
-                continue;
-            }
-
-            $sanitized[$key] = $value;
+            $sanitized[$key] = self::normalizeValue($value);
         }
 
         return $sanitized;
+    }
+
+    private static function normalizeValue(mixed $value, int $depth = 0): mixed
+    {
+        if ($depth >= self::MAX_DEPTH) {
+            return '[truncated depth]';
+        }
+
+        if (is_array($value)) {
+            $normalized = [];
+            $count = 0;
+
+            foreach ($value as $key => $item) {
+                if ($count >= self::MAX_ARRAY_ITEMS) {
+                    $normalized['...'] = sprintf('[truncated %d items]', count($value) - self::MAX_ARRAY_ITEMS);
+                    break;
+                }
+
+                $normalized[$key] = self::normalizeValue($item, $depth + 1);
+                $count++;
+            }
+
+            return $normalized;
+        }
+
+        if (is_object($value)) {
+            if ($value instanceof Throwable) {
+                return sprintf(
+                    '%s: %s',
+                    $value::class,
+                    self::limitString($value->getMessage())
+                );
+            }
+
+            return sprintf('[object %s]', $value::class);
+        }
+
+        if (is_string($value)) {
+            return self::limitString($value);
+        }
+
+        return $value;
+    }
+
+    private static function limitString(string $value): string
+    {
+        if (mb_strlen($value) <= self::MAX_STRING_LENGTH) {
+            return $value;
+        }
+
+        return mb_substr($value, 0, self::MAX_STRING_LENGTH).'...[truncated]';
     }
 
     private static function isSensitiveKey(string $key): bool

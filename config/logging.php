@@ -48,7 +48,7 @@ return [
     */
 
     'log_http_requests' => filter_var(
-        env('LOG_HTTP_REQUESTS', env('APP_ENV') === 'production'),
+        env('LOG_HTTP_REQUESTS', false),
         FILTER_VALIDATE_BOOL
     ),
 
