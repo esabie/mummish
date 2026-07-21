@@ -1,5 +1,6 @@
-import { Link, Head, usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import LogoMark from '@/Components/LogoMark';
+import SeoHead from '@/Components/SeoHead';
 import SiteFooter from '@/Components/SiteFooter';
 import { useCart } from '@/context/CartContext';
 
@@ -63,12 +64,12 @@ export default function Privacy() {
 
     return (
         <>
-            <Head title="Privacy Policy — Mummish">
-                <meta
-                    name="description"
-                    content="How Mummish collects, uses, and protects your family's personal information under the Ghana Data Protection Act, 2012 (Act 843)."
-                />
-            </Head>
+            <SeoHead
+                title="Privacy Policy"
+                description="How Mummish collects, uses, and protects your family's personal information under the Ghana Data Protection Act, 2012 (Act 843)."
+                url={route('privacy')}
+                image="/images/logo.png"
+            />
 
             <div className="flex min-h-screen flex-col bg-[#faf9f7] text-stone-900 antialiased">
                 <header className="sticky top-0 z-40 border-b border-stone-200/90 bg-white/95 backdrop-blur">

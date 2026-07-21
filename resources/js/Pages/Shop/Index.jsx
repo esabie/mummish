@@ -1,8 +1,9 @@
-import { Link, Head, router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import Breadcrumbs from '@/Components/Breadcrumbs';
 import LogoMark from '@/Components/LogoMark';
 import ProductPrice from '@/Components/ProductPrice';
+import SeoHead from '@/Components/SeoHead';
 import SiteFooter from '@/Components/SiteFooter';
 import { useCart } from '@/context/CartContext';
 
@@ -307,9 +308,24 @@ export default function ShopIndex({
             activeDrawerFilters > 0
     );
 
+    const seoTitle = search_query
+        ? `Search: ${search_query}`
+        : applied_filters.category
+          ? filter_options.categories.find((c) => c.id === applied_filters.category)?.label || 'Shop'
+          : 'Shop';
+
+    const seoDescription = search_query
+        ? `Browse ${result_count} results for “${search_query}” on Mummish, Ghana's marketplace for families.`
+        : 'Shop baby and family essentials on Mummish — nursing, feeding, clothing, toys, and more from trusted Ghanaian sellers.';
+
     return (
         <>
-            <Head title={search_query ? `${search_query} — Mummish` : 'Shop — Mummish'} />
+            <SeoHead
+                title={seoTitle}
+                description={seoDescription}
+                url={route('shop.index')}
+                image="/images/logo.png"
+            />
 
             <div className="flex min-h-screen flex-col bg-[#faf9f7] text-stone-900 antialiased">
                 <header className="border-b border-stone-200/90 bg-white/95 backdrop-blur">

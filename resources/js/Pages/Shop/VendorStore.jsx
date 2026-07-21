@@ -1,8 +1,9 @@
-import { Link, Head, router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import Breadcrumbs from '@/Components/Breadcrumbs';
 import LogoMark from '@/Components/LogoMark';
 import ProductPrice from '@/Components/ProductPrice';
+import SeoHead from '@/Components/SeoHead';
 import ShareButton from '@/Components/ShareButton';
 import SiteFooter from '@/Components/SiteFooter';
 import { useCart } from '@/context/CartContext';
@@ -73,7 +74,12 @@ export default function VendorStore({ store, search_query, result_count, current
 
     return (
         <>
-            <Head title={`${store.name} — Mummish`} />
+            <SeoHead
+                title={store.name}
+                description={`Shop ${store.name} on Mummish — ${store.category || 'family essentials'} from a trusted Ghanaian seller.`}
+                image={store.logo || '/images/logo.png'}
+                url={route('shops.show', store.slug)}
+            />
 
             <div className="flex min-h-screen flex-col bg-[#faf9f7] text-stone-900 antialiased">
                 <header className="border-b border-stone-200/90 bg-white/95 backdrop-blur">

@@ -1,8 +1,9 @@
-import { Link, Head, router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import LogoMark from '@/Components/LogoMark';
 import Modal from '@/Components/Modal';
 import ProductPrice from '@/Components/ProductPrice';
+import SeoHead from '@/Components/SeoHead';
 import SiteFooter from '@/Components/SiteFooter';
 import { useCart } from '@/context/CartContext';
 import { Dialog } from '@headlessui/react';
@@ -170,7 +171,12 @@ export default function Welcome({
 
     return (
         <>
-            <Head title="" />
+            <SeoHead
+                title=""
+                description="Mummish is Ghana's marketplace for families — shop nursing, feeding, clothing, toys, and more from trusted local sellers."
+                url="/"
+                image="/images/logo.png"
+            />
 
             <div className="min-h-screen bg-white text-neutral-900 antialiased">
                 {/* <div className="border-b border-neutral-200 bg-market-muted/80">

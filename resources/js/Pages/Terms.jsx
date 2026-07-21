@@ -1,5 +1,6 @@
-import { Link, Head, usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import LogoMark from '@/Components/LogoMark';
+import SeoHead from '@/Components/SeoHead';
 import SiteFooter from '@/Components/SiteFooter';
 import { useCart } from '@/context/CartContext';
 
@@ -75,12 +76,12 @@ export default function Terms() {
 
     return (
         <>
-            <Head title="Terms and Conditions — Mummish">
-                <meta
-                    name="description"
-                    content="Terms and Conditions for using Mummish, Ghana's marketplace for families, in accordance with the Ghanaian Electronic Transactions Act, 2008 (Act 772)."
-                />
-            </Head>
+            <SeoHead
+                title="Terms and Conditions"
+                description="Terms and Conditions for using Mummish, Ghana's marketplace for families, in accordance with the Ghanaian Electronic Transactions Act, 2008 (Act 772)."
+                url={route('terms')}
+                image="/images/logo.png"
+            />
 
             <div className="flex min-h-screen flex-col bg-[#faf9f7] text-stone-900 antialiased">
                 <header className="sticky top-0 z-40 border-b border-stone-200/90 bg-white/95 backdrop-blur">

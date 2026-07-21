@@ -1,5 +1,6 @@
-import { Link, Head, usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import LogoMark from '@/Components/LogoMark';
+import SeoHead from '@/Components/SeoHead';
 import SiteFooter from '@/Components/SiteFooter';
 import { useCart } from '@/context/CartContext';
 
@@ -60,12 +61,12 @@ export default function Billing() {
 
     return (
         <>
-            <Head title="Billing Policy — Mummish">
-                <meta
-                    name="description"
-                    content="How payments, commissions, escrow, and vendor payouts work on Mummish, Ghana's marketplace for families."
-                />
-            </Head>
+            <SeoHead
+                title="Billing Policy"
+                description="How payments, commissions, escrow, and vendor payouts work on Mummish, Ghana's marketplace for families."
+                url={route('billing')}
+                image="/images/logo.png"
+            />
 
             <div className="flex min-h-screen flex-col bg-[#faf9f7] text-stone-900 antialiased">
                 <header className="sticky top-0 z-40 border-b border-stone-200/90 bg-white/95 backdrop-blur">

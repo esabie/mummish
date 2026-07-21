@@ -34,6 +34,8 @@ class HandleInertiaRequests extends Middleware
 
         return [
             ...parent::share($request),
+            'appUrl' => rtrim((string) config('app.url'), '/'),
+            'appName' => (string) config('app.name', 'Mummish'),
             'auth' => [
                 'user' => $user,
             ],

@@ -1,8 +1,9 @@
-import { Link, Head } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { useState } from 'react';
 import Breadcrumbs from '@/Components/Breadcrumbs';
 import LogoMark from '@/Components/LogoMark';
 import ProductPrice from '@/Components/ProductPrice';
+import SeoHead from '@/Components/SeoHead';
 import SiteFooter from '@/Components/SiteFooter';
 import { useCart } from '@/context/CartContext';
 
@@ -176,9 +177,41 @@ export default function ShopShow({ product, store = null }) {
         .filter(Boolean)
         .join(' • ');
 
+    const canonicalUrl =
+        product.shop_slug
+            ? route('shops.products.show', { slug: product.shop_slug, id: product.id })
+            : route('shop.show', product.id);
+
+    const productJsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: product.name,
+        description: product.description,
+        image: product.image ? [product.image] : undefined,
+        brand: product.brand
+            ? { '@type': 'Brand', name: product.brand }
+            : undefined,
+        offers: {
+            '@type': 'Offer',
+            priceCurrency: 'GHS',
+            price: ((product.price_cents ?? 0) / 100).toFixed(2),
+            availability: soldOut
+                ? 'https://schema.org/OutOfStock'
+                : 'https://schema.org/InStock',
+            url: canonicalUrl,
+        },
+    };
+
     return (
         <>
-            <Head title={`${product.name} — Mummish`} />
+            <SeoHead
+                title={product.name}
+                description={product.description}
+                image={product.image}
+                url={canonicalUrl}
+                type="product"
+                jsonLd={productJsonLd}
+            />
 
             <div className="flex min-h-screen flex-col bg-[#f7f5f2] text-stone-900 antialiased">
                 <header className="border-b border-stone-200/90 bg-white/95 backdrop-blur">

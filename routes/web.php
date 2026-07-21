@@ -7,6 +7,7 @@ use App\Http\Controllers\OrderTrackingController;
 use App\Http\Controllers\PaystackWebhookController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ShopController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\VendorStoreController;
 use App\Http\Controllers\Vendor\VendorDashboardController;
 use App\Http\Controllers\Vendor\VendorInventoryController;
@@ -32,6 +33,7 @@ use Inertia\Inertia;
 */
 
 Route::get('/', HomeController::class)->name('home');
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 Route::middleware('throttle:10,1')->group(function () {
     Route::get('/admin-setup/{token}', [AdminSetupController::class, 'create'])

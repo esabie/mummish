@@ -1,7 +1,8 @@
-import { Link, Head, router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import Breadcrumbs from '@/Components/Breadcrumbs';
 import LogoMark from '@/Components/LogoMark';
+import SeoHead from '@/Components/SeoHead';
 import SiteFooter from '@/Components/SiteFooter';
 
 function IconSearch(props) {
@@ -75,7 +76,12 @@ export default function StoresDirectory({ search_query, stores, result_count, cu
 
     return (
         <>
-            <Head title="Stores — Mummish" />
+            <SeoHead
+                title="Stores"
+                description="Browse trusted family stores on Mummish — local Ghanaian sellers for baby gear, clothing, toys, and more."
+                url={route('shops.index')}
+                image="/images/logo.png"
+            />
 
             <div className="flex min-h-screen flex-col bg-[#faf9f7] text-stone-900 antialiased">
                 <header className="border-b border-stone-200/90 bg-white/95 backdrop-blur">

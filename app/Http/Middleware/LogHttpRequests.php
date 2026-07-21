@@ -19,6 +19,7 @@ class LogHttpRequests
         '_ignition/',
         'favicon.ico',
         'robots.txt',
+        'sitemap.xml',
     ];
 
     public function handle(Request $request, Closure $next): Response

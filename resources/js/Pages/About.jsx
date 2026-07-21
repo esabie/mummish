@@ -1,5 +1,6 @@
-import { Link, Head, usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import LogoMark from '@/Components/LogoMark';
+import SeoHead from '@/Components/SeoHead';
 import SiteFooter from '@/Components/SiteFooter';
 import { useCart } from '@/context/CartContext';
 
@@ -111,12 +112,12 @@ export default function About() {
 
     return (
         <>
-            <Head title="About us — Mummish">
-                <meta
-                    name="description"
-                    content="Mummish is Ghana's marketplace for families — declutter, reduce waste, and find great pre-loved gear for your little bosses."
-                />
-            </Head>
+            <SeoHead
+                title="About us"
+                description="Mummish is Ghana's marketplace for families — declutter, reduce waste, and find great pre-loved gear for your little bosses."
+                url={route('about')}
+                image="/images/logo.png"
+            />
 
             <div className="flex min-h-screen flex-col bg-[#faf9f7] text-stone-900 antialiased">
                 <header className="sticky top-0 z-40 border-b border-stone-200/90 bg-white/95 backdrop-blur">

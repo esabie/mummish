@@ -35,7 +35,7 @@ export default function AdminSetup({ token }) {
             <Head title="Create admin" />
 
             <p className="mb-4 text-sm text-gray-600">
-                Create (or reset) the Filament admin account. This one-time link expires after use.
+                Create (or reset) the admin account. This one-time link expires after use.
             </p>
 
             <form onSubmit={submit}>

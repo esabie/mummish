@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Link, useForm, usePage } from '@inertiajs/react';
 import Breadcrumbs from '@/Components/Breadcrumbs';
 import LogoMark from '@/Components/LogoMark';
+import SeoHead from '@/Components/SeoHead';
 import SiteFooter from '@/Components/SiteFooter';
 import InputError from '@/Components/InputError';
 
@@ -230,7 +231,12 @@ export default function VendorSignUp({ categories, existingApplication, referral
 
     return (
         <>
-            <Head title="Sell on Mummish — Vendor sign up" />
+            <SeoHead
+                title="Sell on Mummish"
+                description="Start selling baby and family essentials on Mummish — Ghana's marketplace for parents and caregivers."
+                url={route('vendor.signup')}
+                image="/images/logo.png"
+            />
 
             <div className="flex min-h-screen flex-col bg-[#faf9f7] text-stone-900 antialiased">
                 <header className="border-b border-stone-200/90 bg-white/95 backdrop-blur">

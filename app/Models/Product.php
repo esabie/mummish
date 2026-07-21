@@ -387,6 +387,7 @@ class Product extends Model
                     ->all()
                 : [],
             'price' => $this->formattedPrice(),
+            'price_cents' => $this->price_cents,
             'compare_at_price' => $this->formattedCompareAtPrice(),
             'discount_percent' => $this->discountPercent(),
             'on_sale' => $this->isOnSale(),
