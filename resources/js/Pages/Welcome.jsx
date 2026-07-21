@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import LogoMark from '@/Components/LogoMark';
 import Modal from '@/Components/Modal';
@@ -153,6 +153,12 @@ export default function Welcome({
     const [searchInput, setSearchInput] = useState('');
     const [categoriesModalOpen, setCategoriesModalOpen] = useState(false);
     const { openCart, count: cartCount } = useCart();
+    const { appUrl, seo } = usePage().props;
+    const seoDescription =
+        seo?.description ||
+        'Marketplace for the modern mother. Shop baby clothes, kids products, and family essentials from trusted local sellers across Ghana.';
+    const seoTaglines = Array.isArray(seo?.taglines) ? seo.taglines : [];
+    const siteUrl = (appUrl || '').replace(/\/$/, '');
 
     const featuredCategories = useMemo(() => {
         const withItems = categories
@@ -172,10 +178,19 @@ export default function Welcome({
     return (
         <>
             <SeoHead
-                title=""
-                description="Mummish is Ghana's marketplace for families — shop nursing, feeding, clothing, toys, and more from trusted local sellers."
+                documentTitle={seo?.title || 'Mummish | Marketplace for mothers & kids in Ghana'}
+                description={seoDescription}
                 url="/"
                 image="/images/logo.png"
+                jsonLd={{
+                    '@context': 'https://schema.org',
+                    '@type': 'Organization',
+                    name: 'Mummish',
+                    url: `${siteUrl}/`,
+                    logo: `${siteUrl}/images/logo.png`,
+                    description: seoDescription,
+                    ...(seoTaglines.length > 0 ? { alternateName: seoTaglines } : {}),
+                }}
             />
 
             <div className="min-h-screen bg-white text-neutral-900 antialiased">

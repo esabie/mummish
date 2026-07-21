@@ -21,7 +21,18 @@ router.on('invalid', (event) => {
 });
 
 createInertiaApp({
-    title: (title) => (title ? `${title} - ${appName}` : appName),
+    title: (title) => {
+        if (!title) {
+            return appName;
+        }
+
+        // Allow pages to pass a full document title (e.g. "Mummish | …").
+        if (title === appName || title.startsWith(`${appName} |`) || title.startsWith(`${appName} -`)) {
+            return title;
+        }
+
+        return `${title} - ${appName}`;
+    },
     resolve: (name) => {
         debugLogger.info('Inertia', 'Resolving page component', { name });
         return resolvePageComponent(`./Pages/${name}.jsx`, import.meta.glob('./Pages/**/*.jsx'));

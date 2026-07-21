@@ -32,6 +32,7 @@ function truncate(text, max = 160) {
 /**
  * Shared SEO head tags for public Inertia pages.
  * Pass `title` without the brand — app.jsx appends " - Mummish".
+ * Pass `documentTitle` for a full title that should not be rewritten (e.g. homepage).
  */
 export default function SeoHead({
     title,
@@ -41,6 +42,7 @@ export default function SeoHead({
     type = 'website',
     noindex = false,
     jsonLd = null,
+    documentTitle = null,
 }) {
     const page = usePage();
     const { appUrl, appName } = page.props;
@@ -49,10 +51,11 @@ export default function SeoHead({
     const canonical = absoluteUrl(appUrl, url) || absoluteUrl(appUrl, pathOnly);
     const ogImage = absoluteUrl(appUrl, image) || absoluteUrl(appUrl, '/images/logo.png');
     const metaDescription = truncate(description);
-    const fullTitle = title ? `${title} - ${siteName}` : siteName;
+    const fullTitle = documentTitle || (title ? `${title} - ${siteName}` : siteName);
+    const headTitle = documentTitle || title || '';
 
     return (
-        <Head title={title || ''}>
+        <Head title={headTitle}>
             {metaDescription && <meta head-key="description" name="description" content={metaDescription} />}
             {canonical && <link head-key="canonical" rel="canonical" href={canonical} />}
             {noindex && <meta head-key="robots" name="robots" content="noindex, nofollow" />}

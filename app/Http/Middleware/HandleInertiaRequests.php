@@ -36,6 +36,11 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'appUrl' => rtrim((string) config('app.url'), '/'),
             'appName' => (string) config('app.name', 'Mummish'),
+            'seo' => [
+                'title' => (string) config('seo.title'),
+                'description' => (string) config('seo.description'),
+                'taglines' => array_values(array_filter(config('seo.taglines', []))),
+            ],
             'auth' => [
                 'user' => $user,
             ],

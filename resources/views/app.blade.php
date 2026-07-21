@@ -6,7 +6,46 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="theme-color" content="#0f766e">
 
-        <title inertia>{{ config('app.name', 'Mummish') }}</title>
+        @php
+            $siteName = config('app.name', 'Mummish');
+            $siteUrl = rtrim((string) config('app.url'), '/');
+            $seoTitle = config('seo.title', $siteName);
+            $siteDescription = config('seo.description');
+            $seoTaglines = array_values(array_filter(config('seo.taglines', [])));
+            $ogImage = $siteUrl.'/images/logo.png';
+            $websiteJsonLd = [
+                '@context' => 'https://schema.org',
+                '@type' => 'WebSite',
+                'name' => $siteName,
+                'url' => $siteUrl.'/',
+                'description' => $siteDescription,
+                'potentialAction' => [
+                    '@type' => 'SearchAction',
+                    'target' => $siteUrl.'/shop?q={search_term_string}',
+                    'query-input' => 'required name=search_term_string',
+                ],
+            ];
+            if ($seoTaglines !== []) {
+                $websiteJsonLd['alternateName'] = $seoTaglines;
+            }
+        @endphp
+
+        {{-- Server-rendered defaults so crawlers see Mummish copy without waiting on Inertia JS --}}
+        <meta name="description" content="{{ $siteDescription }}">
+        <link rel="canonical" href="{{ url()->current() }}">
+        <meta property="og:type" content="website">
+        <meta property="og:site_name" content="{{ $siteName }}">
+        <meta property="og:title" content="{{ $seoTitle }}">
+        <meta property="og:description" content="{{ $siteDescription }}">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:image" content="{{ $ogImage }}">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{ $seoTitle }}">
+        <meta name="twitter:description" content="{{ $siteDescription }}">
+        <meta name="twitter:image" content="{{ $ogImage }}">
+        <script type="application/ld+json">{!! json_encode($websiteJsonLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}</script>
+
+        <title inertia>{{ $seoTitle }}</title>
 
         <link rel="icon" href="/images/logo.png?v=3" type="image/png">
 
