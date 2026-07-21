@@ -32,6 +32,7 @@ class AdminSetupController extends Controller
             ['email' => $email],
             [
                 'name' => $request->validated('name'),
+                'phone' => $request->validated('phone'),
                 'password' => $request->validated('password'),
                 'role' => UserRole::Admin,
                 'email_verified_at' => now(),

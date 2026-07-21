@@ -10,6 +10,7 @@ export default function AdminSetup({ token }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
         email: '',
+        phone: '',
         password: '',
         password_confirmation: '',
     });
@@ -35,7 +36,8 @@ export default function AdminSetup({ token }) {
             <Head title="Create admin" />
 
             <p className="mb-4 text-sm text-gray-600">
-                Create (or reset) the admin account. This one-time link expires after use.
+                Create your admin account. Use your own phone number — password reset links are texted to it.
+                This one-time link expires after use.
             </p>
 
             <form onSubmit={submit}>
@@ -67,6 +69,25 @@ export default function AdminSetup({ token }) {
                         required
                     />
                     <InputError message={errors.email} className="mt-2" />
+                </div>
+
+                <div className="mt-4">
+                    <InputLabel htmlFor="phone" value="Your phone number" />
+                    <TextInput
+                        id="phone"
+                        type="tel"
+                        name="phone"
+                        value={data.phone}
+                        className="mt-1 block w-full"
+                        autoComplete="tel"
+                        placeholder="e.g. 0201234567"
+                        onChange={(e) => setData('phone', e.target.value)}
+                        required
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                        Used only for your password reset SMS — not shared with other admins.
+                    </p>
+                    <InputError message={errors.phone} className="mt-2" />
                 </div>
 
                 <div className="mt-4">

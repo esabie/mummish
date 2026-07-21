@@ -25,6 +25,7 @@ class User extends Authenticatable implements FilamentUser
     protected $fillable = [
         'name',
         'email',
+        'phone',
         'password',
         'role',
     ];
@@ -88,5 +89,23 @@ class User extends Authenticatable implements FilamentUser
     public function isAdmin(): bool
     {
         return $this->role === UserRole::Admin;
+    }
+
+    /**
+     * Phone number used when sending a password-reset SMS.
+     * Admins: users.phone only (collected at registration — no shared fallback).
+     * Vendors: vendor application phone.
+     */
+    public function passwordResetPhone(): ?string
+    {
+        if ($this->isAdmin()) {
+            $phone = trim((string) ($this->phone ?? ''));
+
+            return $phone !== '' ? $phone : null;
+        }
+
+        $vendorPhone = trim((string) ($this->vendorApplication?->phone ?? ''));
+
+        return $vendorPhone !== '' ? $vendorPhone : null;
     }
 }
