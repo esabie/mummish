@@ -36,7 +36,7 @@ class PasswordResetTest extends TestCase
 
         $response
             ->assertRedirect('/forgot-password')
-            ->assertSessionHas('status', 'We have texted your password reset link.');
+            ->assertSessionHas('status', 'We have sent your password reset link via SMS.');
 
         Bus::assertDispatched(SendPasswordResetSms::class, function (SendPasswordResetSms $job) use ($user) {
             return $job->phone === '0241234567'

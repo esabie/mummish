@@ -67,6 +67,6 @@ class PasswordResetLinkController extends Controller
 
         SendPasswordResetSms::dispatch($phone, $firstName, $resetUrl);
 
-        return back()->with('status', 'We have texted your password reset link.');
+        return back()->with('status', 'We have sent your password reset link via SMS.');
     }
 }

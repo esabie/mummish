@@ -62,7 +62,7 @@ class RequestPasswordReset extends BaseRequestPasswordReset
         }
 
         Notification::make()
-            ->title('We have texted your password reset link.')
+            ->title('We have sent your password reset link via SMS.')
             ->success()
             ->send();
 
