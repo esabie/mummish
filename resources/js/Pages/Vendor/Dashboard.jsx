@@ -80,6 +80,13 @@ export default function VendorDashboard({
                 </div>
             )}
 
+            {applicationStatus === 'closed' && (
+                <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+                    Your shop has been closed and your product listings have been removed from the marketplace.
+                    {rejectionReason ? <> {rejectionReason}</> : null}
+                </div>
+            )}
+
             <section className="mb-8 rounded-2xl border border-stone-200/90 bg-white p-4 shadow-sm sm:p-6">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>

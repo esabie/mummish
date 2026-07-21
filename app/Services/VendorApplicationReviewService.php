@@ -4,10 +4,12 @@ namespace App\Services;
 
 use App\Enums\VendorApplicationStatus;
 use App\Jobs\SendVendorApplicationStatusSms;
+use App\Models\Product;
 use App\Models\User;
 use App\Models\VendorApplication;
 use App\Notifications\VendorApplicationReviewedNotification;
 use App\Support\AppLog;
+use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 class VendorApplicationReviewService
@@ -15,6 +17,7 @@ class VendorApplicationReviewService
     public function __construct(
         private readonly ShopSlugGenerator $shopSlugGenerator,
         private readonly VendorReferralRewardService $referralRewards,
+        private readonly ProductImageService $productImages,
     ) {}
 
     public function approve(VendorApplication $application, User $reviewer): void
@@ -78,6 +81,64 @@ class VendorApplicationReviewService
         );
 
         $application->user?->notify(new VendorApplicationReviewedNotification($application->fresh()));
+    }
+
+    /**
+     * Close an approved vendor shop and permanently delete all of their products.
+     *
+     * @return int Number of products deleted
+     */
+    public function closeDown(VendorApplication $application, User $reviewer, ?string $reason = null): int
+    {
+        if ($application->status !== VendorApplicationStatus::Approved) {
+            throw new InvalidArgumentException('Only approved vendors can be closed down.');
+        }
+
+        $reason = trim((string) $reason);
+        if ($reason === '') {
+            $reason = 'Your shop was closed by an administrator.';
+        }
+
+        $deletedCount = 0;
+
+        DB::transaction(function () use ($application, $reviewer, $reason, &$deletedCount) {
+            $products = Product::query()
+                ->where('user_id', $application->user_id)
+                ->get();
+
+            foreach ($products as $product) {
+                $this->productImages->deleteStoredUrls($product->image_urls ?? []);
+                if (is_string($product->image_url) && $product->image_url !== '') {
+                    $this->productImages->deleteStoredUrl($product->image_url);
+                }
+                $product->delete();
+                $deletedCount++;
+            }
+
+            $application->update([
+                'status' => VendorApplicationStatus::Closed,
+                'rejection_reason' => $reason,
+                'reviewed_at' => now(),
+                'reviewed_by_user_id' => $reviewer->id,
+            ]);
+        });
+
+        AppLog::info('[VendorApplication] Closed down.', [
+            'application_id' => $application->id,
+            'user_id' => $application->user_id,
+            'reviewer_user_id' => $reviewer->id,
+            'products_deleted' => $deletedCount,
+            'reason_length' => strlen($reason),
+        ]);
+
+        SendVendorApplicationStatusSms::dispatch(
+            $application->fresh(),
+            VendorApplicationStatus::Closed,
+        );
+
+        $application->user?->notify(new VendorApplicationReviewedNotification($application->fresh()));
+
+        return $deletedCount;
     }
 
     private function assertPending(VendorApplication $application): void

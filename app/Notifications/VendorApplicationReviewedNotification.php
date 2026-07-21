@@ -31,20 +31,36 @@ class VendorApplicationReviewedNotification extends Notification implements Shou
      */
     public function toArray(object $notifiable): array
     {
-        $approved = $this->application->status === VendorApplicationStatus::Approved;
-
-        return [
-            'type' => $approved ? 'application_approved' : 'application_rejected',
-            'title' => $approved ? 'Application approved' : 'Application not approved',
-            'body' => $approved
-                ? "Your shop “{$this->application->shop_name}” is live. Start listing products."
-                : 'Your seller application was not approved.'.(
+        return match ($this->application->status) {
+            VendorApplicationStatus::Approved => [
+                'type' => 'application_approved',
+                'title' => 'Application approved',
+                'body' => "Your shop “{$this->application->shop_name}” is live. Start listing products.",
+                'url' => route('vendor.dashboard', [], false),
+                'application_id' => $this->application->id,
+            ],
+            VendorApplicationStatus::Closed => [
+                'type' => 'shop_closed',
+                'title' => 'Shop closed',
+                'body' => 'Your shop has been closed and your product listings have been removed from the marketplace.'.(
                     filled($this->application->rejection_reason)
                         ? ' '.$this->application->rejection_reason
                         : ''
                 ),
-            'url' => route('vendor.dashboard', [], false),
-            'application_id' => $this->application->id,
-        ];
+                'url' => route('vendor.dashboard', [], false),
+                'application_id' => $this->application->id,
+            ],
+            default => [
+                'type' => 'application_rejected',
+                'title' => 'Application not approved',
+                'body' => 'Your seller application was not approved.'.(
+                    filled($this->application->rejection_reason)
+                        ? ' '.$this->application->rejection_reason
+                        : ''
+                ),
+                'url' => route('vendor.dashboard', [], false),
+                'application_id' => $this->application->id,
+            ],
+        };
     }
 }

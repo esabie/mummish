@@ -20,7 +20,10 @@ class VendorListingLimit
             return null;
         }
 
-        if ($application->status === VendorApplicationStatus::Rejected) {
+        if (in_array($application->status, [
+            VendorApplicationStatus::Rejected,
+            VendorApplicationStatus::Closed,
+        ], true)) {
             return 0;
         }
 
@@ -69,6 +72,10 @@ class VendorListingLimit
             throw new \InvalidArgumentException('Your vendor application was not approved. You cannot list products.');
         }
 
+        if ($application?->status === VendorApplicationStatus::Closed) {
+            throw new \InvalidArgumentException('Your shop has been closed. You cannot list products.');
+        }
+
         if ($application === null) {
             throw new \InvalidArgumentException('Submit a vendor application before listing products.');
         }
@@ -83,6 +90,10 @@ class VendorListingLimit
 
         if ($application?->status === VendorApplicationStatus::Rejected) {
             return 'Your vendor application was not approved. You cannot list products.';
+        }
+
+        if ($application?->status === VendorApplicationStatus::Closed) {
+            return 'Your shop has been closed. You cannot list products.';
         }
 
         if ($application === null) {

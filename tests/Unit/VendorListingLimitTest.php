@@ -64,6 +64,24 @@ class VendorListingLimitTest extends TestCase
         $this->assertFalse($limit->canAddListing($user));
     }
 
+    public function test_closed_vendor_cannot_list(): void
+    {
+        $user = $this->pendingVendor();
+        $user->vendorApplication->update([
+            'status' => VendorApplicationStatus::Closed,
+            'rejection_reason' => 'Shop closed by admin',
+        ]);
+
+        $limit = app(VendorListingLimit::class);
+
+        $this->assertSame(0, $limit->maxListingsFor($user));
+        $this->assertFalse($limit->canAddListing($user));
+        $this->assertSame(
+            'Your shop has been closed. You cannot list products.',
+            $limit->limitMessage($user),
+        );
+    }
+
     private function pendingVendor(): User
     {
         $user = User::factory()->create(['role' => UserRole::Vendor]);

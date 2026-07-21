@@ -65,6 +65,11 @@ class VendorApplication extends Model
         return $this->status === VendorApplicationStatus::Approved;
     }
 
+    public function isClosed(): bool
+    {
+        return $this->status === VendorApplicationStatus::Closed;
+    }
+
     public function shopLogoUrl(): ?string
     {
         return PublicStorageUrl::fromStored($this->logo_path);

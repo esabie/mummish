@@ -46,6 +46,7 @@ class SendVendorApplicationStatusSms implements ShouldQueue
         $message = match ($this->status) {
             VendorApplicationStatus::Approved => "Hi {$firstName}, great news! Your seller application for {$shopName} has been approved. Log in to list unlimited products and start selling.",
             VendorApplicationStatus::Rejected => $this->rejectionMessage($firstName, $appName, $shopName),
+            VendorApplicationStatus::Closed => "Hi {$firstName}, your {$appName} shop {$shopName} has been closed. Your product listings have been removed from the marketplace.",
             default => null,
         };
 
