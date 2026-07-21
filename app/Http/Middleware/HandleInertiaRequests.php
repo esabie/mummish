@@ -37,8 +37,12 @@ class HandleInertiaRequests extends Middleware
             'appUrl' => rtrim((string) config('app.url'), '/'),
             'appName' => (string) config('app.name', 'Mummish'),
             'seo' => [
-                'title' => (string) config('seo.title'),
-                'description' => (string) config('seo.description'),
+                'title' => (string) (filled(config('seo.title'))
+                    ? config('seo.title')
+                    : 'Mummish | Marketplace for mothers & kids in Ghana'),
+                'description' => (string) (filled(config('seo.description'))
+                    ? config('seo.description')
+                    : 'Marketplace for the modern mother. Shop baby clothes, kids products, and family essentials from trusted local sellers across Ghana.'),
                 'taglines' => array_values(array_filter(config('seo.taglines', []))),
             ],
             'auth' => [

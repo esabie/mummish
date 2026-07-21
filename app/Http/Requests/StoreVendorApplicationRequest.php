@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use App\Models\VendorReferrer;
 use Illuminate\Foundation\Http\FormRequest;
@@ -74,7 +75,28 @@ class StoreVendorApplicationRequest extends FormRequest
             return $rules;
         }
 
-        $rules['email'] = ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class];
+        $rules['email'] = [
+            'required',
+            'string',
+            'lowercase',
+            'email',
+            'max:255',
+            function (string $attribute, mixed $value, \Closure $fail): void {
+                $existing = User::query()->where('email', $value)->first();
+
+                if (! $existing) {
+                    return;
+                }
+
+                if ($existing->role === UserRole::Admin) {
+                    $fail('This email belongs to an admin account, which cannot become a vendor. Use a different email to sell.');
+
+                    return;
+                }
+
+                $fail('An account with this email already exists. Please log in and apply again.');
+            },
+        ];
         $rules['password'] = ['required', 'confirmed', Password::defaults()];
 
         return $rules;
@@ -91,7 +113,6 @@ class StoreVendorApplicationRequest extends FormRequest
             'ghana_card_id.regex' => 'Ghana Card ID must be in the format GHA-123456789-0.',
             'ghana_card_id.unique' => 'This Ghana Card ID has already been used on a vendor application.',
             'category.required' => 'Please select what you sell.',
-            'email.unique' => 'An account with this email already exists. Please log in and apply again.',
             'terms_accepted.required' => 'You must agree to the Marketplace Terms & Conditions and Vendor Agreement.',
             'terms_accepted.accepted' => 'You must agree to the Marketplace Terms & Conditions and Vendor Agreement.',
         ];

@@ -10,8 +10,16 @@
         @php
             $siteName = config('app.name', 'Mummish');
             $siteUrl = rtrim((string) config('app.url'), '/');
-            $seoTitle = config('seo.title', $siteName);
-            $siteDescription = config('seo.description');
+            if (app()->environment('production') && str_starts_with($siteUrl, 'http://')) {
+                $siteUrl = 'https://'.substr($siteUrl, strlen('http://'));
+            }
+
+            $defaultSeoTitle = 'Mummish | Marketplace for mothers & kids in Ghana';
+            $defaultSeoDescription = 'Marketplace for the modern mother. Shop baby clothes, kids products, and family essentials from trusted local sellers across Ghana.';
+            $seoTitle = trim((string) config('seo.title', ''));
+            $seoTitle = $seoTitle !== '' ? $seoTitle : $defaultSeoTitle;
+            $siteDescription = trim((string) config('seo.description', ''));
+            $siteDescription = $siteDescription !== '' ? $siteDescription : $defaultSeoDescription;
             $seoTaglines = array_values(array_filter(config('seo.taglines', [])));
             $ogImage = $siteUrl.'/images/logo.png';
             $websiteJsonLd = [
@@ -48,7 +56,11 @@
 
         <title inertia>{{ $seoTitle }}</title>
 
-        <link rel="icon" href="/images/logo.png?v=3" type="image/png">
+        {{-- Square icons for Google Search favicon (wide wordmark alone is rejected) --}}
+        <link rel="icon" href="/favicon.ico?v=4" sizes="any">
+        <link rel="icon" href="/favicon-48x48.png?v=4" type="image/png" sizes="48x48">
+        <link rel="icon" href="/favicon-192x192.png?v=4" type="image/png" sizes="192x192">
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=4">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

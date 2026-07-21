@@ -235,6 +235,7 @@ class VendorApplicationTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->component('Vendor/SignUp')
                 ->where('referral_code', 'PARTNER2026')
+                ->where('isAdminAccount', false)
             );
     }
 
@@ -317,5 +318,56 @@ class VendorApplicationTest extends TestCase
 
         $response->assertSessionHasErrors('email');
         $this->assertDatabaseCount('vendor_applications', 1);
+    }
+
+    public function test_authenticated_admin_cannot_submit_vendor_application(): void
+    {
+        $admin = User::factory()->admin()->create([
+            'email' => 'admin@example.com',
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('vendor.signup.store'), [
+            'first_name' => 'Ada',
+            'last_name' => 'Admin',
+            'shop_name' => 'Should Not Exist',
+            'phone' => '0241234567',
+            'ghana_card_id' => 'GHA-333333333-3',
+            'category' => 'toys_development',
+            'terms_accepted' => true,
+        ]);
+
+        $response->assertSessionHasErrors('email');
+        $this->assertDatabaseCount('vendor_applications', 0);
+        $admin->refresh();
+        $this->assertSame(UserRole::Admin, $admin->role);
+    }
+
+    public function test_guest_cannot_apply_with_existing_admin_email(): void
+    {
+        User::factory()->admin()->create([
+            'email' => 'admin@example.com',
+        ]);
+
+        $response = $this->post(route('vendor.signup.store'), $this->validPayload([
+            'email' => 'admin@example.com',
+        ]));
+
+        $response->assertSessionHasErrors('email');
+        $this->assertDatabaseCount('vendor_applications', 0);
+        $this->assertDatabaseCount('users', 1);
+        $this->assertSame(UserRole::Admin, User::first()->role);
+    }
+
+    public function test_vendor_signup_page_flags_admin_account(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('vendor.signup'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Vendor/SignUp')
+                ->where('isAdminAccount', true)
+            );
     }
 }

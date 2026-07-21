@@ -151,7 +151,12 @@ function isFormComplete(data, isAuthenticated) {
     );
 }
 
-export default function VendorSignUp({ categories, existingApplication, referral_code: initialReferralCode = '' }) {
+export default function VendorSignUp({
+    categories,
+    existingApplication,
+    isAdminAccount = false,
+    referral_code: initialReferralCode = '',
+}) {
     const { auth, canLogin } = usePage().props;
     const isAuthenticated = Boolean(auth?.user);
     const nameParts = splitName(auth?.user?.name);
@@ -392,12 +397,26 @@ export default function VendorSignUp({ categories, existingApplication, referral
                                     Vendor application &amp; account
                                 </h2>
                                 <p className="mt-2 text-sm text-stone-600">
-                                    {isAuthenticated
-                                        ? 'Complete your shop details below. You are already logged in.'
-                                        : 'Create your vendor login and shop profile in one step. After submitting, sign in anytime with your email and password.'}
+                                    {isAdminAccount
+                                        ? 'This login is an admin account and can’t submit a vendor application.'
+                                        : isAuthenticated
+                                          ? 'Complete your shop details below. You are already logged in.'
+                                          : 'Create your vendor login and shop profile in one step. After submitting, sign in anytime with your email and password.'}
                                 </p>
 
-                                {existingApplication ? (
+                                {isAdminAccount ? (
+                                    <div
+                                        className="mt-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+                                        role="status"
+                                    >
+                                        You&apos;re signed in as an admin. Admin accounts can&apos;t become vendors —
+                                        each email can only have one role. Sign out and apply with a different email
+                                        to sell on Mummish.
+                                        <a href="/admin" className="ml-1 font-semibold text-[#5c4d3d] underline">
+                                            Open admin panel
+                                        </a>
+                                    </div>
+                                ) : existingApplication ? (
                                     <div
                                         className="mt-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
                                         role="status"

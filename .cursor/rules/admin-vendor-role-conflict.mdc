@@ -1,0 +1,46 @@
+---
+description: UI and product rules when an admin tries to become a vendor (one role per email)
+globs: resources/js/Pages/Vendor/**/*.{jsx,tsx},app/Http/Controllers/VendorOnboardingController.php,app/Http/Requests/StoreVendorApplicationRequest.php
+alwaysApply: false
+---
+
+# Admin vs vendor role conflict
+
+Users have a single `users.role` (`admin` | `vendor` | `customer`). An email cannot be both admin and vendor.
+
+## Product policy
+
+- Never demote an admin to vendor via `/sell`.
+- Block authenticated admins in `VendorOnboardingController::store` before creating a `VendorApplication`.
+- Guests using an admin email get a specific validation error (not “log in and apply again”).
+- Pass `isAdminAccount` from `create()` so the SignUp page can hide the form.
+
+## UI pattern on `Vendor/SignUp`
+
+When `isAdminAccount` is true (same pattern as `existingApplication`):
+
+- Hide the application form.
+- Show an amber status banner explaining one role per email.
+- Tell them to sign out and apply with a **different email**.
+- Link to `/admin` for the admin panel.
+
+```jsx
+// ✅ GOOD — block and explain
+{isAdminAccount ? (
+  <div role="status" className="…amber banner…">
+    Admin accounts can’t become vendors. Sign out and apply with a different email.
+    <a href="/admin">Open admin panel</a>
+  </div>
+) : existingApplication ? (
+  /* existing application banner */
+) : (
+  <form>…</form>
+)}
+
+// ❌ BAD — silently set role to vendor on an admin user
+user.update({ role: UserRole::Vendor });
+```
+
+## Resolving a stuck local admin who wants to sell
+
+Do not convert the admin user. Create a separate vendor account with another email (or restore `role = admin` in DB/tinker if they were already demoted, then apply with a new email).

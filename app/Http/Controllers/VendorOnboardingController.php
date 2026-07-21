@@ -33,6 +33,7 @@ class VendorOnboardingController extends Controller
         return Inertia::render('Vendor/SignUp', [
             'categories' => StoreVendorApplicationRequest::categories(),
             'existingApplication' => $user?->vendorApplication,
+            'isAdminAccount' => $user?->isAdmin() ?? false,
             'referral_code' => $referralCode !== '' ? $referralCode : null,
         ]);
     }
@@ -40,6 +41,12 @@ class VendorOnboardingController extends Controller
     public function store(StoreVendorApplicationRequest $request): RedirectResponse
     {
         $user = $request->user();
+
+        if ($user?->isAdmin()) {
+            throw ValidationException::withMessages([
+                'email' => 'Admin accounts cannot become vendors. Sign out and apply with a different email.',
+            ]);
+        }
 
         if ($user?->vendorApplication) {
             throw ValidationException::withMessages([
