@@ -41,11 +41,11 @@ class AdminPasswordResetTest extends TestCase
             ->assertHasNoFormErrors()
             ->assertNotified();
 
-        Bus::assertDispatched(SendPasswordResetSms::class, function (SendPasswordResetSms $job) use ($admin) {
+        Bus::assertDispatched(SendPasswordResetSms::class, function (SendPasswordResetSms $job) {
             return $job->phone === '0201854694'
                 && $job->firstName === 'Admin'
-                && str_contains($job->resetUrl, '/admin/password-reset/reset')
-                && str_contains($job->resetUrl, 'email='.urlencode($admin->email));
+                && str_contains($job->resetUrl, '/r/')
+                && ! str_contains($job->resetUrl, '/admin/password-reset/');
         });
     }
 

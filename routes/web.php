@@ -7,6 +7,7 @@ use App\Http\Controllers\OrderTrackingController;
 use App\Http\Controllers\PaystackWebhookController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ShopController;
+use App\Http\Controllers\ShortLinkController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\VendorStoreController;
 use App\Http\Controllers\Vendor\VendorDashboardController;
@@ -34,6 +35,10 @@ use Inertia\Inertia;
 
 Route::get('/', HomeController::class)->name('home');
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
+Route::get('/r/{code}', ShortLinkController::class)
+    ->where('code', '[A-Za-z0-9]{6,16}')
+    ->middleware('throttle:60,1')
+    ->name('short-link');
 
 Route::middleware('throttle:10,1')->group(function () {
     Route::get('/admin-setup/{token}', [AdminSetupController::class, 'create'])

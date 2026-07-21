@@ -41,8 +41,8 @@ class PasswordResetTest extends TestCase
         Bus::assertDispatched(SendPasswordResetSms::class, function (SendPasswordResetSms $job) use ($user) {
             return $job->phone === '0241234567'
                 && $job->firstName === 'Ama'
-                && str_contains($job->resetUrl, '/reset-password/')
-                && str_contains($job->resetUrl, 'email='.urlencode($user->email));
+                && str_contains($job->resetUrl, '/r/')
+                && ! str_contains($job->resetUrl, '/reset-password/');
         });
     }
 

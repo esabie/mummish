@@ -4,14 +4,15 @@ namespace App\Filament\Pages\Auth;
 
 use App\Jobs\SendPasswordResetSms;
 use App\Models\User;
+use App\Services\ShortLinkService;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Facades\Filament;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Notifications\Notification;
 use Filament\Pages\Auth\PasswordReset\RequestPasswordReset as BaseRequestPasswordReset;
 use Illuminate\Auth\Events\PasswordResetLinkSent;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Facades\Password;
 
 class RequestPasswordReset extends BaseRequestPasswordReset
 {
@@ -53,9 +54,11 @@ class RequestPasswordReset extends BaseRequestPasswordReset
 
         $token = Password::broker(Filament::getAuthPasswordBroker())->createToken($user);
         $resetUrl = Filament::getResetPasswordUrl($token, $user);
+        $ttlMinutes = (int) config('auth.passwords.users.expire', 60);
+        $shortUrl = app(ShortLinkService::class)->create($resetUrl, $ttlMinutes);
         $firstName = trim(strtok((string) $user->name, ' ') ?: 'there');
 
-        SendPasswordResetSms::dispatch($phone, $firstName, $resetUrl);
+        SendPasswordResetSms::dispatch($phone, $firstName, $shortUrl);
 
         if (class_exists(PasswordResetLinkSent::class)) {
             event(new PasswordResetLinkSent($user));

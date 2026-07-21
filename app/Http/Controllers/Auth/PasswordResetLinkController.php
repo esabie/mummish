@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendPasswordResetSms;
 use App\Models\User;
+use App\Services\ShortLinkService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -59,13 +60,15 @@ class PasswordResetLinkController extends Controller
 
         $token = Password::broker()->createToken($user);
         $resetUrl = url('/reset-password/'.$token.'?email='.urlencode($user->getEmailForPasswordReset()));
+        $ttlMinutes = (int) config('auth.passwords.users.expire', 60);
+        $shortUrl = app(ShortLinkService::class)->create($resetUrl, $ttlMinutes);
 
         $firstName = trim((string) ($user->vendorApplication?->first_name ?? ''));
         if ($firstName === '') {
             $firstName = trim(strtok((string) $user->name, ' ') ?: 'there');
         }
 
-        SendPasswordResetSms::dispatch($phone, $firstName, $resetUrl);
+        SendPasswordResetSms::dispatch($phone, $firstName, $shortUrl);
 
         return back()->with('status', 'We have sent your password reset link via SMS.');
     }
