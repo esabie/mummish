@@ -21,7 +21,7 @@
             $siteDescription = trim((string) config('seo.description', ''));
             $siteDescription = $siteDescription !== '' ? $siteDescription : $defaultSeoDescription;
             $seoTaglines = array_values(array_filter(config('seo.taglines', [])));
-            $ogImage = $siteUrl.'/images/logo.png';
+            $ogImage = $siteUrl.'/icon-512x512.png';
             $websiteJsonLd = [
                 '@context' => 'https://schema.org',
                 '@type' => 'WebSite',
@@ -37,6 +37,14 @@
             if ($seoTaglines !== []) {
                 $websiteJsonLd['alternateName'] = $seoTaglines;
             }
+            $organizationJsonLd = [
+                '@context' => 'https://schema.org',
+                '@type' => 'Organization',
+                'name' => $siteName,
+                'url' => $siteUrl.'/',
+                'logo' => $siteUrl.'/icon-512x512.png',
+                'description' => $siteDescription,
+            ];
         @endphp
 
         {{-- Server-rendered defaults so crawlers see Mummish copy without waiting on Inertia JS --}}
@@ -53,14 +61,16 @@
         <meta name="twitter:description" content="{{ $siteDescription }}">
         <meta name="twitter:image" content="{{ $ogImage }}">
         <script type="application/ld+json">{!! json_encode($websiteJsonLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}</script>
+        <script type="application/ld+json">{!! json_encode($organizationJsonLd, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) !!}</script>
 
         <title inertia>{{ $seoTitle }}</title>
 
-        {{-- Square icons for Google Search favicon (wide wordmark alone is rejected) --}}
-        <link rel="icon" href="/favicon.ico?v=4" sizes="any">
-        <link rel="icon" href="/favicon-48x48.png?v=4" type="image/png" sizes="48x48">
-        <link rel="icon" href="/favicon-192x192.png?v=4" type="image/png" sizes="192x192">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=4">
+        {{-- Stable absolute favicon URLs for Google Search (square, ≥48px) --}}
+        <link rel="icon" href="{{ $siteUrl }}/favicon.ico" sizes="any">
+        <link rel="icon" href="{{ $siteUrl }}/favicon-48x48.png" type="image/png" sizes="48x48">
+        <link rel="icon" href="{{ $siteUrl }}/favicon-96x96.png" type="image/png" sizes="96x96">
+        <link rel="icon" href="{{ $siteUrl }}/favicon-192x192.png" type="image/png" sizes="192x192">
+        <link rel="apple-touch-icon" href="{{ $siteUrl }}/apple-touch-icon.png">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
