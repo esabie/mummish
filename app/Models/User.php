@@ -93,19 +93,19 @@ class User extends Authenticatable implements FilamentUser
 
     /**
      * Phone number used when sending a password-reset SMS.
-     * Admins: users.phone only (collected at registration — no shared fallback).
+     * Admins & customers: users.phone.
      * Vendors: vendor application phone.
      */
     public function passwordResetPhone(): ?string
     {
-        if ($this->isAdmin()) {
-            $phone = trim((string) ($this->phone ?? ''));
+        if ($this->isVendor()) {
+            $vendorPhone = trim((string) ($this->vendorApplication?->phone ?? ''));
 
-            return $phone !== '' ? $phone : null;
+            return $vendorPhone !== '' ? $vendorPhone : null;
         }
 
-        $vendorPhone = trim((string) ($this->vendorApplication?->phone ?? ''));
+        $phone = trim((string) ($this->phone ?? ''));
 
-        return $vendorPhone !== '' ? $vendorPhone : null;
+        return $phone !== '' ? $phone : null;
     }
 }

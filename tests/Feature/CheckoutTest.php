@@ -7,6 +7,7 @@ use App\Enums\PaymentStatus;
 use App\Enums\ProductStatus;
 use App\Enums\UserRole;
 use App\Enums\VendorApplicationStatus;
+use App\Jobs\SendCustomerAccountSetupSms;
 use App\Jobs\SendOrderPaidSms;
 use App\Jobs\SendVendorNewOrderSms;
 use App\Models\Order;
@@ -318,6 +319,83 @@ class CheckoutTest extends TestCase
             'discount_cents' => 250,
             'subtotal_cents' => 2500,
         ]);
+    }
+
+    public function test_guest_checkout_auto_creates_customer_account_and_logs_in(): void
+    {
+        Bus::fake();
+
+        Http::fake([
+            'api.paystack.co/transaction/initialize' => Http::response([
+                'status' => true,
+                'data' => [
+                    'authorization_url' => 'https://checkout.paystack.com/test-session',
+                    'access_code' => 'ACCESS123',
+                    'reference' => 'LH-TESTREF',
+                ],
+            ], 200),
+        ]);
+
+        $product = $this->createShopProduct(stock: 5, priceCents: 2500);
+
+        $response = $this->post(route('checkout.store'), $this->validCheckoutPayload($product), [
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => '',
+        ]);
+
+        $response->assertStatus(409);
+        $this->assertAuthenticated();
+
+        $user = User::query()->where('email', 'buyer@example.com')->first();
+        $this->assertNotNull($user);
+        $this->assertSame(UserRole::Customer, $user->role);
+        $this->assertSame('0241234567', $user->phone);
+
+        $order = Order::query()->first();
+        $this->assertSame($user->id, $order->user_id);
+
+        Bus::assertDispatched(SendCustomerAccountSetupSms::class, function (SendCustomerAccountSetupSms $job) {
+            return $job->phone === '0241234567'
+                && $job->firstName === 'Ada';
+        });
+    }
+
+    public function test_guest_checkout_links_existing_customer_without_logging_in(): void
+    {
+        Bus::fake();
+
+        Http::fake([
+            'api.paystack.co/transaction/initialize' => Http::response([
+                'status' => true,
+                'data' => [
+                    'authorization_url' => 'https://checkout.paystack.com/test-session',
+                    'access_code' => 'ACCESS123',
+                    'reference' => 'LH-TESTREF',
+                ],
+            ], 200),
+        ]);
+
+        $existing = User::factory()->create([
+            'email' => 'buyer@example.com',
+            'role' => UserRole::Customer,
+            'phone' => '0200000000',
+        ]);
+
+        $product = $this->createShopProduct(stock: 5, priceCents: 2500);
+
+        $response = $this->post(route('checkout.store'), $this->validCheckoutPayload($product), [
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => '',
+        ]);
+
+        $response->assertStatus(409);
+        $this->assertGuest();
+        $this->assertDatabaseCount('users', 2); // vendor + existing customer
+
+        $order = Order::query()->first();
+        $this->assertSame($existing->id, $order->user_id);
+
+        Bus::assertNotDispatched(SendCustomerAccountSetupSms::class);
     }
 
     /**

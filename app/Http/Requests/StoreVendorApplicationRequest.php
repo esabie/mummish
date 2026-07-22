@@ -2,9 +2,8 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\UserRole;
-use App\Models\User;
 use App\Models\VendorReferrer;
+use App\Support\EmailRoleConflict;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -82,19 +81,11 @@ class StoreVendorApplicationRequest extends FormRequest
             'email',
             'max:255',
             function (string $attribute, mixed $value, \Closure $fail): void {
-                $existing = User::query()->where('email', $value)->first();
+                $conflict = EmailRoleConflict::vendorRegistrationMessage((string) $value);
 
-                if (! $existing) {
-                    return;
+                if ($conflict !== null) {
+                    $fail($conflict);
                 }
-
-                if ($existing->role === UserRole::Admin) {
-                    $fail('This email belongs to an admin account, which cannot become a vendor. Use a different email to sell.');
-
-                    return;
-                }
-
-                $fail('An account with this email already exists. Please log in and apply again.');
             },
         ];
         $rules['password'] = ['required', 'confirmed', Password::defaults()];

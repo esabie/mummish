@@ -13,6 +13,7 @@ use App\Support\LogSanitizer;
 use App\Support\PublicStorageUrl;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -77,19 +78,31 @@ class CheckoutController extends Controller
         ]);
 
         try {
+            $user = $request->user();
+            $shipping = $request->safe()->only([
+                'customer_name',
+                'customer_email',
+                'customer_phone',
+                'shipping_address_line1',
+                'shipping_address_line2',
+                'shipping_city',
+                'shipping_region',
+                'shipping_notes',
+            ]);
+
+            if ($user === null) {
+                [$user, $createdAccount] = $checkout->resolveGuestCustomer($shipping);
+
+                if ($createdAccount) {
+                    Auth::login($user);
+                    $request->session()->regenerate();
+                }
+            }
+
             $order = $checkout->createPendingOrder(
                 items: $validated['items'],
-                shipping: $request->safe()->only([
-                    'customer_name',
-                    'customer_email',
-                    'customer_phone',
-                    'shipping_address_line1',
-                    'shipping_address_line2',
-                    'shipping_city',
-                    'shipping_region',
-                    'shipping_notes',
-                ]),
-                user: $request->user(),
+                shipping: $shipping,
+                user: $user,
                 promoCode: $validated['promo_code'] ?? null,
             );
 

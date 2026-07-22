@@ -59,7 +59,7 @@ const toc = [
 ];
 
 export default function Privacy() {
-    const { auth, canLogin, canRegister } = usePage().props;
+    const { auth, canLogin, canRegister, supportEmail } = usePage().props;
     const { openCart, count: cartCount } = useCart();
 
     return (
@@ -206,10 +206,10 @@ export default function Privacy() {
                                     or ask for the deletion of your account information at any time by contacting our
                                     Data Protection Officer at{' '}
                                     <a
-                                        href="mailto:privacy@littlehuman.com"
+                                        href={`mailto:${supportEmail}`}
                                         className="font-semibold text-[#5c4d3d] underline-offset-2 hover:underline"
                                     >
-                                        privacy@littlehuman.com
+                                        {supportEmail}
                                     </a>
                                     .
                                 </p>
@@ -332,10 +332,10 @@ export default function Privacy() {
                                     <p>
                                         Send all notices to{' '}
                                         <a
-                                            href="mailto:support@littlehuman.com"
+                                            href={`mailto:${supportEmail}`}
                                             className="font-semibold text-[#5c4d3d] underline-offset-2 hover:underline"
                                         >
-                                            support@littlehuman.com
+                                            {supportEmail}
                                         </a>
                                         . Upon validation, we will promptly remove the offending material and warn or
                                         suspend the non-compliant vendor account.

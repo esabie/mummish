@@ -3,11 +3,14 @@
 namespace App\Filament\Resources\AdminUserResource\Pages;
 
 use App\Enums\UserRole;
+use App\Filament\Concerns\HasUsersHubBreadcrumbs;
 use App\Filament\Resources\AdminUserResource;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateAdminUser extends CreateRecord
 {
+    use HasUsersHubBreadcrumbs;
+
     protected static string $resource = AdminUserResource::class;
 
     /**

@@ -15,7 +15,7 @@ class VendorEarningsService
 {
     public function commissionBps(): int
     {
-        return max(0, (int) config('marketplace.vendor_commission_bps', 2000));
+        return max(0, (int) config('marketplace.vendor_commission_bps', 1000));
     }
 
     public function commissionPercent(): int

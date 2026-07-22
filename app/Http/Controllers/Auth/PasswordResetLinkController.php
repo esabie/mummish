@@ -50,11 +50,11 @@ class PasswordResetLinkController extends Controller
             ]);
         }
 
-        $phone = trim((string) ($user->vendorApplication?->phone ?? ''));
+        $phone = $user->passwordResetPhone();
 
-        if ($phone === '') {
+        if ($phone === null) {
             throw ValidationException::withMessages([
-                'email' => ['We could not send a password reset SMS for this account. Please ensure your seller profile has a phone number, or contact support.'],
+                'email' => ['We could not send a password reset SMS for this account. Please ensure a phone number is on file, or contact support.'],
             ]);
         }
 

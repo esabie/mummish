@@ -83,7 +83,7 @@ class VendorPortalTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('Vendor/Dashboard')
-                ->where('earnings.commission_percent', 20)
+                ->where('earnings.commission_percent', 10)
                 ->where('earnings.totals.gross_cents', 0)
                 ->has('earnings.recent_sales', 0)
             );

@@ -1,46 +1,27 @@
 ---
-description: UI and product rules when an admin tries to become a vendor (one role per email)
-globs: resources/js/Pages/Vendor/**/*.{jsx,tsx},app/Http/Controllers/VendorOnboardingController.php,app/Http/Requests/StoreVendorApplicationRequest.php
+description: One email = one role (admin, vendor, or customer) — signup conflict messaging
+globs: resources/js/Pages/Auth/Register.jsx,resources/js/Pages/Vendor/**/*.{jsx,tsx},app/Http/Controllers/Auth/RegisteredUserController.php,app/Http/Controllers/VendorOnboardingController.php,app/Http/Requests/StoreVendorApplicationRequest.php,app/Support/EmailRoleConflict.php
 alwaysApply: false
 ---
 
-# Admin vs vendor role conflict
+# One email, one role
 
-Users have a single `users.role` (`admin` | `vendor` | `customer`). An email cannot be both admin and vendor.
+Users have a single `users.role` (`admin` | `vendor` | `customer`). An email cannot be both vendor and customer.
 
 ## Product policy
 
+- Customer `/register` and guest `/sell` must reject emails that already belong to another role.
+- Use `App\Support\EmailRoleConflict` for clear, role-specific validation messages.
 - Never demote an admin to vendor via `/sell`.
-- Block authenticated admins in `VendorOnboardingController::store` before creating a `VendorApplication`.
-- Guests using an admin email get a specific validation error (not “log in and apply again”).
-- Pass `isAdminAccount` from `create()` so the SignUp page can hide the form.
+- Authenticated customers may apply on `/sell` (role becomes vendor) — that is the supported upgrade path.
+- Vendors who want to shop should use a **different email** for a customer account (or shop as guest).
 
-## UI pattern on `Vendor/SignUp`
+## Messages
 
-When `isAdminAccount` is true (same pattern as `existingApplication`):
+```php
+// Vendor email on /register
+'This email already belongs to a vendor account. Sign in with that account, or use a different email to register as a customer.'
 
-- Hide the application form.
-- Show an amber status banner explaining one role per email.
-- Tell them to sign out and apply with a **different email**.
-- Link to `/admin` for the admin panel.
-
-```jsx
-// ✅ GOOD — block and explain
-{isAdminAccount ? (
-  <div role="status" className="…amber banner…">
-    Admin accounts can’t become vendors. Sign out and apply with a different email.
-    <a href="/admin">Open admin panel</a>
-  </div>
-) : existingApplication ? (
-  /* existing application banner */
-) : (
-  <form>…</form>
-)}
-
-// ❌ BAD — silently set role to vendor on an admin user
-user.update({ role: UserRole::Vendor });
+// Customer email on guest /sell
+'This email already belongs to a customer account. Sign in with that account to apply as a vendor, or use a different email.'
 ```
-
-## Resolving a stuck local admin who wants to sell
-
-Do not convert the admin user. Create a separate vendor account with another email (or restore `role = admin` in DB/tinker if they were already demoted, then apply with a new email).

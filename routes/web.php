@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\AdminSetupController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NewsletterCustomerController;
 use App\Http\Controllers\OrderTrackingController;
 use App\Http\Controllers\PaystackWebhookController;
 use App\Http\Controllers\ProfileController;
@@ -18,7 +20,6 @@ use App\Http\Controllers\Vendor\VendorPlaceholderController;
 use App\Http\Controllers\Vendor\VendorProductController;
 use App\Http\Controllers\Vendor\VendorProductImageController;
 use App\Http\Controllers\VendorOnboardingController;
-use App\Services\VendorListingLimit;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -53,6 +54,10 @@ Route::get('/about', function () {
     return Inertia::render('About');
 })->name('about');
 
+Route::get('/shipping', function () {
+    return Inertia::render('Shipping');
+})->name('shipping');
+
 Route::get('/terms', function () {
     return Inertia::render('Terms');
 })->name('terms');
@@ -64,6 +69,18 @@ Route::get('/billing', function () {
 Route::get('/privacy', function () {
     return Inertia::render('Privacy');
 })->name('privacy');
+
+Route::get('/faq', function () {
+    return Inertia::render('Faq');
+})->name('faq');
+
+Route::get('/contact', function () {
+    return Inertia::render('Contact');
+})->name('contact');
+
+Route::post('/newsletter', [NewsletterCustomerController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('newsletter.store');
 
 Route::get('/sell', [VendorOnboardingController::class, 'create'])->name('vendor.signup');
 Route::post('/sell', [VendorOnboardingController::class, 'store'])->name('vendor.signup.store');
@@ -101,31 +118,9 @@ Route::post('/orders/{order}/track/received', [OrderTrackingController::class, '
 
 Route::post('/webhooks/paystack', PaystackWebhookController::class)->name('webhooks.paystack');
 
-Route::get('/dashboard', function () {
-    $user = auth()->user();
-
-    if ($user?->isVendor()) {
-        return redirect()->route('vendor.inventory.index');
-    }
-
-    $application = $user?->loadMissing('vendorApplication')->vendorApplication;
-    $listingLimit = app(VendorListingLimit::class);
-
-    return Inertia::render('Dashboard', [
-        'vendorApplication' => $application ? [
-            'shop_name' => $application->shop_name,
-            'status' => $application->status->value,
-            'status_label' => $application->status->label(),
-            'rejection_reason' => $application->rejection_reason,
-        ] : null,
-        'listingLimit' => $user ? [
-            'max' => $listingLimit->maxListingsFor($user),
-            'current' => $listingLimit->currentListingCount($user),
-            'remaining' => $listingLimit->remainingListings($user),
-            'can_add' => $listingLimit->canAddListing($user),
-        ] : null,
-    ]);
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', DashboardController::class)
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware(['auth', 'verified', 'vendor'])->prefix('vendor')->name('vendor.')->group(function () {
     Route::get('/', [VendorDashboardController::class, 'index'])->name('dashboard');

@@ -26,6 +26,8 @@ class AdminUserResource extends Resource
 
     protected static ?string $pluralModelLabel = 'admin users';
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?int $navigationSort = 10;
 
     public static function getEloquentQuery(): Builder

@@ -53,8 +53,8 @@ return [
     // Days a sold-out product stays on the shop before being hidden.
     'sold_out_hidden_after_days' => (int) env('SOLD_OUT_HIDDEN_AFTER_DAYS', 10),
 
-    // Mummish commission on vendor sales (basis points: 2000 = 20%).
-    'vendor_commission_bps' => (int) env('VENDOR_COMMISSION_BPS', 2000),
+    // Mummish commission on vendor sales (basis points: 1000 = 10%).
+    'vendor_commission_bps' => (int) env('VENDOR_COMMISSION_BPS', 1000),
 
     // Fallback when a region/city has no configured rate.
     'checkout_shipping_cents' => (int) env('CHECKOUT_SHIPPING_CENTS', 0),
@@ -344,6 +344,14 @@ return [
         'plastic_free' => 'Plastic-free',
         'fair_trade' => 'Fair Trade Certified',
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Public contact
+    |--------------------------------------------------------------------------
+    */
+    'support_email' => env('SUPPORT_EMAIL', 'info@themummish.com'),
+    'support_phone' => env('SUPPORT_PHONE', '0208062428'),
 
     /*
     |--------------------------------------------------------------------------

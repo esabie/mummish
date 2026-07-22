@@ -51,7 +51,7 @@ const paymentMethods = [
 
 const toc = [
     { id: 'payment-methods', label: 'Payment methods' },
-    { id: 'commission', label: 'The 20% commission breakdown' },
+    { id: 'commission', label: 'The 10% commission breakdown' },
     { id: 'escrow', label: 'Escrow and payouts' },
 ];
 
@@ -170,7 +170,7 @@ export default function Billing() {
                                 </ul>
                             </Section>
 
-                            <Section id="commission" number="2" title="The 20% Commission Breakdown">
+                            <Section id="commission" number="2" title="The 10% Commission Breakdown">
                                 <p>
                                     The service charge covers the administrative and operational costs of running the
                                     marketplace securely.
@@ -178,8 +178,8 @@ export default function Billing() {
                                 <div className="rounded-xl border border-[#5c4d3d]/20 bg-[#5c4d3d]/5 p-5">
                                     <p className="font-semibold text-stone-900">Example</p>
                                     <p className="mt-2">
-                                        If a vendor sells a Fairly New stroller for GHS 500, Mummish&apos;s 20%
-                                        commission equals GHS 100. The remaining balance of GHS 400 is released to the
+                                        If a vendor sells a Fairly New stroller for GHS 500, Mummish&apos;s 10%
+                                        commission equals GHS 50. The remaining balance of GHS 450 is released to the
                                         seller&apos;s wallet.
                                     </p>
                                 </div>
@@ -197,7 +197,7 @@ export default function Billing() {
                                     </li>
                                     <li>
                                         Once delivery is confirmed by the buyer or tracked as successfully delivered,
-                                        the funds (minus our 20% service fee) are released to the vendor&apos;s wallet.
+                                        the funds (minus our 10% service fee) are released to the vendor&apos;s wallet.
                                     </li>
                                     <li>
                                         Vendors can withdraw their wallet balances directly to their linked Mobile Money

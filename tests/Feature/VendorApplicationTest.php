@@ -352,10 +352,31 @@ class VendorApplicationTest extends TestCase
             'email' => 'admin@example.com',
         ]));
 
-        $response->assertSessionHasErrors('email');
+        $response->assertSessionHasErrors([
+            'email' => 'This email belongs to an admin account, which cannot become a vendor. Use a different email to sell.',
+        ]);
         $this->assertDatabaseCount('vendor_applications', 0);
         $this->assertDatabaseCount('users', 1);
         $this->assertSame(UserRole::Admin, User::first()->role);
+    }
+
+    public function test_guest_cannot_apply_with_existing_customer_email_without_logging_in(): void
+    {
+        User::factory()->create([
+            'email' => 'buyer@example.com',
+            'role' => UserRole::Customer,
+        ]);
+
+        $response = $this->post(route('vendor.signup.store'), $this->validPayload([
+            'email' => 'buyer@example.com',
+        ]));
+
+        $response->assertSessionHasErrors([
+            'email' => 'This email already belongs to a customer account. Sign in with that account to apply as a vendor, or use a different email.',
+        ]);
+        $this->assertDatabaseCount('vendor_applications', 0);
+        $this->assertDatabaseCount('users', 1);
+        $this->assertSame(UserRole::Customer, User::first()->role);
     }
 
     public function test_vendor_signup_page_flags_admin_account(): void

@@ -1,8 +1,31 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, useForm, usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
+import InputError from '@/Components/InputError';
 import LogoMark from '@/Components/LogoMark';
 
 export default function SiteFooter() {
-    const { auth, canLogin } = usePage().props;
+    const { auth, canLogin, flash, supportEmail } = usePage().props;
+    const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
+        name: '',
+        phone: '',
+    });
+    const [joined, setJoined] = useState(false);
+
+    useEffect(() => {
+        if (flash?.newsletterJoined) {
+            setJoined(true);
+            reset();
+            clearErrors();
+        }
+    }, [flash?.newsletterJoined]);
+
+    const submit = (e) => {
+        e.preventDefault();
+        setJoined(false);
+        post(route('newsletter.store'), {
+            preserveScroll: true,
+        });
+    };
 
     return (
         <footer>
@@ -28,9 +51,9 @@ export default function SiteFooter() {
                                 </Link>
                             </li>
                             <li>
-                                <a href="#" className="hover:text-market">
-                                    Shipping &amp; returns
-                                </a>
+                                <Link href={route('shipping')} className="hover:text-market">
+                                    Shipping &amp; delivery
+                                </Link>
                             </li>
                             <li>
                                 <Link href={route('orders.track')} className="hover:text-market">
@@ -38,18 +61,18 @@ export default function SiteFooter() {
                                 </Link>
                             </li>
                             <li>
-                                <a href="#" className="hover:text-market">
+                                <Link href={route('contact')} className="hover:text-market">
                                     Contact us
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a href="#" className="hover:text-market">
+                                <Link href={route('faq')} className="hover:text-market">
                                     FAQ
-                                </a>
+                                </Link>
                             </li>
                         </ul>
                     </div>
-                    
+
                     {/* <div>
                         <h4 className="text-sm font-bold text-neutral-900">Shop</h4>
                         <ul className="mt-3 space-y-2 text-sm text-neutral-600">
@@ -75,23 +98,52 @@ export default function SiteFooter() {
                             </li>
                         </ul>
                     </div> */}
-                    
+
                     <div>
                         <h4 className="text-sm font-bold text-neutral-900">Get the good stuff</h4>
-                        <p className="mt-3 text-sm text-neutral-600">Drop your email for launches and seller tips.</p>
-                        <form className="mt-3 flex gap-2" onSubmit={(e) => e.preventDefault()}>
-                            <input
-                                type="email"
-                                placeholder="Email"
-                                className="min-w-0 flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-market focus:outline-none focus:ring-1 focus:ring-market"
-                            />
-                            <button
-                                type="submit"
-                                className="rounded-lg bg-market px-4 py-2 text-sm font-semibold text-white hover:bg-market-hover"
-                            >
-                                Join
-                            </button>
-                        </form>
+                        <p className="mt-3 text-sm text-neutral-600">
+                            Share your number for launches, deals, and seller tips.
+                        </p>
+                        {joined ? (
+                            <p className="mt-3 text-sm font-medium text-emerald-700" role="status">
+                                You&apos;re on the list — thanks for joining.
+                            </p>
+                        ) : (
+                            <form className="mt-3 space-y-2" onSubmit={submit}>
+                                <div>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
+                                        placeholder="Name (optional)"
+                                        autoComplete="name"
+                                        className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-market focus:outline-none focus:ring-1 focus:ring-market"
+                                    />
+                                    <InputError message={errors.name} className="mt-1" />
+                                </div>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="tel"
+                                        name="phone"
+                                        value={data.phone}
+                                        onChange={(e) => setData('phone', e.target.value)}
+                                        placeholder="Phone number"
+                                        autoComplete="tel"
+                                        required
+                                        className="min-w-0 flex-1 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-market focus:outline-none focus:ring-1 focus:ring-market"
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={processing}
+                                        className="rounded-lg bg-market px-4 py-2 text-sm font-semibold text-white hover:bg-market-hover disabled:opacity-60"
+                                    >
+                                        {processing ? '…' : 'Join'}
+                                    </button>
+                                </div>
+                                <InputError message={errors.phone} />
+                            </form>
+                        )}
                     </div>
                 </div>
             </div>

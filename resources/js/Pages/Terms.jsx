@@ -195,10 +195,10 @@ export default function Terms() {
                                     vendors (parents/sellers) with buyers.
                                 </p>
                                 <div className="rounded-xl border border-[#5c4d3d]/20 bg-[#5c4d3d]/5 p-5">
-                                    <p className="font-semibold text-stone-900">The 20% service charge</p>
+                                    <p className="font-semibold text-stone-900">The 10% service charge</p>
                                     <p className="mt-2">
                                         For providing the platform, matching audience, security escrow, and customer
-                                        support, Mummish applies a flat 20% service fee on the final sale price of
+                                        support, Mummish applies a flat 10% service fee on the final sale price of
                                         every successfully completed transaction. This fee is automatically deducted
                                         from the payout balance transferred to the vendor.
                                     </p>

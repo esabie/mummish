@@ -68,7 +68,7 @@ const conditionTypes = [
     {
         title: 'New',
         description:
-            'Unopened gifts or items your little boss never got to wear and still in original packaging or with tags.',
+            'Unopened gifts or items your little boss never got to use and still in original packaging or with tags.',
         accent: 'bg-emerald-50 text-emerald-800 ring-emerald-200/80',
         dot: 'bg-emerald-500',
     },

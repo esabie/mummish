@@ -153,20 +153,7 @@ function OrderHistory({ orders }) {
 
 function VendorShopSummary({ shop, isVendor }) {
     if (!shop && !isVendor) {
-        return (
-            <section className="rounded-xl border border-stone-200 bg-gradient-to-br from-[#f7f3ee] via-white to-white p-5 shadow-sm sm:p-6">
-                <h2 className="text-lg font-semibold text-stone-900">Sell on Mummish</h2>
-                <p className="mt-1 text-sm text-stone-600">
-                    Turn pre-loved kids&apos; essentials into income. Set up a shop and reach parents across Ghana.
-                </p>
-                <Link
-                    href={route('vendor.signup')}
-                    className="mt-4 inline-flex rounded-full bg-[#5c4d3d] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4a3e32]"
-                >
-                    Apply to sell
-                </Link>
-            </section>
-        );
+        return null;
     }
 
     const initial = (shop?.shop_name || 'S').trim().charAt(0).toUpperCase();

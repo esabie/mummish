@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import Breadcrumbs from '@/Components/Breadcrumbs';
 import LogoMark from '@/Components/LogoMark';
@@ -147,6 +147,7 @@ export default function ShopIndex({
     filter_options = { categories: [], conditions: [], makers: [], price_ceiling: 200 },
     applied_filters = { category: null, price_max: null, eco: false, maker: null, condition: null, sort: 'newest' },
 }) {
+    const { flash } = usePage().props;
     const { openCart, addItem, getRemainingStock, count: cartCount } = useCart();
     const [searchInput, setSearchInput] = useState(search_query);
     const [filtersOpen, setFiltersOpen] = useState(false);
@@ -397,6 +398,14 @@ export default function ShopIndex({
                         </div>
                     </div>
                 </header>
+
+                {flash?.error ? (
+                    <div className="border-b border-red-200 bg-red-50" role="alert">
+                        <p className="mx-auto max-w-7xl px-4 py-3 text-sm font-medium text-red-900 sm:px-6 lg:px-8">
+                            {flash.error}
+                        </p>
+                    </div>
+                ) : null}
 
                 <div className="border-b border-stone-200/90 bg-white/90">
                     <div className="mx-auto max-w-7xl px-4 py-2.5 sm:px-6 lg:px-8">

@@ -4,17 +4,23 @@ namespace App\Services;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Enums\UserRole;
+use App\Jobs\SendCustomerAccountSetupSms;
 use App\Jobs\SendOrderPaidSms;
 use App\Jobs\SendVendorNewOrderSms;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use App\Notifications\VendorNewOrderNotification;
+use App\Services\ShortLinkService;
 use App\Support\LogSanitizer;
 use App\Support\PublicStorageUrl;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
@@ -308,6 +314,53 @@ class CheckoutService
         });
     }
 
+    /**
+     * Link guest checkout to an existing account, or create a customer account.
+     *
+     * @param  array<string, mixed>  $shipping
+     * @return array{0: User, 1: bool} [user, created]
+     */
+    public function resolveGuestCustomer(array $shipping): array
+    {
+        $email = strtolower(trim((string) ($shipping['customer_email'] ?? '')));
+        $name = trim((string) ($shipping['customer_name'] ?? ''));
+        $phone = trim((string) ($shipping['customer_phone'] ?? ''));
+
+        $existing = User::query()->where('email', $email)->first();
+
+        if ($existing) {
+            if ($existing->isCustomer() && $phone !== '' && trim((string) ($existing->phone ?? '')) === '') {
+                $existing->update(['phone' => $phone]);
+            }
+
+            Log::info('CheckoutService: linked guest checkout to existing user.', [
+                'user_id' => $existing->id,
+                'role' => $existing->role?->value,
+            ]);
+
+            return [$existing, false];
+        }
+
+        $user = User::create([
+            'name' => $name !== '' ? $name : 'Customer',
+            'email' => $email,
+            'phone' => $phone !== '' ? $phone : null,
+            'password' => Hash::make(Str::random(40)),
+            'role' => UserRole::Customer,
+        ]);
+
+        event(new Registered($user));
+
+        $this->sendCustomerAccountSetupSms($user);
+
+        Log::info('CheckoutService: auto-created customer from guest checkout.', [
+            'user_id' => $user->id,
+            'email_masked' => LogSanitizer::maskEmail($user->email),
+        ]);
+
+        return [$user, true];
+    }
+
     public function findOrderByReference(string $reference): ?Order
     {
         $order = Order::query()
@@ -321,6 +374,27 @@ class CheckoutService
         ]);
 
         return $order;
+    }
+
+    private function sendCustomerAccountSetupSms(User $user): void
+    {
+        $phone = $user->passwordResetPhone();
+
+        if ($phone === null) {
+            Log::warning('CheckoutService: skipped account setup SMS — no phone on customer.', [
+                'user_id' => $user->id,
+            ]);
+
+            return;
+        }
+
+        $token = Password::broker()->createToken($user);
+        $resetUrl = url('/reset-password/'.$token.'?email='.urlencode($user->getEmailForPasswordReset()));
+        $ttlMinutes = (int) config('auth.passwords.users.expire', 60);
+        $shortUrl = app(ShortLinkService::class)->create($resetUrl, $ttlMinutes);
+        $firstName = trim(strtok((string) $user->name, ' ') ?: 'there');
+
+        SendCustomerAccountSetupSms::dispatch($phone, $firstName, $shortUrl);
     }
 
     /**

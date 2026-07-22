@@ -7,7 +7,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { Head, Link, useForm } from '@inertiajs/react';
 
-export default function Login({ status, canResetPassword }) {
+export default function Login({ status, canResetPassword, redirect: redirectTo = null }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
@@ -25,6 +25,10 @@ export default function Login({ status, canResetPassword }) {
 
         post(route('login'));
     };
+
+    const registerHref = redirectTo
+        ? route('register', { redirect: redirectTo })
+        : route('register');
 
     return (
         <GuestLayout
@@ -96,6 +100,16 @@ export default function Login({ status, canResetPassword }) {
                         Log in
                     </PrimaryButton>
                 </div>
+
+                <p className="mt-6 text-center text-sm text-gray-600">
+                    New here?{' '}
+                    <Link
+                        href={registerHref}
+                        className="font-semibold text-gray-900 underline hover:text-gray-700"
+                    >
+                        Create an account
+                    </Link>
+                </p>
             </form>
         </GuestLayout>
     );

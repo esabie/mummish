@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Support\AppLog;
 use App\Support\LogSanitizer;
+use App\Support\SafeRedirect;
 use App\Support\UserHome;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,11 +20,14 @@ class AuthenticatedSessionController extends Controller
     /**
      * Display the login view.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
+        SafeRedirect::remember($request->query('redirect'));
+
         return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
+            'redirect' => SafeRedirect::sanitize($request->query('redirect')),
         ]);
     }
 

@@ -243,6 +243,34 @@ export default function CheckoutIndex({
                     ) : (
                         <form onSubmit={submit} className="grid gap-8 lg:grid-cols-[1fr_380px]">
                             <div className="space-y-6">
+                                {!customer ? (
+                                    <div className="flex flex-col gap-4 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-6">
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-bold uppercase tracking-wide text-stone-900">
+                                                You are checking out as a guest
+                                            </p>
+                                            <p className="mt-1.5 text-xs font-medium uppercase tracking-wide text-stone-500">
+                                                Sign in to access your order history, or create an account for faster
+                                                checkout next time.
+                                            </p>
+                                        </div>
+                                        <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+                                            <Link
+                                                href={route('login', { redirect: '/checkout' })}
+                                                className="inline-flex items-center justify-center rounded-lg border-2 border-stone-900 bg-white px-4 py-2.5 text-center text-xs font-bold uppercase tracking-widest text-stone-900 transition hover:bg-stone-50"
+                                            >
+                                                Sign in for faster checkout
+                                            </Link>
+                                            <Link
+                                                href={route('register', { redirect: '/checkout' })}
+                                                className="text-center text-xs font-semibold text-market hover:underline"
+                                            >
+                                                Create an account
+                                            </Link>
+                                        </div>
+                                    </div>
+                                ) : null}
+
                                 <section className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
                                     <h2 className="text-lg font-bold text-stone-900">Contact</h2>
                                     <div className="mt-5 grid gap-4 sm:grid-cols-2">
