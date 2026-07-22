@@ -51,7 +51,7 @@ export default function SiteFooter() {
                                 </Link>
                             </li>
                             <li>
-                                <Link href={route('shipping')} className="hover:text-market">
+                                <Link href="/shipping" className="hover:text-market">
                                     Shipping &amp; delivery
                                 </Link>
                             </li>
@@ -61,12 +61,12 @@ export default function SiteFooter() {
                                 </Link>
                             </li>
                             <li>
-                                <Link href={route('contact')} className="hover:text-market">
+                                <Link href="/contact" className="hover:text-market">
                                     Contact us
                                 </Link>
                             </li>
                             <li>
-                                <Link href={route('faq')} className="hover:text-market">
+                                <Link href="/faq" className="hover:text-market">
                                     FAQ
                                 </Link>
                             </li>

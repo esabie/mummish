@@ -51,7 +51,7 @@ export default function Contact() {
             <SeoHead
                 title="Contact Us"
                 description="Need help with Mummish? Contact our support team by email, WhatsApp, or phone and we will help you quickly."
-                url={route('contact')}
+                url="/contact"
                 image="/images/logo.png"
             />
 

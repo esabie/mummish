@@ -143,7 +143,7 @@ export default function Shipping() {
             <SeoHead
                 title="Shipping & Delivery"
                 description="Shipping on Mummish is available across Ghana. See Accra, metro, and nationwide delivery times, zone-based pricing, and how to track your order."
-                url={route('shipping')}
+                url="/shipping"
                 image="/images/logo.png"
             />
 

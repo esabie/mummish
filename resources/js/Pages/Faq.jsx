@@ -261,7 +261,7 @@ const categories = [
                 answer: (
                     <p>
                         Most orders are delivered within 1–7 business days, depending on your location in Ghana. See our{' '}
-                        <Link href={route('shipping')} className="font-semibold text-[#5c4d3d] underline">
+                        <Link href="/shipping" className="font-semibold text-[#5c4d3d] underline">
                             shipping page
                         </Link>{' '}
                         for more detail.
@@ -295,7 +295,7 @@ export default function Faq() {
             <SeoHead
                 title="FAQ"
                 description="Answers to common questions about buying and selling on Mummish — Ghana's marketplace for mothers, families, and baby essentials."
-                url={route('faq')}
+                url="/faq"
                 image="/images/logo.png"
             />
 
