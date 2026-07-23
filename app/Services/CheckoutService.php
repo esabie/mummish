@@ -79,12 +79,11 @@ class CheckoutService
         }
 
         return DB::transaction(function () use ($lines, $shipping, $user, $shippingCents, $subtotalCents, $discountCents, $appliedPromo, $totalCents) {
-            $reference = $this->generatePaystackReference();
             $orderNumber = $this->generateOrderNumber();
 
             Log::debug('CheckoutService: persisting order.', [
                 'order_number' => $orderNumber,
-                'paystack_reference' => $reference,
+                'paystack_reference' => $orderNumber,
                 'total_cents' => $totalCents,
             ]);
 
@@ -93,7 +92,7 @@ class CheckoutService
                 'order_number' => $orderNumber,
                 'status' => OrderStatus::PendingPayment,
                 'payment_status' => PaymentStatus::Pending,
-                'paystack_reference' => $reference,
+                'paystack_reference' => $orderNumber,
                 'customer_name' => trim((string) $shipping['customer_name']),
                 'customer_email' => strtolower(trim((string) $shipping['customer_email'])),
                 'customer_phone' => trim((string) $shipping['customer_phone']),
@@ -559,18 +558,16 @@ class CheckoutService
     private function generateOrderNumber(): string
     {
         do {
-            $number = 'LH-'.now()->format('Ymd').'-'.strtoupper(Str::random(6));
-        } while (Order::query()->where('order_number', $number)->exists());
+            $number = 'MM'.now()->format('Ymd').strtoupper(Str::random(3));
+        } while (
+            Order::query()
+                ->where(function ($query) use ($number): void {
+                    $query->where('order_number', $number)
+                        ->orWhere('paystack_reference', $number);
+                })
+                ->exists()
+        );
 
         return $number;
-    }
-
-    private function generatePaystackReference(): string
-    {
-        do {
-            $reference = 'LH-'.strtoupper(Str::random(16));
-        } while (Order::query()->where('paystack_reference', $reference)->exists());
-
-        return $reference;
     }
 }

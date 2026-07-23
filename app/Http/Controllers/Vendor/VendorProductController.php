@@ -295,7 +295,7 @@ class VendorProductController extends Controller
     private function generateSku(int $userId): string
     {
         do {
-            $sku = 'LH-'.$userId.'-'.strtoupper(Str::random(6));
+            $sku = 'MM-'.$userId.'-'.strtoupper(Str::random(6));
         } while (Product::query()->where('sku', $sku)->exists());
 
         return $sku;

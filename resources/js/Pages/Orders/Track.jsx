@@ -61,7 +61,7 @@ export default function TrackOrder({ prefill, error }) {
                                     value={data.order_number}
                                     onChange={(e) => setData('order_number', e.target.value)}
                                     className="mt-1 block w-full"
-                                    placeholder="e.g. LH-20260717-ABC123"
+                                    placeholder="e.g. MM20260723A7K"
                                     autoComplete="off"
                                     required
                                 />

@@ -72,6 +72,8 @@ class CheckoutTest extends TestCase
 
         $order = Order::query()->first();
         $this->assertNotNull($order);
+        $this->assertSame($order->order_number, $order->paystack_reference);
+        $this->assertMatchesRegularExpression('/^MM\d{8}[A-Z0-9]{3}$/', $order->order_number);
         $this->assertDatabaseHas('order_items', [
             'order_id' => $order->id,
             'product_id' => $product->id,

@@ -51,7 +51,7 @@ class VendorProductTest extends TestCase
 
         $this->assertNotNull($product);
         $this->assertSame('Wooden Blocks', $product->title);
-        $this->assertStringStartsWith('LH-'.$user->id.'-', $product->sku);
+        $this->assertStringStartsWith('MM-'.$user->id.'-', $product->sku);
         $this->assertSame(2450, $product->price_cents);
         $this->assertSame(10, $product->stock_quantity);
         $this->assertSame(ProductCondition::New, $product->condition);
