@@ -213,7 +213,6 @@ return [
             'Softcare',
             'Bella Baby Happy',
             'Goon',
-            'Other',
         ],
         'bath_potty' => [
             'Fisher-Price',
@@ -270,7 +269,6 @@ return [
             'Ackermans',
             'Pep Stores',
             'Woodin Baby',
-            'Other',
         ],
         'health_safety' => [
             'Safety 1st',

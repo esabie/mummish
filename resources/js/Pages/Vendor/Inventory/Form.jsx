@@ -207,7 +207,9 @@ export default function VendorProductForm({
     const requiresClothingSize = categoriesRequiringSize.includes(data.category);
 
     const availableBrands = useMemo(() => {
-        const brands = categoryBrands[data.category] ?? [];
+        const brands = (categoryBrands[data.category] ?? []).filter(
+            (brand) => brand.value !== OTHER_BRAND_VALUE && brand.label?.toLowerCase() !== 'other',
+        );
 
         return [...brands, { value: OTHER_BRAND_VALUE, label: 'Other' }];
     }, [categoryBrands, data.category]);
