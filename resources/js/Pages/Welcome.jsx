@@ -33,6 +33,19 @@ function productHref(product) {
     return route('shop.show', product.id);
 }
 
+function productBadgeClasses(variant) {
+    switch (variant) {
+        case 'sale':
+            return 'bg-red-600 text-white shadow-sm';
+        case 'new':
+            return 'bg-white/95 text-neutral-800 shadow-sm';
+        case 'accent':
+            return 'bg-amber-500 text-white shadow-sm';
+        default:
+            return 'bg-white/95 text-neutral-800 shadow-sm';
+    }
+}
+
 /** Edge-to-edge horizontal scroll on mobile; hidden from md up. */
 function MobileCarousel({ children, className = '', ariaLabel }) {
     return (
@@ -123,9 +136,18 @@ function ProductCard({ product }) {
                         className="h-full w-full object-cover"
                     />
                     {product.badges?.length > 0 && (
-                        <span className="absolute left-2 top-2 rounded-md bg-white/95 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-neutral-800 shadow-sm">
-                            {product.badges[0].text}
-                        </span>
+                        <div className="absolute left-2 top-2 flex flex-wrap gap-1">
+                            {product.badges.map((badge) => (
+                                <span
+                                    key={badge.text}
+                                    className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${productBadgeClasses(
+                                        badge.variant,
+                                    )}`}
+                                >
+                                    {badge.text}
+                                </span>
+                            ))}
+                        </div>
                     )}
                 </div>
                 <div className="p-3 sm:p-4">

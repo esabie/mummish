@@ -850,7 +850,7 @@ export default function VendorProductForm({
                                     </li>
                                     <li>
                                         <span className="font-medium text-stone-900">Discount %</span> is optional. Enter an
-                                        original price first, then a percent, and we&apos;ll calculate the sale price for you.
+                                        original price first, then a percent, and we will calculate the sale price for you.
                                     </li>
                                     <li>If the product is not on sale, leave original price and discount % blank.</li>
                                 </ul>

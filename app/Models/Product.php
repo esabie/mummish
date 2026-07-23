@@ -332,16 +332,16 @@ class Product extends Model
     {
         $badges = [];
 
-        if ($this->created_at !== null && $this->created_at->isAfter(now()->subDays(14))) {
-            $badges[] = ['text' => 'NEW', 'variant' => 'new'];
-        }
-
         if ($this->isOnSale()) {
             $percent = $this->discountPercent();
             $badges[] = [
                 'text' => $percent !== null ? "{$percent}% OFF" : 'SALE',
                 'variant' => 'sale',
             ];
+        }
+
+        if ($this->created_at !== null && $this->created_at->isAfter(now()->subDays(14))) {
+            $badges[] = ['text' => 'NEW', 'variant' => 'new'];
         }
 
         if ($this->isLowStock()) {

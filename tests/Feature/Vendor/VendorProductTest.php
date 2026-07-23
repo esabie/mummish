@@ -161,6 +161,8 @@ class VendorProductTest extends TestCase
         $this->assertSame(2400, $product->price_cents);
         $this->assertTrue($product->isOnSale());
         $this->assertSame(20, $product->discountPercent());
+        $this->assertSame('20% OFF', $product->shopBadges()[0]['text'] ?? null);
+        $this->assertSame('sale', $product->shopBadges()[0]['variant'] ?? null);
     }
 
     public function test_create_product_rejects_original_price_not_above_sale_price(): void

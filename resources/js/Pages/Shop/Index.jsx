@@ -69,6 +69,8 @@ function badgeClasses(variant) {
             return 'bg-emerald-100 text-emerald-900 ring-1 ring-emerald-200/80';
         case 'new':
             return 'bg-rose-100 text-rose-900 ring-1 ring-rose-200/80';
+        case 'sale':
+            return 'bg-red-100 text-red-900 ring-1 ring-red-200/80';
         default:
             return 'bg-stone-200 text-stone-800 ring-1 ring-stone-300/80';
     }
