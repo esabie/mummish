@@ -316,7 +316,6 @@ return [
             'Pregnacare',
             'Elevit',
             "Nature's Plus Prenatal",
-            'Ghanaian maternity brands on Jumia/Koala',
             'Belly Band Ghana',
         ],
     ],

@@ -15,6 +15,16 @@ const peachBtn =
 const outlineBtn =
     'rounded-xl border border-stone-300 bg-white px-5 py-2.5 text-sm font-semibold text-stone-700 shadow-sm transition hover:bg-stone-50 disabled:opacity-50';
 
+const OTHER_BRAND_VALUE = '__other__';
+
+function categoryHasBrand(categoryBrands, category, brand) {
+    if (!category || !brand) {
+        return false;
+    }
+
+    return (categoryBrands[category] ?? []).some((option) => option.value === brand);
+}
+
 function stripDigits(value) {
     return value.replace(/[0-9\u0660-\u0669\u06F0-\u06F9\u0966-\u096F\uFF10-\uFF19]/g, '');
 }
@@ -161,6 +171,16 @@ export default function VendorProductForm({
     });
 
     const [customTag, setCustomTag] = useState('');
+    const [brandIsOther, setBrandIsOther] = useState(() =>
+        Boolean(product?.brand) && !categoryHasBrand(categoryBrands, product?.category, product?.brand),
+    );
+    const [customBrand, setCustomBrand] = useState(() => {
+        if (product?.brand && !categoryHasBrand(categoryBrands, product?.category, product?.brand)) {
+            return product.brand;
+        }
+
+        return '';
+    });
     const [discountPercent, setDiscountPercent] = useState(() => {
         const original = parseFloat(product?.compare_at_price ?? '');
         const sale = parseFloat(product?.price ?? '');
@@ -188,11 +208,11 @@ export default function VendorProductForm({
 
     const availableBrands = useMemo(() => {
         const brands = categoryBrands[data.category] ?? [];
-        if (data.brand && !brands.some((b) => b.value === data.brand)) {
-            return [{ value: data.brand, label: data.brand }, ...brands];
-        }
-        return brands;
-    }, [categoryBrands, data.category, data.brand]);
+
+        return [...brands, { value: OTHER_BRAND_VALUE, label: 'Other' }];
+    }, [categoryBrands, data.category]);
+
+    const brandSelectValue = brandIsOther ? OTHER_BRAND_VALUE : data.brand;
 
     const clothingSizeLabel =
         clothingSizeOptions.find((o) => o.value === data.clothing_size)?.label ?? '';
@@ -200,9 +220,28 @@ export default function VendorProductForm({
     const handleCategoryChange = (value) => {
         setData('category', value);
         setData('brand', '');
+        setBrandIsOther(false);
+        setCustomBrand('');
         if (!categoriesRequiringSize.includes(value)) {
             setData('clothing_size', '');
         }
+    };
+
+    const handleBrandSelectChange = (value) => {
+        if (value === OTHER_BRAND_VALUE) {
+            setBrandIsOther(true);
+            setData('brand', customBrand.trim());
+            return;
+        }
+
+        setBrandIsOther(false);
+        setCustomBrand('');
+        setData('brand', value);
+    };
+
+    const handleCustomBrandChange = (value) => {
+        setCustomBrand(value);
+        setData('brand', value);
     };
 
     const handleOriginalPriceChange = (value) => {
@@ -290,7 +329,9 @@ export default function VendorProductForm({
 
     const previewImage = previewGallery[0] ?? null;
 
-    const brandLabel = availableBrands.find((b) => b.value === data.brand)?.label ?? data.brand;
+    const brandLabel = brandIsOther
+        ? (customBrand.trim() || data.brand || 'Other')
+        : (availableBrands.find((b) => b.value === data.brand)?.label ?? data.brand);
     const conditionLabel =
         conditionOptions.find((option) => option.value === data.condition)?.label ?? 'New';
 
@@ -312,7 +353,11 @@ export default function VendorProductForm({
         if (!data.category) {
             return 'Category is required.';
         }
-        if (!data.brand) {
+        if (brandIsOther) {
+            if (!customBrand.trim()) {
+                return 'Please enter the brand name.';
+            }
+        } else if (!data.brand) {
             return 'Please select a brand.';
         }
         if (!data.condition) {
@@ -356,7 +401,7 @@ export default function VendorProductForm({
             }
         }
         return null;
-    }, [data, imageQuality, minImages]);
+    }, [brandIsOther, customBrand, data, imageQuality, minImages]);
 
     const submitWithStatus = useCallback(
         (status) => {
@@ -372,6 +417,7 @@ export default function VendorProductForm({
             transform((formData) => {
                 const payload = {
                     ...formData,
+                    brand: String(formData.brand ?? '').trim(),
                     status,
                     allows_customization: formData.allows_customization ? 1 : 0,
                 };
@@ -536,8 +582,8 @@ export default function VendorProductForm({
                                     </label>
                                     <select
                                         id="brand"
-                                        value={data.brand}
-                                        onChange={(e) => setData('brand', e.target.value)}
+                                        value={brandSelectValue}
+                                        onChange={(e) => handleBrandSelectChange(e.target.value)}
                                         className={inputClass}
                                         disabled={!data.category}
                                         required
@@ -551,6 +597,24 @@ export default function VendorProductForm({
                                             </option>
                                         ))}
                                     </select>
+                                    {brandIsOther ? (
+                                        <div className="mt-3">
+                                            <label htmlFor="custom_brand" className="text-sm font-medium text-stone-700">
+                                                Brand name
+                                                <RequiredMark />
+                                            </label>
+                                            <input
+                                                id="custom_brand"
+                                                type="text"
+                                                value={customBrand}
+                                                onChange={(e) => handleCustomBrandChange(e.target.value)}
+                                                className={inputClass}
+                                                placeholder="Enter brand name"
+                                                maxLength={120}
+                                                required
+                                            />
+                                        </div>
+                                    ) : null}
                                     <InputError message={errors.brand} className="mt-1" />
                                 </div>
                                 <div>
@@ -764,10 +828,40 @@ export default function VendorProductForm({
 
                     <SectionCard icon={<IconCalculator />} title="Pricing & Inventory">
                         <div className="space-y-4">
-                            <div className="grid gap-4 sm:grid-cols-3">
-                                <div>
-                                    <label htmlFor="compare_at_price" className="text-sm font-medium text-stone-700">
-                                        Discounted price (GHS)
+                            <div className="rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm leading-relaxed text-stone-700">
+                                <p className="font-semibold text-stone-900">How pricing works</p>
+                                <ul className="mt-2 list-disc space-y-1.5 pl-5">
+                                    <li>
+                                        <span className="font-medium text-stone-900">Sale price</span> is required. This is
+                                        what the buyer pays.
+                                    </li>
+                                    <li>
+                                        <span className="font-medium text-stone-900">Original price</span> is optional. Use it
+                                        only if the item is on sale. Shoppers will see it crossed out next to the sale price
+                                        (for example{' '}
+                                        <span className="whitespace-nowrap">
+                                            <span className="text-stone-500 line-through">₵100</span> ₵80
+                                        </span>
+                                        ).
+                                    </li>
+                                    <li>
+                                        If you set an original price, it must be{' '}
+                                        <span className="font-medium text-stone-900">higher</span> than the sale price.
+                                    </li>
+                                    <li>
+                                        <span className="font-medium text-stone-900">Discount %</span> is optional. Enter an
+                                        original price first, then a percent, and we&apos;ll calculate the sale price for you.
+                                    </li>
+                                    <li>If the product is not on sale, leave original price and discount % blank.</li>
+                                </ul>
+                            </div>
+                            <div className="grid gap-4 sm:grid-cols-3 sm:items-start">
+                                <div className="flex flex-col">
+                                    <label
+                                        htmlFor="compare_at_price"
+                                        className="flex min-h-10 items-end text-sm font-medium text-stone-700"
+                                    >
+                                        Original price (GHS)
                                     </label>
                                     <div className="relative mt-1.5">
                                         <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-stone-500">
@@ -784,11 +878,16 @@ export default function VendorProductForm({
                                             placeholder="Optional"
                                         />
                                     </div>
-                                    <p className="mt-1 text-xs text-stone-500">Leave blank if product is not on sale.</p>
+                                    <p className="mt-1 text-xs text-stone-500">
+                                        The higher &quot;was&quot; price. Leave blank if the product is not on sale.
+                                    </p>
                                     <InputError message={errors.compare_at_price} className="mt-1" />
                                 </div>
-                                <div>
-                                    <label htmlFor="discount_percent" className="text-sm font-medium text-stone-700">
+                                <div className="flex flex-col">
+                                    <label
+                                        htmlFor="discount_percent"
+                                        className="flex min-h-10 items-end text-sm font-medium text-stone-700"
+                                    >
                                         Discount %
                                     </label>
                                     <div className="relative mt-1.5">
@@ -810,9 +909,12 @@ export default function VendorProductForm({
                                     </div>
                                     <p className="mt-1 text-xs text-stone-500">Auto-calculates the sale price.</p>
                                 </div>
-                                <div>
-                                    <label htmlFor="price" className="text-sm font-medium text-stone-700">
-                                        Item Original price (GHS)
+                                <div className="flex flex-col">
+                                    <label
+                                        htmlFor="price"
+                                        className="flex min-h-10 items-end text-sm font-medium text-stone-700"
+                                    >
+                                        Sale price (GHS)
                                         <RequiredMark />
                                     </label>
                                     <div className="relative mt-1.5">
@@ -831,6 +933,7 @@ export default function VendorProductForm({
                                             required
                                         />
                                     </div>
+                                    <p className="mt-1 text-xs text-stone-500">What the buyer pays.</p>
                                     <InputError message={errors.price} className="mt-1" />
                                 </div>
                             </div>

@@ -97,11 +97,11 @@ trait ValidatesVendorProduct
     protected function brandForCategoryRule(): Closure
     {
         return function (string $attribute, mixed $value, Closure $fail): void {
-            $category = (string) $this->input('category');
-            $allowed = config("marketplace.category_brands.{$category}", []);
+            $brand = trim((string) $value);
 
-            if ($allowed === [] || ! in_array((string) $value, $allowed, true)) {
-                $fail('Please select a valid brand for this category.');
+            // "Other" is a UI sentinel — vendors must submit the actual brand name.
+            if ($brand === '' || strcasecmp($brand, 'Other') === 0 || $brand === '__other__') {
+                $fail('Please enter a brand name.');
             }
         };
     }

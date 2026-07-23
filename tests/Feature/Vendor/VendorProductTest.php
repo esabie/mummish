@@ -214,16 +214,31 @@ class VendorProductTest extends TestCase
         ]);
     }
 
-    public function test_create_product_rejects_invalid_brand_for_category(): void
+    public function test_create_product_rejects_other_brand_sentinel(): void
     {
         $user = $this->vendorWithApplication();
 
         $response = $this->actingAs($user)->post(route('vendor.inventory.store'), $this->validProductPayload([
-            'brand' => 'Pampers',
+            'brand' => 'Other',
         ]));
 
         $response->assertSessionHasErrors('brand');
         $this->assertDatabaseCount('products', 0);
+    }
+
+    public function test_create_product_allows_custom_brand_name(): void
+    {
+        $user = $this->vendorWithApplication();
+
+        $response = $this->actingAs($user)->post(route('vendor.inventory.store'), $this->validProductPayload([
+            'brand' => 'Little Local Co',
+        ]));
+
+        $response->assertRedirect(route('vendor.inventory.index'));
+        $this->assertDatabaseHas('products', [
+            'user_id' => $user->id,
+            'brand' => 'Little Local Co',
+        ]);
     }
 
     public function test_create_product_rejects_numeric_description(): void
