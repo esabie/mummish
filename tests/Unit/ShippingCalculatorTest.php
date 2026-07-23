@@ -7,6 +7,13 @@ use Tests\TestCase;
 
 class ShippingCalculatorTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config(['marketplace.shipping_free' => false]);
+    }
+
     public function test_uses_region_rate_for_city_without_override(): void
     {
         $calculator = new ShippingCalculator;
@@ -52,5 +59,18 @@ class ShippingCalculatorTest extends TestCase
 
         $this->assertSame(0, $calculator->centsForLocation('', 'Tema'));
         $this->assertSame(0, $calculator->centsForLocation('Greater Accra', ''));
+    }
+
+    public function test_shipping_free_flag_waives_all_rates(): void
+    {
+        config(['marketplace.shipping_free' => true]);
+
+        $calculator = new ShippingCalculator;
+
+        $this->assertTrue($calculator->isFree());
+        $this->assertSame(0, $calculator->centsForLocation('Greater Accra', 'Tema'));
+        $this->assertSame(0, $calculator->centsForLocation('Ashanti', 'Kumasi'));
+        $this->assertSame(0, $calculator->regionRates()['Greater Accra'] ?? null);
+        $this->assertSame(0, $calculator->cityRates()['Greater Accra|Tema'] ?? null);
     }
 }

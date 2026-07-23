@@ -59,6 +59,9 @@ return [
     // Fallback when a region/city has no configured rate.
     'checkout_shipping_cents' => (int) env('CHECKOUT_SHIPPING_CENTS', 0),
 
+    // Temporary testing switch — set SHIPPING_FREE=true to waive all delivery fees.
+    'shipping_free' => filter_var(env('SHIPPING_FREE', false), FILTER_VALIDATE_BOOLEAN),
+
     /*
     |--------------------------------------------------------------------------
     | Checkout shipping by delivery location (amounts in pesewas / cents, GHS)

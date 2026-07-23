@@ -84,7 +84,7 @@ class PaystackService
         $secret = $this->secretKey();
         $url = $this->baseUrl().'/transaction/verify/'.urlencode($reference);
 
-        Log::info('Paystack: verifying transaction.', [
+        Log::info('Paystack: Transaction Status Check.', [
             'reference' => $reference,
             'api_url' => $url,
         ]);
@@ -93,7 +93,7 @@ class PaystackService
             ->acceptJson()
             ->get($url);
 
-        Log::debug('Paystack: verify HTTP response.', [
+        Log::debug('Paystack: Status Check HTTP response.', [
             'reference' => $reference,
             'http_status' => $response->status(),
             'api_status' => $response->json('status'),
