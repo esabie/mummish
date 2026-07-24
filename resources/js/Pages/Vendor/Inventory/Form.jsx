@@ -352,6 +352,9 @@ export default function VendorProductForm({
         if (!data.title?.trim()) {
             return 'Product name is required.';
         }
+        if (data.title.trim().length > 30) {
+            return 'Product name must be 30 characters or fewer.';
+        }
         if (!data.category) {
             return 'Category is required.';
         }
@@ -550,9 +553,13 @@ export default function VendorProductForm({
                                     value={data.title}
                                     onChange={(e) => setData('title', e.target.value)}
                                     className={inputClass}
-                                    placeholder="e.g. Hand-Crafted Organic Cotton Baby Rattle"
+                                    placeholder="e.g. Organic cotton baby rattle"
+                                    maxLength={30}
                                     required
                                 />
+                                <p className="mt-1 text-xs text-stone-500">
+                                    Keep it short and clear. Put extra detail in the description (max 30 characters).
+                                </p>
                                 <InputError message={errors.title} className="mt-1" />
                             </div>
                             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

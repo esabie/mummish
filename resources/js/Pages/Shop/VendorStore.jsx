@@ -209,7 +209,9 @@ export default function VendorStore({ store, search_query, result_count, current
                                             )}
                                         </div>
                                         <div className="flex flex-1 flex-col p-4">
-                                            <h2 className="line-clamp-2 text-sm font-bold text-stone-900">{p.name}</h2>
+                                            <h2 className="line-clamp-2 min-h-[2.75rem] text-sm font-bold leading-snug text-stone-900">
+                                                {p.name}
+                                            </h2>
                                             <ProductPrice
                                                 price={p.price}
                                                 compareAtPrice={p.compare_at_price}

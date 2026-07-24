@@ -595,17 +595,14 @@ export default function ShopIndex({
                                                         )}
                                                     </div>
                                                     <div className="space-y-2 p-4 pb-3">
-                                                        <div className="flex items-start justify-between gap-2">
-                                                            <h2 className="text-sm font-semibold leading-snug text-stone-900 sm:text-base">
-                                                                {p.name}
-                                                            </h2>
-                                                            <ProductPrice
-                                                                price={p.price}
-                                                                compareAtPrice={p.compare_at_price}
-                                                                className="shrink-0"
-                                                                priceClassName="text-sm font-bold text-stone-900"
-                                                            />
-                                                        </div>
+                                                        <h2 className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-snug text-stone-900 sm:text-base">
+                                                            {p.name}
+                                                        </h2>
+                                                        <ProductPrice
+                                                            price={p.price}
+                                                            compareAtPrice={p.compare_at_price}
+                                                            priceClassName="text-sm font-bold text-stone-900"
+                                                        />
                                                         <p className="text-xs text-stone-500">
                                                             {p.brand ? (
                                                                 <>

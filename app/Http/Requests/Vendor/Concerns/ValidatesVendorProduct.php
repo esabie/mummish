@@ -33,7 +33,7 @@ trait ValidatesVendorProduct
             : ['nullable', 'array', 'max:'.$maxImages];
 
         return [
-            'title' => ['required', 'string', 'max:200'],
+            'title' => ['required', 'string', 'max:30'],
             'category' => ['required', 'string', Rule::in(array_keys(StoreVendorApplicationRequest::categories()))],
             'brand' => ['required', 'string', 'max:120', $this->brandForCategoryRule()],
             'condition' => ['required', Rule::enum(\App\Enums\ProductCondition::class)],

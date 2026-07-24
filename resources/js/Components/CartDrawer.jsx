@@ -158,7 +158,7 @@ export default function CartDrawer() {
                                         <img src={line.image} alt="" className="h-full w-full object-cover" />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-bold uppercase tracking-wide text-neutral-900">{line.name}</p>
+                                        <p className="line-clamp-2 text-sm font-bold uppercase tracking-wide text-neutral-900">{line.name}</p>
                                         {line.attributes ? (
                                             <p className="mt-1 text-xs uppercase tracking-wide text-neutral-500">{line.attributes}</p>
                                         ) : null}

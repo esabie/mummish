@@ -216,6 +216,18 @@ class VendorProductTest extends TestCase
         ]);
     }
 
+    public function test_create_product_rejects_title_longer_than_30_characters(): void
+    {
+        $user = $this->vendorWithApplication();
+
+        $response = $this->actingAs($user)->post(route('vendor.inventory.store'), $this->validProductPayload([
+            'title' => str_repeat('A', 31),
+        ]));
+
+        $response->assertSessionHasErrors('title');
+        $this->assertDatabaseCount('products', 0);
+    }
+
     public function test_create_product_rejects_other_brand_sentinel(): void
     {
         $user = $this->vendorWithApplication();
