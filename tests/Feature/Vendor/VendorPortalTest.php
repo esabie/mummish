@@ -85,8 +85,104 @@ class VendorPortalTest extends TestCase
                 ->component('Vendor/Dashboard')
                 ->where('earnings.commission_percent', 10)
                 ->where('earnings.totals.gross_cents', 0)
+                ->where('payoutDetails.payment_method', null)
+                ->has('ghanaBanks')
+                ->where('ghanaBanks.0', fn ($bank) => is_string($bank) && $bank !== '')
                 ->has('earnings.recent_sales', 0)
             );
+    }
+
+    public function test_vendor_can_save_bank_payment_details(): void
+    {
+        $user = $this->vendorWithApplication();
+
+        $this->actingAs($user)
+            ->put(route('vendor.payment-details.update'), [
+                'payment_method' => 'bank',
+                'bank_name' => 'GCB BANK',
+                'bank_account_name' => 'Ama Mensah',
+                'bank_account_number' => '0123456789',
+            ])
+            ->assertRedirect();
+
+        $application = $user->fresh()->vendorApplication;
+
+        $this->assertSame('bank', $application->payment_method);
+        $this->assertSame('GCB BANK', $application->bank_name);
+        $this->assertSame('Ama Mensah', $application->bank_account_name);
+        $this->assertSame('0123456789', $application->bank_account_number);
+        $this->assertNull($application->mobile_money_provider);
+        $this->assertNull($application->mobile_money_name);
+        $this->assertNull($application->mobile_money_number);
+    }
+
+    public function test_vendor_cannot_save_bank_name_outside_list(): void
+    {
+        $user = $this->vendorWithApplication();
+
+        $this->actingAs($user)
+            ->from(route('vendor.dashboard'))
+            ->put(route('vendor.payment-details.update'), [
+                'payment_method' => 'bank',
+                'bank_name' => 'Not A Real Bank',
+                'bank_account_name' => 'Ama Mensah',
+                'bank_account_number' => '0123456789',
+            ])
+            ->assertRedirect(route('vendor.dashboard'))
+            ->assertSessionHasErrors('bank_name');
+    }
+
+    public function test_vendor_can_save_mobile_money_details(): void
+    {
+        $user = $this->vendorWithApplication();
+
+        $this->actingAs($user)
+            ->put(route('vendor.payment-details.update'), [
+                'payment_method' => 'mobile_money',
+                'mobile_money_provider' => 'MTN MoMo',
+                'mobile_money_name' => 'Ama Mensah',
+                'mobile_money_number' => '0241234567',
+            ])
+            ->assertRedirect();
+
+        $application = $user->fresh()->vendorApplication;
+
+        $this->assertSame('mobile_money', $application->payment_method);
+        $this->assertSame('MTN MoMo', $application->mobile_money_provider);
+        $this->assertSame('Ama Mensah', $application->mobile_money_name);
+        $this->assertSame('0241234567', $application->mobile_money_number);
+        $this->assertNull($application->bank_name);
+        $this->assertNull($application->bank_account_name);
+        $this->assertNull($application->bank_account_number);
+    }
+
+    public function test_vendor_cannot_update_payment_details_after_saving(): void
+    {
+        $user = $this->vendorWithApplication();
+
+        $user->vendorApplication()->update([
+            'payment_method' => 'bank',
+            'bank_name' => 'GCB BANK',
+            'bank_account_name' => 'Ama Mensah',
+            'bank_account_number' => '0123456789',
+        ]);
+
+        $this->actingAs($user)
+            ->from(route('vendor.dashboard'))
+            ->put(route('vendor.payment-details.update'), [
+                'payment_method' => 'mobile_money',
+                'mobile_money_provider' => 'MTN MoMo',
+                'mobile_money_name' => 'Ama Mensah',
+                'mobile_money_number' => '0241234567',
+            ])
+            ->assertRedirect(route('vendor.dashboard'))
+            ->assertSessionHas('error');
+
+        $application = $user->fresh()->vendorApplication;
+
+        $this->assertSame('bank', $application->payment_method);
+        $this->assertSame('GCB BANK', $application->bank_name);
+        $this->assertNull($application->mobile_money_provider);
     }
 
     private function vendorWithApplication(): User

@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Vendor;
 
 use App\Enums\ProductStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Vendor\UpdateVendorPayoutDetailsRequest;
 use App\Models\Product;
 use App\Services\VendorEarningsService;
 use App\Services\VendorListingLimit;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -27,6 +29,17 @@ class VendorDashboardController extends Controller
             'applicationStatus' => $application->status->value,
             'applicationStatusLabel' => $application->status->label(),
             'rejectionReason' => $application->rejection_reason,
+            'payoutDetails' => [
+                'payment_method' => $application->payment_method,
+                'payment_method_label' => $application->paymentMethodLabel(),
+                'bank_name' => $application->bank_name,
+                'bank_account_name' => $application->bank_account_name,
+                'bank_account_number' => $application->bank_account_number,
+                'mobile_money_provider' => $application->mobile_money_provider,
+                'mobile_money_name' => $application->mobile_money_name,
+                'mobile_money_number' => $application->mobile_money_number,
+            ],
+            'ghanaBanks' => config('ghana_banks.names', []),
             'listingLimit' => [
                 'max' => $listingLimit->maxListingsFor($user),
                 'current' => $listingLimit->currentListingCount($user),
@@ -41,5 +54,18 @@ class VendorDashboardController extends Controller
             ],
             'earnings' => $earnings,
         ]);
+    }
+
+    public function updatePayoutDetails(UpdateVendorPayoutDetailsRequest $request): RedirectResponse
+    {
+        $application = $request->user()->vendorApplication;
+
+        if ($application->hasPaymentDetails()) {
+            return back()->with('error', 'Payment details are locked. Contact Mummish support if you need them changed.');
+        }
+
+        $application->applyPayoutDetails($request->validated());
+
+        return back()->with('success', 'Payment details saved. Contact Mummish support if you need them changed later.');
     }
 }

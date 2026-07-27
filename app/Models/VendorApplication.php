@@ -20,6 +20,13 @@ class VendorApplication extends Model
         'phone',
         'ghana_card_id',
         'category',
+        'payment_method',
+        'bank_name',
+        'bank_account_name',
+        'bank_account_number',
+        'mobile_money_provider',
+        'mobile_money_name',
+        'mobile_money_number',
         'referral_code',
         'vendor_referrer_id',
         'terms_accepted',
@@ -73,5 +80,45 @@ class VendorApplication extends Model
     public function shopLogoUrl(): ?string
     {
         return PublicStorageUrl::fromStored($this->logo_path);
+    }
+
+    public function paymentMethodLabel(): ?string
+    {
+        return match ($this->payment_method) {
+            'bank' => 'Bank',
+            'mobile_money' => 'Mobile money',
+            default => null,
+        };
+    }
+
+    public function hasPaymentDetails(): bool
+    {
+        return filled($this->payment_method);
+    }
+
+    /**
+     * @param  array{
+     *     payment_method: string,
+     *     bank_name?: string|null,
+     *     bank_account_name?: string|null,
+     *     bank_account_number?: string|null,
+     *     mobile_money_provider?: string|null,
+     *     mobile_money_name?: string|null,
+     *     mobile_money_number?: string|null
+     * }  $data
+     */
+    public function applyPayoutDetails(array $data): void
+    {
+        if (($data['payment_method'] ?? null) === 'bank') {
+            $data['mobile_money_provider'] = null;
+            $data['mobile_money_name'] = null;
+            $data['mobile_money_number'] = null;
+        } else {
+            $data['bank_name'] = null;
+            $data['bank_account_name'] = null;
+            $data['bank_account_number'] = null;
+        }
+
+        $this->update($data);
     }
 }

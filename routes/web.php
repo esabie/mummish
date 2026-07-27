@@ -124,6 +124,7 @@ Route::get('/dashboard', DashboardController::class)
 
 Route::middleware(['auth', 'verified', 'vendor'])->prefix('vendor')->name('vendor.')->group(function () {
     Route::get('/', [VendorDashboardController::class, 'index'])->name('dashboard');
+    Route::put('/payment-details', [VendorDashboardController::class, 'updatePayoutDetails'])->name('payment-details.update');
     Route::get('/inventory', [VendorInventoryController::class, 'index'])->name('inventory.index');
     Route::get('/inventory/create', [VendorProductController::class, 'create'])->name('inventory.create');
     Route::post('/inventory', [VendorProductController::class, 'store'])->name('inventory.store');

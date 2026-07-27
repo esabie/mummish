@@ -12,6 +12,7 @@ use App\Models\VendorApplication;
 use App\Services\VendorApplicationReviewService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class VendorApplicationReviewTest extends TestCase
@@ -166,6 +167,40 @@ class VendorApplicationReviewTest extends TestCase
         $admin = User::factory()->create(['role' => UserRole::Admin]);
 
         $this->actingAs($admin)->get('/admin')->assertOk();
+    }
+
+    public function test_admin_can_update_vendor_payment_details(): void
+    {
+        $admin = User::factory()->create(['role' => UserRole::Admin]);
+        $vendor = User::factory()->create(['role' => UserRole::Vendor]);
+        $application = $this->createPendingApplication($vendor);
+
+        $application->update([
+            'payment_method' => 'bank',
+            'bank_name' => 'GCB BANK',
+            'bank_account_name' => 'Ama Mensah',
+            'bank_account_number' => '0123456789',
+        ]);
+
+        $this->actingAs($admin);
+
+        Livewire::test(\App\Filament\Resources\VendorApplicationResource\Pages\ViewVendorApplication::class, [
+            'record' => $application->getRouteKey(),
+        ])
+            ->callAction('updatePaymentDetails', data: [
+                'payment_method' => 'mobile_money',
+                'mobile_money_provider' => 'MTN MoMo',
+                'mobile_money_name' => 'Ama Mensah',
+                'mobile_money_number' => '0249998877',
+            ]);
+
+        $application->refresh();
+
+        $this->assertSame('mobile_money', $application->payment_method);
+        $this->assertSame('MTN MoMo', $application->mobile_money_provider);
+        $this->assertSame('0249998877', $application->mobile_money_number);
+        $this->assertNull($application->bank_name);
+        $this->assertNull($application->bank_account_number);
     }
 
     private function createPendingApplication(User $vendor, string $shopName = 'Little Knot'): VendorApplication

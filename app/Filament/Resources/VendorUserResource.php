@@ -55,6 +55,20 @@ class VendorUserResource extends Resource
                     ->label('Phone')
                     ->placeholder('—')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('vendorApplication.payment_method')
+                    ->label('Payment')
+                    ->badge()
+                    ->color(fn (User $record): string => $record->vendorApplication?->payment_method ? 'success' : 'danger')
+                    ->formatStateUsing(fn (User $record): string => $record->vendorApplication?->payment_method
+                        ? ($record->vendorApplication?->paymentMethodLabel() ?? 'Saved')
+                        : 'Payment details missing'),
+                Tables\Columns\TextColumn::make('vendorApplication.bank_account_number')
+                    ->label('Bank/MoMo number')
+                    ->placeholder('—')
+                    ->formatStateUsing(fn (User $record): string => $record->vendorApplication?->bank_account_number
+                        ?? $record->vendorApplication?->mobile_money_number
+                        ?? '—')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('vendorApplication.status')
                     ->label('Application')
                     ->badge()

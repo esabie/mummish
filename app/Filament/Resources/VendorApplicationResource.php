@@ -66,6 +66,34 @@ class VendorApplicationResource extends Resource
                             ->formatStateUsing(fn (bool $state): string => $state ? 'Yes' : 'No'),
                     ])
                     ->columns(2),
+                Infolists\Components\Section::make('Payment details')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('payment_method')
+                            ->label('Status')
+                            ->badge()
+                            ->color(fn (VendorApplication $record): string => $record->payment_method ? 'success' : 'danger')
+                            ->formatStateUsing(fn (VendorApplication $record): string => $record->payment_method ? 'Saved' : 'Payment details missing'),
+                        Infolists\Components\TextEntry::make('payment_method')
+                            ->label('Payment method')
+                            ->formatStateUsing(fn (VendorApplication $record): string => $record->paymentMethodLabel() ?? '—'),
+                        Infolists\Components\TextEntry::make('bank_name')
+                            ->placeholder('—'),
+                        Infolists\Components\TextEntry::make('bank_account_name')
+                            ->label('Bank account name')
+                            ->placeholder('—'),
+                        Infolists\Components\TextEntry::make('bank_account_number')
+                            ->label('Bank account number')
+                            ->placeholder('—'),
+                        Infolists\Components\TextEntry::make('mobile_money_provider')
+                            ->placeholder('—'),
+                        Infolists\Components\TextEntry::make('mobile_money_name')
+                            ->label('Mobile money account name')
+                            ->placeholder('—'),
+                        Infolists\Components\TextEntry::make('mobile_money_number')
+                            ->label('Mobile money number')
+                            ->placeholder('—'),
+                    ])
+                    ->columns(2),
                 Infolists\Components\Section::make('Review')
                     ->schema([
                         Infolists\Components\TextEntry::make('status')
@@ -116,6 +144,13 @@ class VendorApplicationResource extends Resource
                 Tables\Columns\TextColumn::make('business_email')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('phone'),
+                Tables\Columns\TextColumn::make('payment_method')
+                    ->label('Payment')
+                    ->badge()
+                    ->color(fn (VendorApplication $record): string => $record->payment_method ? 'success' : 'danger')
+                    ->formatStateUsing(fn (VendorApplication $record): string => $record->payment_method
+                        ? $record->paymentMethodLabel()
+                        : 'Payment details missing'),
                 Tables\Columns\TextColumn::make('ghana_card_id')
                     ->label('Ghana Card ID')
                     ->toggleable(isToggledHiddenByDefault: true),

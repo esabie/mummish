@@ -12,7 +12,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Ghana is GMT year-round (Africa/Accra).
+        $schedule->command('vendors:remind-missing-payout-details')
+            ->dailyAt('09:00')
+            ->timezone('Africa/Accra')
+            ->withoutOverlapping();
     }
 
     /**

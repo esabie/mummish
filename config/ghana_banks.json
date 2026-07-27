@@ -1,0 +1,152 @@
+{
+  "banks": [
+    {
+      "name": "ABSA Ghana",
+      "code": "300303"
+    },
+    {
+      "name": "ACCESS BANK",
+      "code": "300329"
+    },
+    {
+      "name": "ADOM SAVINGS AND LOANS",
+      "code": "300360"
+    },
+    {
+      "name": "AGRICULTURAL DEVELOPMENT BANK",
+      "code": "300307"
+    },
+    {
+      "name": "ARB Apex Bank Limited",
+      "code": "9F424F97FA17"
+    },
+    {
+      "name": "BANK OF AFRICA",
+      "code": "300320"
+    },
+    {
+      "name": "BANK OF BARODA (GH) LTD",
+      "code": "300327"
+    },
+    {
+      "name": "BANK OF GHANA",
+      "code": "300328"
+    },
+    {
+      "name": "BSIC",
+      "code": "300324"
+    },
+    {
+      "name": "CAL BANK",
+      "code": "300313"
+    },
+    {
+      "name": "CONSOLIDATED BANK GHANA",
+      "code": "300331"
+    },
+    {
+      "name": "ECOBANK",
+      "code": "300312"
+    },
+    {
+      "name": "ENERGY BANK",
+      "code": "300330"
+    },
+    {
+      "name": "FBN BANK",
+      "code": "300319"
+    },
+    {
+      "name": "FIDELITY BANK",
+      "code": "300323"
+    },
+    {
+      "name": "FIRST ALLIED SAVINGS AND LOANS",
+      "code": "300351"
+    },
+    {
+      "name": "FIRST ATLANTIC BANK",
+      "code": "300316"
+    },
+    {
+      "name": "FIRST NATIONAL BANK",
+      "code": "300334"
+    },
+    {
+      "name": "GCB BANK",
+      "code": "300304"
+    },
+    {
+      "name": "GHL Bank Limited",
+      "code": "B5D1BE0564D9"
+    },
+    {
+      "name": "GN BANK",
+      "code": "300348"
+    },
+    {
+      "name": "Guarantee Trust(GT) Bank",
+      "code": "300622"
+    },
+    {
+      "name": "HERITAGE BANK",
+      "code": "300359"
+    },
+    {
+      "name": "HFC BANK",
+      "code": "300310"
+    },
+    {
+      "name": "NATIONAL INVESTMENT BANK",
+      "code": "300305"
+    },
+    {
+      "name": "OPPORTUNITY INTERNATIONAL",
+      "code": "300349"
+    },
+    {
+      "name": "PREMIUM BANK",
+      "code": "300358"
+    },
+    {
+      "name": "PRUDENTIAL BANK",
+      "code": "300317"
+    },
+    {
+      "name": "Republic Bank (Ghana) Limited",
+      "code": "66347D3CE88B"
+    },
+    {
+      "name": "ROYAL BANK",
+      "code": "300331"
+    },
+    {
+      "name": "Societe General (Ghana) Limited",
+      "code": "67C780EB"
+    },
+    {
+      "name": "STANBIC BANK",
+      "code": "300318"
+    },
+    {
+      "name": "STANDARD CHARTERED BANK",
+      "code": "300302"
+    },
+    {
+      "name": "UNIBANK",
+      "code": "300321"
+    },
+    {
+      "name": "UNITED BANK FOR AFRICA",
+      "code": "300325"
+    },
+    {
+      "name": "UNIVERSAL MERCHANT BANK",
+      "code": "300309"
+    },
+    {
+      "name": "ZENITH BANK",
+      "code": "300311"
+    }
+  ]
+}
