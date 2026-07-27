@@ -131,6 +131,7 @@ Route::middleware(['auth', 'verified', 'vendor'])->prefix('vendor')->name('vendo
     Route::post('/inventory/check-image', [VendorProductImageController::class, 'check'])->name('inventory.check-image');
     Route::get('/inventory/{product}/edit', [VendorProductController::class, 'edit'])->name('inventory.edit');
     Route::put('/inventory/{product}', [VendorProductController::class, 'update'])->name('inventory.update');
+    Route::post('/inventory/{product}/mark-sold', [VendorProductController::class, 'markSold'])->name('inventory.mark-sold');
     Route::delete('/inventory/{product}', [VendorProductController::class, 'destroy'])->name('inventory.destroy');
     Route::get('/orders', [VendorOrderController::class, 'index'])->name('orders.index');
     Route::post('/orders/{order}/fulfill', [VendorOrderController::class, 'fulfill'])->name('orders.fulfill');

@@ -160,6 +160,28 @@ class VendorProductController extends Controller
             ->with('success', 'Product removed.');
     }
 
+    public function markSold(Request $request, Product $product): RedirectResponse
+    {
+        $this->ensureOwnsProduct($request, $product);
+
+        if ($product->stock_quantity === 0) {
+            return back()->with('success', 'This product is already marked as sold.');
+        }
+
+        AppLog::info('[Vendor] Marking product as sold.', [
+            'product_id' => $product->id,
+            'vendor_user_id' => $request->user()->id,
+            'previous_stock' => $product->stock_quantity,
+            'sku' => $product->sku,
+        ]);
+
+        $product->update([
+            'stock_quantity' => 0,
+        ]);
+
+        return back()->with('success', 'Product marked as sold. Stock is now 0.');
+    }
+
     private function ensureOwnsProduct(Request $request, Product $product): void
     {
         if ($product->user_id !== $request->user()->id) {

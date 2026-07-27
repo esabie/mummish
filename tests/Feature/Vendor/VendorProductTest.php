@@ -417,6 +417,85 @@ class VendorProductTest extends TestCase
         $this->assertDatabaseMissing('products', ['id' => $product->id]);
     }
 
+    public function test_vendor_can_mark_own_product_as_sold(): void
+    {
+        $user = $this->vendorWithApplication();
+
+        $product = Product::create([
+            'user_id' => $user->id,
+            'title' => 'Ready to sell',
+            'sku' => 'SOLD1',
+            'category' => 'toys_development',
+            'price_cents' => 1500,
+            'stock_quantity' => 4,
+            'status' => ProductStatus::Active,
+            'description' => 'A wonderful product for kids to enjoy every day.',
+            'material_tags' => ['handmade'],
+            'image_urls' => $this->sampleImageUrls(),
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('vendor.inventory.mark-sold', $product))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $product->refresh();
+
+        $this->assertSame(0, $product->stock_quantity);
+        $this->assertNotNull($product->sold_out_at);
+        $this->assertTrue($product->isOutOfStock());
+    }
+
+    public function test_vendor_cannot_mark_another_vendors_product_as_sold(): void
+    {
+        $owner = $this->vendorWithApplication();
+        $other = $this->vendorWithApplication('other-sold@example.com');
+
+        $product = Product::create([
+            'user_id' => $owner->id,
+            'title' => 'Owned item',
+            'sku' => 'OWN-SOLD',
+            'category' => 'toys_development',
+            'price_cents' => 1500,
+            'stock_quantity' => 2,
+            'status' => ProductStatus::Active,
+            'description' => 'A wonderful product for kids to enjoy every day.',
+            'material_tags' => ['handmade'],
+            'image_urls' => $this->sampleImageUrls(),
+        ]);
+
+        $this->actingAs($other)
+            ->post(route('vendor.inventory.mark-sold', $product))
+            ->assertNotFound();
+
+        $this->assertSame(2, $product->fresh()->stock_quantity);
+    }
+
+    public function test_marking_already_sold_product_is_idempotent(): void
+    {
+        $user = $this->vendorWithApplication();
+
+        $product = Product::create([
+            'user_id' => $user->id,
+            'title' => 'Already sold',
+            'sku' => 'SOLD0',
+            'category' => 'toys_development',
+            'price_cents' => 1500,
+            'stock_quantity' => 0,
+            'status' => ProductStatus::Active,
+            'description' => 'A wonderful product for kids to enjoy every day.',
+            'material_tags' => ['handmade'],
+            'image_urls' => $this->sampleImageUrls(),
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('vendor.inventory.mark-sold', $product))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertSame(0, $product->fresh()->stock_quantity);
+    }
+
     /**
      * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>

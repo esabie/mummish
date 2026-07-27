@@ -1,4 +1,5 @@
 import InputError from '@/Components/InputError';
+import { compressImagesForUpload } from '@/utils/compressImageForUpload';
 import axios from 'axios';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -57,6 +58,7 @@ export default function ProductImagesUpload({
 }) {
     const [dragOver, setDragOver] = useState(false);
     const [quality, setQuality] = useState({});
+    const [preparing, setPreparing] = useState(false);
     const fileRef = useRef(null);
     const checkingRef = useRef(new Set());
     const startedRef = useRef(new Set());
@@ -177,7 +179,7 @@ export default function ProductImagesUpload({
         onQualityChange({ allPassed, checking, failedMessages });
     }, [newFiles, quality, onQualityChange]);
 
-    const addFiles = (fileList) => {
+    const addFiles = async (fileList) => {
         const incoming = Array.from(fileList || []).filter((f) => f.type?.startsWith('image/'));
         if (incoming.length === 0) {
             return;
@@ -186,7 +188,14 @@ export default function ProductImagesUpload({
         if (room <= 0) {
             return;
         }
-        onNewFilesChange([...newFiles, ...incoming.slice(0, room)]);
+
+        setPreparing(true);
+        try {
+            const compressed = await compressImagesForUpload(incoming.slice(0, room));
+            onNewFilesChange([...newFiles, ...compressed]);
+        } finally {
+            setPreparing(false);
+        }
     };
 
     const removeAt = (index) => {
@@ -233,7 +242,9 @@ export default function ProductImagesUpload({
                     dragOver ? 'border-[#5c4d3d] bg-[#5c4d3d]/5' : 'border-stone-300 bg-stone-50/80 hover:border-stone-400'
                 } ${total < minImages ? 'border-amber-300' : ''}`}
             >
-                {mainPreview ? (
+                {preparing ? (
+                    <p className="text-sm font-medium text-stone-700">Preparing photos…</p>
+                ) : mainPreview ? (
                     <img src={mainPreview.src} alt="" className="max-h-48 w-full rounded-lg object-contain" />
                 ) : (
                     <>

@@ -60,7 +60,15 @@ function StockBar({ product, className = 'min-w-[120px]' }) {
     );
 }
 
-function StatusPill({ label, status }) {
+function StatusPill({ label, status, soldOut = false }) {
+    if (soldOut) {
+        return (
+            <span className="inline-flex rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-800">
+                Sold
+            </span>
+        );
+    }
+
     const styles =
         status === 'active'
             ? 'bg-emerald-100 text-emerald-800'
@@ -69,6 +77,22 @@ function StatusPill({ label, status }) {
     return (
         <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${styles}`}>{label}</span>
     );
+}
+
+function markProductSold(product) {
+    if (product.is_out_of_stock) {
+        return;
+    }
+
+    if (
+        !window.confirm(
+            `Mark “${product.title}” as sold? Stock will be set to 0 and it will show as sold out on the shop.`,
+        )
+    ) {
+        return;
+    }
+
+    router.post(route('vendor.inventory.mark-sold', product.id), {}, { preserveScroll: true });
 }
 
 function CategoryPill({ label }) {
@@ -106,17 +130,32 @@ function ProductCard({ product, selected, onToggle }) {
                     </div>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                         <CategoryPill label={product.category_label} />
-                        <StatusPill label={product.status_label} status={product.status} />
+                        <StatusPill
+                            label={product.status_label}
+                            status={product.status}
+                            soldOut={product.is_out_of_stock}
+                        />
                     </div>
                     <div className="mt-3">
                         <StockBar product={product} className="w-full max-w-[200px]" />
                     </div>
-                    <Link
-                        href={route('vendor.inventory.edit', product.id)}
-                        className="mt-3 inline-block text-sm font-medium text-[#5c4d3d] hover:underline"
-                    >
-                        Edit
-                    </Link>
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                        <Link
+                            href={route('vendor.inventory.edit', product.id)}
+                            className="text-sm font-medium text-[#5c4d3d] hover:underline"
+                        >
+                            Edit
+                        </Link>
+                        {!product.is_out_of_stock ? (
+                            <button
+                                type="button"
+                                onClick={() => markProductSold(product)}
+                                className="text-sm font-medium text-rose-700 hover:underline"
+                            >
+                                Mark as sold
+                            </button>
+                        ) : null}
+                    </div>
                 </div>
             </div>
         </article>
@@ -380,15 +419,30 @@ export default function VendorInventoryIndex({
                                             <StockBar product={product} />
                                         </td>
                                         <td className="px-4 py-4">
-                                            <StatusPill label={product.status_label} status={product.status} />
+                                            <StatusPill
+                                                label={product.status_label}
+                                                status={product.status}
+                                                soldOut={product.is_out_of_stock}
+                                            />
                                         </td>
                                         <td className="px-4 py-4">
-                                            <Link
-                                                href={route('vendor.inventory.edit', product.id)}
-                                                className="text-sm font-medium text-[#5c4d3d] hover:underline"
-                                            >
-                                                Edit
-                                            </Link>
+                                            <div className="flex flex-col items-start gap-1.5">
+                                                <Link
+                                                    href={route('vendor.inventory.edit', product.id)}
+                                                    className="text-sm font-medium text-[#5c4d3d] hover:underline"
+                                                >
+                                                    Edit
+                                                </Link>
+                                                {!product.is_out_of_stock ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => markProductSold(product)}
+                                                        className="text-sm font-medium text-rose-700 hover:underline"
+                                                    >
+                                                        Mark as sold
+                                                    </button>
+                                                ) : null}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))

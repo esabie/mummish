@@ -3,7 +3,7 @@ import Modal from '@/Components/Modal';
 import ProductImagesUpload from '@/Components/Vendor/ProductImagesUpload';
 import ProductLivePreviewModal from '@/Components/Vendor/ProductLivePreviewModal';
 import VendorLayout from '@/Layouts/VendorLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 const inputClass =
@@ -459,6 +459,22 @@ export default function VendorProductForm({
         destroy(route('vendor.inventory.destroy', product.id));
     };
 
+    const handleMarkSold = () => {
+        if (!product || Number(product.stock_quantity) <= 0) {
+            return;
+        }
+
+        if (
+            !window.confirm(
+                `Mark “${product.title}” as sold? Stock will be set to 0 and it will show as sold out on the shop.`,
+            )
+        ) {
+            return;
+        }
+
+        router.post(route('vendor.inventory.mark-sold', product.id), {}, { preserveScroll: true });
+    };
+
     const allMaterialOptions = [
         ...materialTagOptions,
         ...(data.material_tags ?? [])
@@ -806,7 +822,19 @@ export default function VendorProductForm({
                     </SectionCard>
 
                     {isEdit && (
-                        <div className="flex justify-end border-t border-stone-200 pt-4">
+                        <div className="flex flex-wrap items-center justify-end gap-4 border-t border-stone-200 pt-4">
+                            {Number(product.stock_quantity) > 0 ? (
+                                <button
+                                    type="button"
+                                    onClick={handleMarkSold}
+                                    disabled={processing}
+                                    className="text-sm font-medium text-rose-700 hover:text-rose-900 disabled:opacity-50"
+                                >
+                                    Mark as sold
+                                </button>
+                            ) : (
+                                <span className="text-sm font-medium text-stone-500">Already sold out</span>
+                            )}
                             <button
                                 type="button"
                                 onClick={handleDelete}
