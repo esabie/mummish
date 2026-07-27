@@ -44,6 +44,7 @@ return [
         'electronics' => 'https://images.unsplash.com/photo-1585944150943-9486e8982d08?auto=format&fit=crop&w=400&h=400&q=80',
         'bath_potty' => 'https://images.unsplash.com/photo-1605000793929-288d0f586844?auto=format&fit=crop&w=400&h=400&q=80',
         'maternity_postnatal' => 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=400&h=400&q=80',
+        'health_services' => 'https://images.unsplash.com/photo-1666214280391-8ff5bd3c0bf0?auto=format&fit=crop&w=400&h=400&q=80',
     ],
 
     'shop_per_page' => (int) env('SHOP_PER_PAGE', 12),
@@ -151,6 +152,7 @@ return [
         'electronics' => 'Electronics',
         'bath_potty' => 'Bath & Potty',
         'maternity_postnatal' => 'Maternity (Pre & Postnatal Care)',
+        'health_services' => 'Health Services',
     ],
 
     'categories_requiring_size' => ['clothing_footwear'],
@@ -314,6 +316,13 @@ return [
             'Elevit',
             "Nature's Plus Prenatal",
             'Belly Band Ghana',
+        ],
+        'health_services' => [
+            'Nyaho Medical Centre',
+            'Lister Hospital',
+            '37 Military Hospital',
+            'Trust Hospital',
+            'Korle Bu Teaching Hospital',
         ],
     ],
 
