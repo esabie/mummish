@@ -133,12 +133,12 @@ return [
 
     'product_image_max_kb' => (int) env('PRODUCT_IMAGE_MAX_KB', 5120),
 
-    'product_image_min_width' => (int) env('PRODUCT_IMAGE_MIN_WIDTH', 500),
+    'product_image_min_width' => (int) env('PRODUCT_IMAGE_MIN_WIDTH', 300),
 
-    'product_image_min_height' => (int) env('PRODUCT_IMAGE_MIN_HEIGHT', 500),
+    'product_image_min_height' => (int) env('PRODUCT_IMAGE_MIN_HEIGHT', 300),
 
-    // Laplacian variance; higher = sharper. Keep low — phone compression often softens scores.
-    'product_image_min_sharpness' => (float) env('PRODUCT_IMAGE_MIN_SHARPNESS', 20),
+    // Laplacian variance; higher = sharper. Keep very low — phone compression softens scores a lot.
+    'product_image_min_sharpness' => (float) env('PRODUCT_IMAGE_MIN_SHARPNESS', 5),
 
     'categories' => [
         'feeding_nursing' => 'Nursing',

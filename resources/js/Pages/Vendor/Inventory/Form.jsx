@@ -149,7 +149,7 @@ export default function VendorProductForm({
     conditionOptions = [],
     minImages = 3,
     maxImages = 8,
-    imageRequirements = { minWidth: 800, minHeight: 800 },
+    imageRequirements = { minWidth: 300, minHeight: 300 },
 }) {
     const isEdit = product !== null;
 

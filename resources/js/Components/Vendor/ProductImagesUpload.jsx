@@ -63,8 +63,8 @@ export default function ProductImagesUpload({
     const checkingRef = useRef(new Set());
     const startedRef = useRef(new Set());
     const total = existingImages.length + newFiles.length;
-    const minWidth = imageRequirements?.minWidth ?? 500;
-    const minHeight = imageRequirements?.minHeight ?? 500;
+    const minWidth = imageRequirements?.minWidth ?? 300;
+    const minHeight = imageRequirements?.minHeight ?? 300;
 
     const newPreviewUrls = useMemo(
         () => newFiles.map((file) => URL.createObjectURL(file)),

@@ -1,6 +1,6 @@
 /**
  * Downscale/compress a browser File for upload so phone photos don't trip nginx 413s.
- * Keeps enough resolution for product quality checks (min ~500px).
+ * Keeps enough resolution for product quality checks (min ~300px).
  *
  * @param {File} file
  * @param {{ maxDimension?: number, maxBytes?: number, quality?: number }} [options]

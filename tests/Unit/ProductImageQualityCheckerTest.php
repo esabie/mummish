@@ -30,7 +30,7 @@ class ProductImageQualityCheckerTest extends TestCase
         }
 
         $result = app(ProductImageQualityChecker::class)->check(
-            TestProductImage::sharpJpeg('small.jpg', 400, 400)
+            TestProductImage::sharpJpeg('small.jpg', 200, 200)
         );
 
         $this->assertFalse($result->pass);

@@ -252,8 +252,8 @@ class VendorProductController extends Controller
             'minImages' => (int) config('marketplace.min_product_images', 3),
             'maxImages' => (int) config('marketplace.max_product_images', 8),
             'imageRequirements' => [
-                'minWidth' => (int) config('marketplace.product_image_min_width', 800),
-                'minHeight' => (int) config('marketplace.product_image_min_height', 800),
+                'minWidth' => (int) config('marketplace.product_image_min_width', 300),
+                'minHeight' => (int) config('marketplace.product_image_min_height', 300),
             ],
             'categoriesRequiringSize' => config('marketplace.categories_requiring_size', []),
             'categoryBrands' => collect(config('marketplace.category_brands', []))
