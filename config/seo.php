@@ -1,6 +1,6 @@
 <?php
 
-$defaultTitle = 'Mummish | Marketplace for mothers & kids in Ghana';
+$defaultTitle = 'The Mummish';
 $defaultDescription = 'Marketplace for the modern mother. Shop baby clothes, kids products, and family essentials from trusted local sellers across Ghana.';
 
 $title = env('SEO_TITLE');

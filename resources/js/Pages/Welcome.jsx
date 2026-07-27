@@ -200,7 +200,7 @@ export default function Welcome({
     return (
         <>
             <SeoHead
-                documentTitle={seo?.title || 'Mummish | Marketplace for mothers & kids in Ghana'}
+                documentTitle={seo?.title || 'The Mummish'}
                 description={seoDescription}
                 url="/"
                 image="/images/logo.png"

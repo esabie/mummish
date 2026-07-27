@@ -12,6 +12,7 @@ import { CartProvider } from './context/CartContext';
 import { debugLogger } from './utils/debugLogger';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const siteTitle = 'The Mummish';
 
 router.on('invalid', (event) => {
     if (event.detail.response?.status === 419) {
@@ -22,16 +23,16 @@ router.on('invalid', (event) => {
 
 createInertiaApp({
     title: (title) => {
-        if (!title) {
-            return appName;
+        if (!title || title === appName || title === siteTitle) {
+            return siteTitle;
         }
 
-        // Allow pages to pass a full document title (e.g. "Mummish | …").
-        if (title === appName || title.startsWith(`${appName} |`) || title.startsWith(`${appName} -`)) {
+        // Already includes the brand — don't append again (avoids "The Mummish - Mummish").
+        if (/\bMummish\b/i.test(title)) {
             return title;
         }
 
-        return `${title} - ${appName}`;
+        return `${title} - ${siteTitle}`;
     },
     resolve: (name) => {
         debugLogger.info('Inertia', 'Resolving page component', { name });

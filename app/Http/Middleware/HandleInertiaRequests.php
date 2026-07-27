@@ -40,7 +40,7 @@ class HandleInertiaRequests extends Middleware
             'seo' => [
                 'title' => (string) (filled(config('seo.title'))
                     ? config('seo.title')
-                    : 'Mummish | Marketplace for mothers & kids in Ghana'),
+                    : 'The Mummish'),
                 'description' => (string) (filled(config('seo.description'))
                     ? config('seo.description')
                     : 'Marketplace for the modern mother. Shop baby clothes, kids products, and family essentials from trusted local sellers across Ghana.'),
