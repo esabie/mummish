@@ -61,8 +61,8 @@ export default function ProductImagesUpload({
     const checkingRef = useRef(new Set());
     const startedRef = useRef(new Set());
     const total = existingImages.length + newFiles.length;
-    const minWidth = imageRequirements?.minWidth ?? 800;
-    const minHeight = imageRequirements?.minHeight ?? 800;
+    const minWidth = imageRequirements?.minWidth ?? 500;
+    const minHeight = imageRequirements?.minHeight ?? 500;
 
     const newPreviewUrls = useMemo(
         () => newFiles.map((file) => URL.createObjectURL(file)),
@@ -243,7 +243,7 @@ export default function ProductImagesUpload({
                         <p className="text-sm font-medium text-stone-700">Drag & drop images here</p>
                         <p className="mt-1 text-xs text-stone-500">or click to browse (JPEG, PNG, WebP)</p>
                         <p className="mt-2 text-xs text-stone-400">
-                            Min {minWidth} × {minHeight}px · clear, well-lit photos
+                            Min {minWidth} × {minHeight}px · clear photos work best
                         </p>
                     </>
                 )}
@@ -320,8 +320,8 @@ export default function ProductImagesUpload({
             )}
 
             <p className="mt-4 rounded-lg bg-stone-50 px-3 py-2 text-xs leading-relaxed text-stone-600">
-                <span className="font-semibold text-stone-800">Tip:</span> Use bright, natural light and hold your
-                phone steady. Each photo is checked for size and clarity as you upload.
+                <span className="font-semibold text-stone-800">Tip:</span> Use your phone&apos;s camera app in good
+                light. We only check that photos are large enough and not extremely blurry.
             </p>
             <InputError message={error} className="mt-1" />
         </div>

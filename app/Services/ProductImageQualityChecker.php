@@ -27,36 +27,24 @@ class ProductImageQualityChecker
 
         $width = imagesx($image);
         $height = imagesy($image);
-        $minWidth = (int) config('marketplace.product_image_min_width', 800);
-        $minHeight = (int) config('marketplace.product_image_min_height', 800);
-        $minSharpness = (float) config('marketplace.product_image_min_sharpness', 80);
-        $minBrightness = (int) config('marketplace.product_image_min_brightness', 25);
-        $maxBrightness = (int) config('marketplace.product_image_max_brightness', 245);
+        $minWidth = (int) config('marketplace.product_image_min_width', 500);
+        $minHeight = (int) config('marketplace.product_image_min_height', 500);
+        $minSharpness = (float) config('marketplace.product_image_min_sharpness', 20);
 
         $issues = [];
         $messages = [];
 
         if ($width < $minWidth || $height < $minHeight) {
             $issues[] = 'resolution';
-            $messages[] = "Image must be at least {$minWidth}×{$minHeight} pixels (yours is {$width}×{$height}). Use your phone's full-resolution camera setting.";
+            $messages[] = "Image must be at least {$minWidth}×{$minHeight} pixels (yours is {$width}×{$height}).";
         }
 
         $analysisImage = $this->resizeForAnalysis($image, 600);
-        $brightness = $this->averageBrightness($analysisImage);
-
-        if ($brightness < $minBrightness) {
-            $issues[] = 'dark';
-            $messages[] = 'Photo is too dark. Use natural light or a brighter room and avoid shadows on the product.';
-        } elseif ($brightness > $maxBrightness) {
-            $issues[] = 'bright';
-            $messages[] = 'Photo is overexposed. Reduce direct light so product details are visible.';
-        }
-
         $sharpness = $this->laplacianVariance($analysisImage);
 
         if ($sharpness < $minSharpness) {
             $issues[] = 'blur';
-            $messages[] = 'Photo looks blurry or soft. Hold steady, tap to focus on the product, and retake the shot.';
+            $messages[] = 'Photo looks very blurry. Hold steady and tap to focus on the product before retaking.';
         }
 
         imagedestroy($image);
@@ -69,7 +57,7 @@ class ProductImageQualityChecker
             width: $width,
             height: $height,
             sharpnessScore: round($sharpness, 2),
-            brightness: round($brightness, 2),
+            brightness: null,
             issues: $issues,
             messages: $messages,
         );
@@ -115,28 +103,6 @@ class ProductImageQualityChecker
         imagecopyresampled($resized, $image, 0, 0, 0, 0, $targetWidth, $targetHeight, $width, $height);
 
         return $resized;
-    }
-
-    private function averageBrightness(GdImage $image): float
-    {
-        $width = imagesx($image);
-        $height = imagesy($image);
-        $step = max(1, (int) floor(max($width, $height) / 200));
-        $sum = 0.0;
-        $count = 0;
-
-        for ($y = 0; $y < $height; $y += $step) {
-            for ($x = 0; $x < $width; $x += $step) {
-                $rgb = imagecolorat($image, $x, $y);
-                $r = ($rgb >> 16) & 0xFF;
-                $g = ($rgb >> 8) & 0xFF;
-                $b = $rgb & 0xFF;
-                $sum += 0.299 * $r + 0.587 * $g + 0.114 * $b;
-                $count++;
-            }
-        }
-
-        return $count > 0 ? $sum / $count : 0.0;
     }
 
     private function laplacianVariance(GdImage $image): float

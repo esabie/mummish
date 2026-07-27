@@ -402,7 +402,7 @@ export default function VendorProductForm({
                 return 'Still checking photo quality. Please wait a moment.';
             }
             if (!imageQuality.allPassed) {
-                return 'Replace blurry or low-resolution photos before saving.';
+                return 'Some photos did not pass the quality check. Replace the flagged images or try again.';
             }
         }
         return null;
