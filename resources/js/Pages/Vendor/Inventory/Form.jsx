@@ -194,6 +194,8 @@ export default function VendorProductForm({
     const [previewOpen, setPreviewOpen] = useState(false);
     const [livePreviewOpen, setLivePreviewOpen] = useState(false);
     const [serviceFeeModalOpen, setServiceFeeModalOpen] = useState(false);
+    const [markSoldModalOpen, setMarkSoldModalOpen] = useState(false);
+    const [markingSold, setMarkingSold] = useState(false);
     const [clientError, setClientError] = useState(null);
     const [imageQuality, setImageQuality] = useState({
         allPassed: true,
@@ -460,19 +462,22 @@ export default function VendorProductForm({
     };
 
     const handleMarkSold = () => {
-        if (!product || Number(product.stock_quantity) <= 0) {
+        if (!product || Number(product.stock_quantity) <= 0 || markingSold) {
             return;
         }
 
-        if (
-            !window.confirm(
-                `Mark “${product.title}” as sold? Stock will be set to 0 and it will show as sold out on the shop.`,
-            )
-        ) {
-            return;
-        }
-
-        router.post(route('vendor.inventory.mark-sold', product.id), {}, { preserveScroll: true });
+        setMarkingSold(true);
+        router.post(
+            route('vendor.inventory.mark-sold', product.id),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setMarkingSold(false);
+                    setMarkSoldModalOpen(false);
+                },
+            },
+        );
     };
 
     const allMaterialOptions = [
@@ -822,24 +827,26 @@ export default function VendorProductForm({
                     </SectionCard>
 
                     {isEdit && (
-                        <div className="flex flex-wrap items-center justify-end gap-4 border-t border-stone-200 pt-4">
+                        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-stone-200 pt-4">
                             {Number(product.stock_quantity) > 0 ? (
                                 <button
                                     type="button"
-                                    onClick={handleMarkSold}
-                                    disabled={processing}
-                                    className="text-sm font-medium text-rose-700 hover:text-rose-900 disabled:opacity-50"
+                                    onClick={() => setMarkSoldModalOpen(true)}
+                                    disabled={processing || markingSold}
+                                    className="inline-flex whitespace-nowrap items-center justify-center rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-800 shadow-sm transition hover:bg-rose-100 disabled:opacity-50"
                                 >
                                     Mark as sold
                                 </button>
                             ) : (
-                                <span className="text-sm font-medium text-stone-500">Already sold out</span>
+                                <span className="inline-flex whitespace-nowrap items-center rounded-lg bg-stone-100 px-3 py-1.5 text-xs font-semibold text-stone-500">
+                                    Sold out
+                                </span>
                             )}
                             <button
                                 type="button"
                                 onClick={handleDelete}
                                 disabled={processing}
-                                className="text-sm font-medium text-red-600 hover:text-red-800"
+                                className="inline-flex whitespace-nowrap items-center justify-center rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 shadow-sm transition hover:bg-red-50 disabled:opacity-50"
                             >
                                 Delete product
                             </button>
@@ -1125,6 +1132,43 @@ export default function VendorProductForm({
                             className="rounded-lg bg-[#5c4d3d] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4a3e32]"
                         >
                             Got it
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            <Modal
+                show={markSoldModalOpen}
+                onClose={() => {
+                    if (!markingSold) {
+                        setMarkSoldModalOpen(false);
+                    }
+                }}
+                maxWidth="md"
+                closeable={!markingSold}
+            >
+                <div className="px-6 py-6">
+                    <h2 className="text-lg font-bold text-stone-900">Mark as sold?</h2>
+                    <p className="mt-3 text-sm leading-relaxed text-stone-600">
+                        Mark “{product?.title}” as sold? Stock will be set to 0. It will show as Sold out on the shop
+                        for a short period, then be removed automatically.
+                    </p>
+                    <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                        <button
+                            type="button"
+                            onClick={() => setMarkSoldModalOpen(false)}
+                            disabled={markingSold}
+                            className="inline-flex items-center justify-center rounded-lg border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 disabled:opacity-50"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleMarkSold}
+                            disabled={markingSold}
+                            className="inline-flex items-center justify-center rounded-lg bg-rose-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-800 disabled:opacity-50"
+                        >
+                            {markingSold ? 'Marking…' : 'Mark as sold'}
                         </button>
                     </div>
                 </div>

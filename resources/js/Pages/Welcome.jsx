@@ -37,6 +37,8 @@ function productBadgeClasses(variant) {
     switch (variant) {
         case 'sale':
             return 'bg-red-600 text-white shadow-sm';
+        case 'sold':
+            return 'bg-stone-900 text-white shadow-sm';
         case 'new':
             return 'bg-white/95 text-neutral-800 shadow-sm';
         case 'accent':
@@ -124,6 +126,8 @@ function StoreAvatar({ store }) {
 }
 
 function ProductCard({ product }) {
+    const soldOut = Boolean(product.sold_out) || (product.stock_quantity ?? 0) < 1;
+
     return (
         <article className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition active:scale-[0.99]">
             <Link href={productHref(product)} className="block">
@@ -133,9 +137,16 @@ function ProductCard({ product }) {
                         alt=""
                         loading="lazy"
                         decoding="async"
-                        className="h-full w-full object-cover"
+                        className={`h-full w-full object-cover ${soldOut ? 'opacity-60 grayscale-[35%]' : ''}`}
                     />
-                    {product.badges?.length > 0 && (
+                    {soldOut && (
+                        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-stone-900/20">
+                            <span className="rounded-lg bg-stone-900 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-white shadow-lg">
+                                Sold out
+                            </span>
+                        </div>
+                    )}
+                    {!soldOut && product.badges?.length > 0 && (
                         <div className="absolute left-2 top-2 flex flex-wrap gap-1">
                             {product.badges.map((badge) => (
                                 <span

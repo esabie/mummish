@@ -71,6 +71,8 @@ function badgeClasses(variant) {
             return 'bg-rose-100 text-rose-900 ring-1 ring-rose-200/80';
         case 'sale':
             return 'bg-red-100 text-red-900 ring-1 ring-red-200/80';
+        case 'sold':
+            return 'bg-stone-900 text-white ring-1 ring-stone-900';
         default:
             return 'bg-stone-200 text-stone-800 ring-1 ring-stone-300/80';
     }

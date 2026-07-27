@@ -175,11 +175,14 @@ class VendorProductController extends Controller
             'sku' => $product->sku,
         ]);
 
-        $product->update([
-            'stock_quantity' => 0,
-        ]);
+        $product->markAsSold();
 
-        return back()->with('success', 'Product marked as sold. Stock is now 0.');
+        $graceDays = (int) config('marketplace.sold_out_hidden_after_days', 10);
+
+        return back()->with(
+            'success',
+            "Product marked as sold. It will show as Sold out on the shop for {$graceDays} days, then be removed."
+        );
     }
 
     private function ensureOwnsProduct(Request $request, Product $product): void

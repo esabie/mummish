@@ -444,6 +444,10 @@ class VendorProductTest extends TestCase
         $this->assertSame(0, $product->stock_quantity);
         $this->assertNotNull($product->sold_out_at);
         $this->assertTrue($product->isOutOfStock());
+        $this->assertTrue(
+            Product::query()->visibleInShop()->whereKey($product->id)->exists(),
+            'Marked-as-sold products should stay visible as sold out during the grace period.',
+        );
     }
 
     public function test_vendor_cannot_mark_another_vendors_product_as_sold(): void
