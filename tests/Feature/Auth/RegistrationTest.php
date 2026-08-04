@@ -3,9 +3,11 @@
 namespace Tests\Feature\Auth;
 
 use App\Enums\UserRole;
+use App\Jobs\SendCustomerWelcomeSms;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -22,6 +24,8 @@ class RegistrationTest extends TestCase
 
     public function test_new_users_can_register(): void
     {
+        Bus::fake([SendCustomerWelcomeSms::class]);
+
         $response = $this->post('/register', [
             'name' => 'Test User',
             'email' => 'test@example.com',
@@ -36,10 +40,17 @@ class RegistrationTest extends TestCase
         $user = User::first();
         $this->assertSame(UserRole::Customer, $user->role);
         $this->assertSame('0241234567', $user->phone);
+
+        Bus::assertDispatched(SendCustomerWelcomeSms::class, function (SendCustomerWelcomeSms $job) {
+            return $job->phone === '0241234567'
+                && $job->firstName === 'Test';
+        });
     }
 
     public function test_registration_requires_phone_number(): void
     {
+        Bus::fake([SendCustomerWelcomeSms::class]);
+
         $response = $this->from('/register')->post('/register', [
             'name' => 'Test User',
             'email' => 'test@example.com',
@@ -52,10 +63,13 @@ class RegistrationTest extends TestCase
         $response->assertSessionHasErrors('phone');
         $this->assertGuest();
         $this->assertDatabaseCount('users', 0);
+        Bus::assertNotDispatched(SendCustomerWelcomeSms::class);
     }
 
     public function test_cannot_register_customer_with_existing_vendor_email(): void
     {
+        Bus::fake([SendCustomerWelcomeSms::class]);
+
         User::factory()->vendor()->create([
             'email' => 'seller@example.com',
         ]);
@@ -75,10 +89,13 @@ class RegistrationTest extends TestCase
         $this->assertGuest();
         $this->assertDatabaseCount('users', 1);
         $this->assertSame(UserRole::Vendor, User::first()->role);
+        Bus::assertNotDispatched(SendCustomerWelcomeSms::class);
     }
 
     public function test_cannot_register_customer_with_existing_customer_email(): void
     {
+        Bus::fake([SendCustomerWelcomeSms::class]);
+
         User::factory()->create([
             'email' => 'buyer@example.com',
             'role' => UserRole::Customer,
@@ -96,5 +113,6 @@ class RegistrationTest extends TestCase
         $response->assertSessionHasErrors('email');
         $this->assertGuest();
         $this->assertDatabaseCount('users', 1);
+        Bus::assertNotDispatched(SendCustomerWelcomeSms::class);
     }
 }
