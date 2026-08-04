@@ -110,12 +110,17 @@ export default function ProductImagesUpload({
                     issues: data.issues ?? [],
                 },
             }));
-        } catch {
+        } catch (error) {
+            const status = error?.response?.status;
             setQuality((current) => ({
                 ...current,
                 [key]: {
                     status: 'error',
-                    messages: ['Could not check this image. Please try uploading it again.'],
+                    messages: [
+                        status === 413
+                            ? 'This image is too large to check. Try a smaller photo (under 2 MB).'
+                            : 'Could not check this image. Please try uploading it again.',
+                    ],
                 },
             }));
         } finally {
