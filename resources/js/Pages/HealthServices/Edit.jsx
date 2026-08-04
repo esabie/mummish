@@ -1,9 +1,11 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import Breadcrumbs from '@/Components/Breadcrumbs';
 import LogoMark from '@/Components/LogoMark';
 import SeoHead from '@/Components/SeoHead';
 import SiteFooter from '@/Components/SiteFooter';
 import InputError from '@/Components/InputError';
+import ImageCropModal from '@/Components/ImageCropModal';
 
 const inputClass =
     'mt-1 block w-full rounded-lg border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-900 shadow-sm placeholder:text-stone-400 focus:border-[#5c4d3d] focus:outline-none focus:ring-1 focus:ring-[#5c4d3d]';
@@ -47,6 +49,10 @@ function RequiredLabel({ htmlFor, children }) {
 
 export default function HealthServicesEdit({ professional }) {
     const { flash } = usePage().props;
+    const imageInputRef = useRef(null);
+    const [imagePreview, setImagePreview] = useState(null);
+    const [cropSrc, setCropSrc] = useState(null);
+    const [cropFileName, setCropFileName] = useState('profile.jpg');
     const { data, setData, put, processing, errors } = useForm({
         name: professional.name ?? '',
         title: professional.title ?? '',
@@ -70,6 +76,71 @@ export default function HealthServicesEdit({ professional }) {
         is_active: Boolean(professional.is_active),
         image: null,
     });
+
+    useEffect(() => {
+        return () => {
+            if (imagePreview) {
+                URL.revokeObjectURL(imagePreview);
+            }
+            if (cropSrc) {
+                URL.revokeObjectURL(cropSrc);
+            }
+        };
+    }, [imagePreview, cropSrc]);
+
+    const handleImageChange = (e) => {
+        const file = e.target.files?.[0];
+
+        if (!file) {
+            return;
+        }
+
+        if (cropSrc) {
+            URL.revokeObjectURL(cropSrc);
+        }
+
+        setCropFileName(file.name || 'profile.jpg');
+        setCropSrc(URL.createObjectURL(file));
+
+        if (imageInputRef.current) {
+            imageInputRef.current.value = '';
+        }
+    };
+
+    const handleCropCancel = () => {
+        if (cropSrc) {
+            URL.revokeObjectURL(cropSrc);
+        }
+        setCropSrc(null);
+    };
+
+    const handleCropSave = (file, previewUrl) => {
+        if (cropSrc) {
+            URL.revokeObjectURL(cropSrc);
+        }
+        setCropSrc(null);
+
+        if (imagePreview) {
+            URL.revokeObjectURL(imagePreview);
+        }
+
+        setData('image', file);
+        setImagePreview(previewUrl);
+    };
+
+    const clearImage = () => {
+        setData('image', null);
+
+        if (imagePreview) {
+            URL.revokeObjectURL(imagePreview);
+        }
+
+        setImagePreview(null);
+
+        if (imageInputRef.current) {
+            imageInputRef.current.value = '';
+        }
+    };
 
     const toggleVisitMode = (mode) => {
         const removing = data.visit_modes.includes(mode);
@@ -263,11 +334,58 @@ export default function HealthServicesEdit({ professional }) {
                         </div>
 
                         <div>
-                            <label htmlFor="image" className="text-sm font-medium text-stone-700">Replace profile image</label>
-                            <input id="image" type="file" accept="image/jpeg,image/jpg,image/png,image/webp" className={inputClass} onChange={(e) => setData('image', e.target.files?.[0] ?? null)} />
-                            {professional.image_url && (
-                                <img src={professional.image_url} alt="" className="mt-3 h-20 w-20 rounded-xl object-cover ring-1 ring-stone-200" />
-                            )}
+                            <label htmlFor="image" className="text-sm font-medium text-stone-700">
+                                Replace profile image
+                            </label>
+                            <div className="mt-2 flex items-center gap-4">
+                                <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-stone-100 ring-1 ring-stone-200">
+                                    {imagePreview || professional.image_url ? (
+                                        <img
+                                            src={imagePreview || professional.image_url}
+                                            alt=""
+                                            className="h-full w-full object-cover"
+                                        />
+                                    ) : (
+                                        <span className="text-lg font-bold text-stone-400">
+                                            {(data.name.trim()[0] || '?').toUpperCase()}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <input
+                                        ref={imageInputRef}
+                                        id="image"
+                                        type="file"
+                                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                                        onChange={handleImageChange}
+                                        className="sr-only"
+                                    />
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => imageInputRef.current?.click()}
+                                            className="inline-flex cursor-pointer items-center rounded-lg bg-[#5c4d3d]/10 px-3 py-2 text-sm font-semibold text-[#5c4d3d] transition hover:bg-[#5c4d3d]/20 hover:text-[#4a3e32] active:scale-[0.98]"
+                                        >
+                                            {imagePreview || professional.image_url ? 'Change photo' : 'Choose photo'}
+                                        </button>
+                                        {data.image ? (
+                                            <span className="truncate text-sm text-stone-600">{data.image.name}</span>
+                                        ) : null}
+                                    </div>
+                                    {imagePreview ? (
+                                        <button
+                                            type="button"
+                                            onClick={clearImage}
+                                            className="mt-2 text-xs font-medium text-stone-500 underline hover:text-stone-700"
+                                        >
+                                            Remove new photo
+                                        </button>
+                                    ) : null}
+                                    <p className="mt-1 text-xs text-stone-500">
+                                        You can crop and zoom after choosing a photo.
+                                    </p>
+                                </div>
+                            </div>
                             <InputError message={errors.image} className="mt-1" />
                         </div>
 
@@ -573,6 +691,15 @@ export default function HealthServicesEdit({ professional }) {
 
                 <SiteFooter />
             </div>
+
+            <ImageCropModal
+                open={Boolean(cropSrc)}
+                imageSrc={cropSrc}
+                fileName={cropFileName}
+                title="Adjust profile photo"
+                onCancel={handleCropCancel}
+                onSave={handleCropSave}
+            />
         </>
     );
 }

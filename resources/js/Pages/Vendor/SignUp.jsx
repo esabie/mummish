@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import Breadcrumbs from '@/Components/Breadcrumbs';
+import ImageCropModal from '@/Components/ImageCropModal';
 import LogoMark from '@/Components/LogoMark';
 import SeoHead from '@/Components/SeoHead';
 import SiteFooter from '@/Components/SiteFooter';
@@ -163,6 +164,8 @@ export default function VendorSignUp({
     const formRef = useRef(null);
     const logoInputRef = useRef(null);
     const [logoPreview, setLogoPreview] = useState(null);
+    const [cropSrc, setCropSrc] = useState(null);
+    const [cropFileName, setCropFileName] = useState('logo.jpg');
 
     const { data, setData, post, processing, errors, reset } = useForm({
         first_name: nameParts.first,
@@ -184,8 +187,11 @@ export default function VendorSignUp({
             if (logoPreview) {
                 URL.revokeObjectURL(logoPreview);
             }
+            if (cropSrc) {
+                URL.revokeObjectURL(cropSrc);
+            }
         };
-    }, [logoPreview]);
+    }, [logoPreview, cropSrc]);
 
     const handleLogoChange = (e) => {
         const file = e.target.files?.[0];
@@ -194,13 +200,38 @@ export default function VendorSignUp({
             return;
         }
 
-        setData('logo', file);
+        if (cropSrc) {
+            URL.revokeObjectURL(cropSrc);
+        }
+
+        setCropFileName(file.name || 'logo.jpg');
+        setCropSrc(URL.createObjectURL(file));
+
+        // Allow selecting the same file again after cancel.
+        if (logoInputRef.current) {
+            logoInputRef.current.value = '';
+        }
+    };
+
+    const handleCropCancel = () => {
+        if (cropSrc) {
+            URL.revokeObjectURL(cropSrc);
+        }
+        setCropSrc(null);
+    };
+
+    const handleCropSave = (file, previewUrl) => {
+        if (cropSrc) {
+            URL.revokeObjectURL(cropSrc);
+        }
+        setCropSrc(null);
 
         if (logoPreview) {
             URL.revokeObjectURL(logoPreview);
         }
 
-        setLogoPreview(URL.createObjectURL(file));
+        setData('logo', file);
+        setLogoPreview(previewUrl);
     };
 
     const clearLogo = () => {
@@ -595,7 +626,7 @@ export default function VendorSignUp({
                                             </div>
                                         </div>
                                         <p className="mt-1 text-xs text-stone-500">
-                                            Shown on your shop page and in the store circles on the homepage. JPG or PNG up to 2 MB.
+                                            Shown on your shop page and in the store circles on the homepage. You can crop and zoom after choosing a file. JPG or PNG up to 2 MB.
                                         </p>
                                         <InputError message={errors.logo} className="mt-1" />
                                     </div>
@@ -755,6 +786,16 @@ export default function VendorSignUp({
 
                 <SiteFooter />
             </div>
+
+            <ImageCropModal
+                open={Boolean(cropSrc)}
+                imageSrc={cropSrc}
+                fileName={cropFileName}
+                title="Adjust shop logo"
+                description="Drag to reposition and use the slider to zoom. Save when it looks right."
+                onCancel={handleCropCancel}
+                onSave={handleCropSave}
+            />
         </>
     );
 }

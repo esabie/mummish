@@ -5,6 +5,7 @@ import LogoMark from '@/Components/LogoMark';
 import SeoHead from '@/Components/SeoHead';
 import SiteFooter from '@/Components/SiteFooter';
 import InputError from '@/Components/InputError';
+import ImageCropModal from '@/Components/ImageCropModal';
 
 const brandBrown = 'bg-[#5c4d3d] hover:bg-[#4a3e32]';
 const brandBrownOutline =
@@ -147,6 +148,8 @@ export default function HealthServicesSignUp() {
     const formRef = useRef(null);
     const imageInputRef = useRef(null);
     const [imagePreview, setImagePreview] = useState(null);
+    const [cropSrc, setCropSrc] = useState(null);
+    const [cropFileName, setCropFileName] = useState('profile.jpg');
 
     const { data, setData, post, processing, errors } = useForm({
         name: auth?.user?.name ?? '',
@@ -169,8 +172,11 @@ export default function HealthServicesSignUp() {
             if (imagePreview) {
                 URL.revokeObjectURL(imagePreview);
             }
+            if (cropSrc) {
+                URL.revokeObjectURL(cropSrc);
+            }
         };
-    }, [imagePreview]);
+    }, [imagePreview, cropSrc]);
 
     const handleImageChange = (e) => {
         const file = e.target.files?.[0];
@@ -179,13 +185,38 @@ export default function HealthServicesSignUp() {
             return;
         }
 
-        setData('image', file);
+        if (cropSrc) {
+            URL.revokeObjectURL(cropSrc);
+        }
+
+        setCropFileName(file.name || 'profile.jpg');
+        setCropSrc(URL.createObjectURL(file));
+
+        // Allow selecting the same file again after cancel.
+        if (imageInputRef.current) {
+            imageInputRef.current.value = '';
+        }
+    };
+
+    const handleCropCancel = () => {
+        if (cropSrc) {
+            URL.revokeObjectURL(cropSrc);
+        }
+        setCropSrc(null);
+    };
+
+    const handleCropSave = (file, previewUrl) => {
+        if (cropSrc) {
+            URL.revokeObjectURL(cropSrc);
+        }
+        setCropSrc(null);
 
         if (imagePreview) {
             URL.revokeObjectURL(imagePreview);
         }
 
-        setImagePreview(URL.createObjectURL(file));
+        setData('image', file);
+        setImagePreview(previewUrl);
     };
 
     const clearImage = () => {
@@ -621,7 +652,8 @@ export default function HealthServicesSignUp() {
                                                 </div>
                                             </div>
                                             <p className="mt-1 text-xs text-stone-500">
-                                                Shown on your public profile. JPG or PNG up to 2 MB.
+                                                Shown on your public profile. You can crop and zoom after choosing a
+                                                photo. JPG or PNG up to 2 MB.
                                             </p>
                                             <InputError message={errors.image} className="mt-1" />
                                         </div>
@@ -709,6 +741,15 @@ export default function HealthServicesSignUp() {
 
                 <SiteFooter />
             </div>
+
+            <ImageCropModal
+                open={Boolean(cropSrc)}
+                imageSrc={cropSrc}
+                fileName={cropFileName}
+                title="Adjust profile photo"
+                onCancel={handleCropCancel}
+                onSave={handleCropSave}
+            />
         </>
     );
 }
