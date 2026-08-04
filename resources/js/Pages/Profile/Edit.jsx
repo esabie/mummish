@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 
 function statusBadgeClass(status) {
     switch (status) {
@@ -264,14 +264,16 @@ function VendorShopSummary({ shop, isVendor }) {
 }
 
 export default function Edit({ auth, mustVerifyEmail, status, orders = [], shop = null }) {
+    const { homeUrl } = usePage().props;
     const isVendor = auth.user?.role === 'vendor' || Boolean(shop?.has_application);
+    const dashboardHref = homeUrl || route('dashboard');
 
     return (
         <AuthenticatedLayout
             user={auth.user}
             breadcrumbs={[
                 { label: 'Home', href: '/' },
-                { label: 'Dashboard', href: route('dashboard') },
+                { label: 'Dashboard', href: dashboardHref },
                 { label: 'Account' },
             ]}
             header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">My account</h2>}

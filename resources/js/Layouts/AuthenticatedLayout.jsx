@@ -4,10 +4,16 @@ import Breadcrumbs from '@/Components/Breadcrumbs';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 
 export default function Authenticated({ user, header, breadcrumbs, children }) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
+    const { homeUrl } = usePage().props;
+    const dashboardHref = homeUrl || route('dashboard');
+    const isHealthProfessional = user?.role === 'health_professional';
+    const dashboardActive = isHealthProfessional
+        ? route().current('health-professionals.*')
+        : route().current('dashboard');
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -22,12 +28,21 @@ export default function Authenticated({ user, header, breadcrumbs, children }) {
                             </div>
 
                             <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink href={route('dashboard')} active={route().current('dashboard')}>
+                                <NavLink href={dashboardHref} active={dashboardActive}>
                                     Dashboard
                                 </NavLink>
-                                <NavLink href={route('shop.index')} active={route().current('shop.*')}>
-                                    Shop
-                                </NavLink>
+                                {isHealthProfessional ? (
+                                    <NavLink
+                                        href={route('health-services.index')}
+                                        active={route().current('health-services.*')}
+                                    >
+                                        Health Services
+                                    </NavLink>
+                                ) : (
+                                    <NavLink href={route('shop.index')} active={route().current('shop.*')}>
+                                        Shop
+                                    </NavLink>
+                                )}
                                 <NavLink href={route('profile.edit')} active={route().current('profile.*')}>
                                     Account
                                 </NavLink>
@@ -99,12 +114,21 @@ export default function Authenticated({ user, header, breadcrumbs, children }) {
 
                 <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' sm:hidden'}>
                     <div className="pt-2 pb-3 space-y-1">
-                        <ResponsiveNavLink href={route('dashboard')} active={route().current('dashboard')}>
+                        <ResponsiveNavLink href={dashboardHref} active={dashboardActive}>
                             Dashboard
                         </ResponsiveNavLink>
-                        <ResponsiveNavLink href={route('shop.index')} active={route().current('shop.*')}>
-                            Shop
-                        </ResponsiveNavLink>
+                        {isHealthProfessional ? (
+                            <ResponsiveNavLink
+                                href={route('health-services.index')}
+                                active={route().current('health-services.*')}
+                            >
+                                Health Services
+                            </ResponsiveNavLink>
+                        ) : (
+                            <ResponsiveNavLink href={route('shop.index')} active={route().current('shop.*')}>
+                                Shop
+                            </ResponsiveNavLink>
+                        )}
                         <ResponsiveNavLink href={route('profile.edit')} active={route().current('profile.*')}>
                             Account
                         </ResponsiveNavLink>

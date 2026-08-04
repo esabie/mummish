@@ -56,6 +56,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasOne(VendorApplication::class)->latestOfMany();
     }
 
+    public function healthProfessional(): HasOne
+    {
+        return $this->hasOne(HealthProfessional::class);
+    }
+
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
@@ -91,10 +96,16 @@ class User extends Authenticatable implements FilamentUser
         return $this->role === UserRole::Admin;
     }
 
+    public function isHealthProfessional(): bool
+    {
+        return $this->role === UserRole::HealthProfessional;
+    }
+
     /**
      * Phone number used when sending a password-reset SMS.
      * Admins & customers: users.phone.
      * Vendors: vendor application phone.
+     * Health professionals: profile phone, then users.phone.
      */
     public function passwordResetPhone(): ?string
     {
@@ -102,6 +113,13 @@ class User extends Authenticatable implements FilamentUser
             $vendorPhone = trim((string) ($this->vendorApplication?->phone ?? ''));
 
             return $vendorPhone !== '' ? $vendorPhone : null;
+        }
+
+        if ($this->isHealthProfessional()) {
+            $healthPhone = trim((string) ($this->healthProfessional?->phone ?? ''));
+            if ($healthPhone !== '') {
+                return $healthPhone;
+            }
         }
 
         $phone = trim((string) ($this->phone ?? ''));

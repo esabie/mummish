@@ -3,6 +3,9 @@
 use App\Http\Controllers\AdminSetupController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HealthServiceController;
+use App\Http\Controllers\HealthProfessionalOnboardingController;
+use App\Http\Controllers\HealthProfessionalDashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsletterCustomerController;
 use App\Http\Controllers\OrderTrackingController;
@@ -90,6 +93,22 @@ Route::post('/shop/cart-stock', [ShopController::class, 'cartStock'])->name('sho
 Route::get('/shop/products/{id}', [ShopController::class, 'show'])
     ->whereNumber('id')
     ->name('shop.show');
+Route::get('/health-services', [HealthServiceController::class, 'index'])->name('health-services.index');
+Route::get('/health-services/join/register', [HealthProfessionalOnboardingController::class, 'create'])->name('health-professionals.signup');
+Route::post('/health-services/join/register', [HealthProfessionalOnboardingController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('health-professionals.signup.store');
+
+Route::middleware(['auth', 'health_professional'])->group(function () {
+    Route::get('/health-services/professionals/manage', [HealthProfessionalDashboardController::class, 'index'])
+        ->name('health-professionals.dashboard');
+    Route::get('/health-services/professionals/{professional}/edit', [HealthProfessionalDashboardController::class, 'edit'])
+        ->name('health-professionals.edit');
+    Route::put('/health-services/professionals/{professional}', [HealthProfessionalDashboardController::class, 'update'])
+        ->name('health-professionals.update');
+});
+
+Route::get('/health-services/{slug}', [HealthServiceController::class, 'show'])->name('health-services.show');
 
 Route::get('/shops', [VendorStoreController::class, 'index'])->name('shops.index');
 Route::get('/shops/{slug}', [VendorStoreController::class, 'show'])

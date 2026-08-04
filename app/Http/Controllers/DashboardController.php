@@ -18,6 +18,10 @@ class DashboardController extends Controller
             return redirect()->route('vendor.inventory.index');
         }
 
+        if ($user->isHealthProfessional()) {
+            return redirect()->route('health-professionals.dashboard');
+        }
+
         if ($user->isAdmin()) {
             return redirect('/admin');
         }

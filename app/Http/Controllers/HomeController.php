@@ -25,10 +25,11 @@ class HomeController extends Controller
     }
 
     /**
-     * @return array<int, array{id: string, label: string, count: int, image: string}>
+     * @return array<int, array{id: string, label: string, count: int, image: string, href?: string}>
      */
     private function shopByCategories(): array
     {
+        $healthServicesCount = count(config('marketplace.health_services_professionals', []));
         $categoryCounts = Product::query()
             ->visibleInShop()
             ->selectRaw('category, COUNT(*) as aggregate')
@@ -38,7 +39,7 @@ class HomeController extends Controller
         $images = config('marketplace.homepage_category_images', []);
         $placeholder = (string) config('marketplace.product_placeholder_image');
 
-        return collect(StoreVendorApplicationRequest::categories())
+        $productCategories = collect(StoreVendorApplicationRequest::categories())
             ->map(fn (string $label, string $id) => [
                 'id' => $id,
                 'label' => $label,
@@ -47,6 +48,17 @@ class HomeController extends Controller
             ])
             ->values()
             ->all();
+
+        return [
+            [
+                'id' => 'health_services',
+                'label' => 'Health Services',
+                'count' => $healthServicesCount,
+                'image' => $this->categoryImageUrl('health_services', $images, $placeholder),
+                'href' => route('health-services.index'),
+            ],
+            ...$productCategories,
+        ];
     }
 
     /**

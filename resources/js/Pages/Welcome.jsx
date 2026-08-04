@@ -70,9 +70,11 @@ function SectionHeading({ title, action }) {
 }
 
 function CategoryCard({ cat }) {
+    const href = cat.href || route('shop.index', { category: cat.id });
+
     return (
         <Link
-            href={route('shop.index', { category: cat.id })}
+            href={href}
             className="group flex min-w-0 flex-col"
         >
             <div className="aspect-square overflow-hidden rounded-2xl bg-neutral-100 ring-1 ring-neutral-200/80 transition group-hover:ring-market/40 group-active:scale-[0.98]">

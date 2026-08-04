@@ -21,6 +21,7 @@ class EmailRoleConflict
 
         return match ($existing->role) {
             UserRole::Vendor => 'This email already belongs to a vendor account. Sign in with that account, or use a different email to register as a customer.',
+            UserRole::HealthProfessional => 'This email already belongs to a healthcare professional account. Sign in with that account, or use a different email to register as a customer.',
             UserRole::Admin => 'This email belongs to an admin account and cannot be used for a customer signup. Use a different email.',
             default => 'An account with this email already exists. Please sign in instead.',
         };
@@ -41,7 +42,28 @@ class EmailRoleConflict
         return match ($existing->role) {
             UserRole::Admin => 'This email belongs to an admin account, which cannot become a vendor. Use a different email to sell.',
             UserRole::Vendor => 'A vendor account with this email already exists. Please sign in instead.',
+            UserRole::HealthProfessional => 'This email already belongs to a healthcare professional account. Sign in with that account, or use a different email to sell.',
             default => 'This email already belongs to a customer account. Sign in with that account to apply as a vendor, or use a different email.',
+        };
+    }
+
+    /**
+     * Message when an email is already taken on health professional signup.
+     * Returns null when the email is available.
+     */
+    public static function healthProfessionalRegistrationMessage(string $email): ?string
+    {
+        $existing = self::find($email);
+
+        if ($existing === null) {
+            return null;
+        }
+
+        return match ($existing->role) {
+            UserRole::Admin => 'This email belongs to an admin account and cannot be used for health professional registration. Use a different email.',
+            UserRole::Vendor => 'This email already belongs to a vendor account. Sign in with that account, or use a different email.',
+            UserRole::HealthProfessional => 'A healthcare professional account with this email already exists. Please sign in instead.',
+            default => 'This email already belongs to a customer account. Sign in with that account, or use a different email to register as a healthcare professional.',
         };
     }
 
