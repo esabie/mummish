@@ -11,43 +11,60 @@ export async function compressImageForUpload(file, options = {}) {
         return file;
     }
 
-    // Already small enough — skip work (and avoid re-encoding PNG logos badly).
     const maxBytes = options.maxBytes ?? 1_500_000;
+    // Already small enough — skip work (and avoid re-encoding PNG logos badly).
     if (file.size <= maxBytes && file.type !== 'image/png') {
         return file;
     }
 
-    const maxDimension = options.maxDimension ?? 2000;
+    let maxDimension = options.maxDimension ?? 2000;
     let quality = options.quality ?? 0.82;
 
     const bitmap = await loadBitmap(file);
     try {
-        const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
-        const width = Math.max(1, Math.round(bitmap.width * scale));
-        const height = Math.max(1, Math.round(bitmap.height * scale));
+        let bestBlob = null;
 
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-            return file;
+        for (let pass = 0; pass < 4; pass += 1) {
+            const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+            const width = Math.max(1, Math.round(bitmap.width * scale));
+            const height = Math.max(1, Math.round(bitmap.height * scale));
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                return file;
+            }
+            ctx.drawImage(bitmap, 0, 0, width, height);
+
+            while (quality >= 0.5) {
+                const blob = await canvasToBlob(canvas, 'image/jpeg', quality);
+                if (blob && (!bestBlob || blob.size < bestBlob.size)) {
+                    bestBlob = blob;
+                }
+                if (blob && blob.size <= maxBytes) {
+                    bestBlob = blob;
+                    break;
+                }
+                quality = Math.round((quality - 0.08) * 100) / 100;
+            }
+
+            if (bestBlob && bestBlob.size <= maxBytes) {
+                break;
+            }
+
+            // Still too large — shrink dimensions and try again.
+            maxDimension = Math.round(maxDimension * 0.75);
+            quality = Math.min(quality, 0.72);
         }
-        ctx.drawImage(bitmap, 0, 0, width, height);
 
-        let blob = await canvasToBlob(canvas, 'image/jpeg', quality);
-        // If still large, step quality down once more.
-        if (blob && blob.size > maxBytes && quality > 0.6) {
-            quality = 0.7;
-            blob = await canvasToBlob(canvas, 'image/jpeg', quality);
-        }
-
-        if (!blob || blob.size >= file.size) {
+        if (!bestBlob || bestBlob.size >= file.size) {
             return file;
         }
 
         const baseName = file.name.replace(/\.[^.]+$/, '') || 'product';
-        return new File([blob], `${baseName}.jpg`, {
+        return new File([bestBlob], `${baseName}.jpg`, {
             type: 'image/jpeg',
             lastModified: Date.now(),
         });
@@ -59,13 +76,21 @@ export async function compressImageForUpload(file, options = {}) {
 }
 
 /**
+ * Product gallery uploads: keep each file small enough that several fit under a ~2 MB nginx limit.
+ *
  * @param {File[]} files
  * @returns {Promise<File[]>}
  */
 export async function compressImagesForUpload(files) {
     const results = [];
     for (const file of files) {
-        results.push(await compressImageForUpload(file));
+        results.push(
+            await compressImageForUpload(file, {
+                maxDimension: 1600,
+                maxBytes: 550_000,
+                quality: 0.8,
+            }),
+        );
     }
     return results;
 }

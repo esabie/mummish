@@ -1,4 +1,5 @@
 import InputError from '@/Components/InputError';
+import { showHttpError } from '@/utils/httpErrorBus';
 import { compressImagesForUpload } from '@/utils/compressImageForUpload';
 import axios from 'axios';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -197,7 +198,21 @@ export default function ProductImagesUpload({
         setPreparing(true);
         try {
             const compressed = await compressImagesForUpload(incoming.slice(0, room));
-            onNewFilesChange([...newFiles, ...compressed]);
+            const usable = compressed.filter((file) => file.size <= 1_800_000);
+            if (usable.length > 0) {
+                onNewFilesChange([...newFiles, ...usable]);
+            }
+            if (usable.length < compressed.length) {
+                showHttpError({
+                    message:
+                        'One or more photos are still too large after compression. Try a different photo or export a smaller JPG.',
+                    status: 413,
+                });
+            }
+        } catch {
+            showHttpError({
+                message: 'Could not prepare those photos. Please try different images.',
+            });
         } finally {
             setPreparing(false);
         }
@@ -337,7 +352,8 @@ export default function ProductImagesUpload({
 
             <p className="mt-4 rounded-lg bg-stone-50 px-3 py-2 text-xs leading-relaxed text-stone-600">
                 <span className="font-semibold text-stone-800">Tip:</span> Use your phone&apos;s camera app in good
-                light. We only check that photos are large enough and not extremely blurry.
+                light. Photos are compressed automatically before upload — we only check that they are large enough
+                and not extremely blurry.
             </p>
             <InputError message={error} className="mt-1" />
         </div>
