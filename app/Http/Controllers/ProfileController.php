@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreVendorApplicationRequest;
 use App\Models\User;
 use App\Services\CustomerOrderHistory;
+use App\Services\DeleteUserAccount;
 use App\Services\VendorListingLimit;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,6 +30,31 @@ class ProfileController extends Controller
             'orders' => $orders->forUser($user),
             'shop' => $this->shopSummary($user),
         ]);
+    }
+
+    /**
+     * Delete the user's account.
+     */
+    public function destroy(Request $request, DeleteUserAccount $deleter): RedirectResponse
+    {
+        $request->validate([
+            'password' => ['required', 'current_password'],
+        ]);
+
+        $user = $request->user();
+
+        if ($user->isAdmin()) {
+            abort(403, 'Admin accounts cannot be deleted from the profile page.');
+        }
+
+        $deleter->delete($user);
+
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/');
     }
 
     /**

@@ -123,6 +123,10 @@ class VendorOnboardingController extends Controller
             'created_new_user' => $createdNewUser,
             'shop_name' => $request->shop_name,
             'category' => $request->category,
+            'phone_masked' => LogSanitizer::maskPhone($request->phone),
+            'ghana_card_id_suffix' => substr((string) $request->ghana_card_id, -4),
+            'has_logo' => $request->hasFile('logo'),
+            'has_referral_code' => filled($request->referral_code),
         ]);
 
         return redirect()

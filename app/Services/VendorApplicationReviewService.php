@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Enums\VendorApplicationStatus;
 use App\Jobs\SendVendorApplicationStatusSms;
-use App\Models\Product;
 use App\Models\User;
 use App\Models\VendorApplication;
 use App\Notifications\VendorApplicationReviewedNotification;
@@ -102,18 +101,7 @@ class VendorApplicationReviewService
         $deletedCount = 0;
 
         DB::transaction(function () use ($application, $reviewer, $reason, &$deletedCount) {
-            $products = Product::query()
-                ->where('user_id', $application->user_id)
-                ->get();
-
-            foreach ($products as $product) {
-                $this->productImages->deleteStoredUrls($product->image_urls ?? []);
-                if (is_string($product->image_url) && $product->image_url !== '') {
-                    $this->productImages->deleteStoredUrl($product->image_url);
-                }
-                $product->delete();
-                $deletedCount++;
-            }
+            $deletedCount = $this->productImages->deleteListingsForVendorId((int) $application->user_id);
 
             $application->update([
                 'status' => VendorApplicationStatus::Closed,

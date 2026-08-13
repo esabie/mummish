@@ -143,6 +143,7 @@ Route::middleware(['auth', 'verified', 'vendor'])->prefix('vendor')->name('vendo
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 require __DIR__.'/auth.php';

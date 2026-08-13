@@ -44,7 +44,7 @@ class VendorApplication extends Model
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function reviewedBy(): BelongsTo
@@ -75,6 +75,11 @@ class VendorApplication extends Model
     public function isClosed(): bool
     {
         return $this->status === VendorApplicationStatus::Closed;
+    }
+
+    public function isDeleted(): bool
+    {
+        return $this->status === VendorApplicationStatus::Deleted;
     }
 
     public function shopLogoUrl(): ?string

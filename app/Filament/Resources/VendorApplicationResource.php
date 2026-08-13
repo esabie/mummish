@@ -49,7 +49,9 @@ class VendorApplicationResource extends Resource
                         Infolists\Components\TextEntry::make('ghana_card_id')
                             ->label('Ghana Card ID'),
                         Infolists\Components\TextEntry::make('user.email')
-                            ->label('Account email'),
+                            ->label('Account email')
+                            ->state(fn (VendorApplication $record): string => $record->user?->displayEmail()
+                                ?? $record->business_email),
                     ])
                     ->columns(2),
                 Infolists\Components\Section::make('Shop')
@@ -103,15 +105,26 @@ class VendorApplicationResource extends Resource
                                 VendorApplicationStatus::Approved => 'success',
                                 VendorApplicationStatus::Rejected => 'danger',
                                 VendorApplicationStatus::Closed => 'gray',
+                                VendorApplicationStatus::Deleted => 'danger',
                             })
                             ->formatStateUsing(fn (VendorApplicationStatus $state): string => $state->label()),
                         Infolists\Components\TextEntry::make('rejection_reason')
-                            ->label(fn (VendorApplication $record): string => $record->isClosed() ? 'Close reason' : 'Rejection reason')
+                            ->label(fn (VendorApplication $record): string => match ($record->status) {
+                                VendorApplicationStatus::Closed => 'Close reason',
+                                VendorApplicationStatus::Deleted => 'Account note',
+                                default => 'Rejection reason',
+                            })
                             ->visible(fn (VendorApplication $record): bool => in_array($record->status, [
                                 VendorApplicationStatus::Rejected,
                                 VendorApplicationStatus::Closed,
+                                VendorApplicationStatus::Deleted,
                             ], true))
                             ->columnSpanFull(),
+                        Infolists\Components\TextEntry::make('user.deleted_at')
+                            ->label('Account deleted at')
+                            ->dateTime()
+                            ->visible(fn (VendorApplication $record): bool => $record->user?->trashed() ?? $record->isDeleted())
+                            ->placeholder('—'),
                         Infolists\Components\TextEntry::make('reviewed_at')
                             ->dateTime()
                             ->placeholder('—'),
@@ -168,6 +181,7 @@ class VendorApplicationResource extends Resource
                         VendorApplicationStatus::Approved => 'success',
                         VendorApplicationStatus::Rejected => 'danger',
                         VendorApplicationStatus::Closed => 'gray',
+                        VendorApplicationStatus::Deleted => 'danger',
                     })
                     ->formatStateUsing(fn (VendorApplicationStatus $state): string => $state->label()),
                 Tables\Columns\TextColumn::make('created_at')
@@ -265,7 +279,7 @@ class VendorApplicationResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['user', 'reviewedBy']);
+        return parent::getEloquentQuery()->with(['user' => fn ($query) => $query->withTrashed(), 'reviewedBy']);
     }
 
     public static function canCreate(): bool

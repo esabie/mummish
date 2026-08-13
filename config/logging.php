@@ -41,14 +41,17 @@ return [
     | Application Log Toggles
     |--------------------------------------------------------------------------
     |
-    | HTTP request and SQL query logging are opt-in (or enabled in production
-    | for HTTP only) to keep local dev fast and avoid memory pressure from
-    | verbose per-query logs.
+    | HTTP request logging defaults on in production so mutations and page
+    | traffic leave a trail. SQL query logging stays opt-in (very noisy).
+    | 4xx/5xx and POST/PUT/PATCH/DELETE are always logged regardless.
     |
     */
 
     'log_http_requests' => filter_var(
-        env('LOG_HTTP_REQUESTS', false),
+        env(
+            'LOG_HTTP_REQUESTS',
+            env('APP_ENV') === 'production' ? 'true' : 'false'
+        ),
         FILTER_VALIDATE_BOOL
     ),
 

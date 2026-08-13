@@ -8,6 +8,7 @@ enum VendorApplicationStatus: string
     case Approved = 'approved';
     case Rejected = 'rejected';
     case Closed = 'closed';
+    case Deleted = 'deleted';
 
     public function label(): string
     {
@@ -16,6 +17,7 @@ enum VendorApplicationStatus: string
             self::Approved => 'Approved',
             self::Rejected => 'Rejected',
             self::Closed => 'Closed',
+            self::Deleted => 'Account deleted',
         };
     }
 }

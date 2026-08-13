@@ -13,7 +13,7 @@ class EmailRoleConflict
      */
     public static function customerRegistrationMessage(string $email): ?string
     {
-        $existing = self::find($email);
+        $existing = self::findActiveOrHealDeleted($email);
 
         if ($existing === null) {
             return null;
@@ -32,7 +32,7 @@ class EmailRoleConflict
      */
     public static function vendorRegistrationMessage(string $email): ?string
     {
-        $existing = self::find($email);
+        $existing = self::findActiveOrHealDeleted($email);
 
         if ($existing === null) {
             return null;
@@ -45,7 +45,11 @@ class EmailRoleConflict
         };
     }
 
-    private static function find(string $email): ?User
+    /**
+     * Soft-deleted accounts should not block reuse. If a deleted row still
+     * holds the live email (legacy data), release it and treat as available.
+     */
+    private static function findActiveOrHealDeleted(string $email): ?User
     {
         $email = strtolower(trim($email));
 
@@ -53,6 +57,24 @@ class EmailRoleConflict
             return null;
         }
 
-        return User::query()->where('email', $email)->first();
+        $existing = User::query()->withTrashed()->where('email', $email)->first();
+
+        if ($existing === null) {
+            return null;
+        }
+
+        if ($existing->trashed()) {
+            $existing->releaseEmailForReuse();
+
+            AppLog::info('[Account] Freed email held by soft-deleted user during signup check.', [
+                'user_id' => $existing->id,
+                'email_masked' => LogSanitizer::maskEmail($email),
+                'role' => $existing->role?->value,
+            ]);
+
+            return null;
+        }
+
+        return $existing;
     }
 }

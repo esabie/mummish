@@ -17,9 +17,20 @@ class ProductImageService
      */
     public function storeUploads(User $user, array $files): array
     {
-        AppLog::debug('[ProductImage] Storing uploads.', [
+        AppLog::info('[ProductImage] Storing uploads.', [
             'vendor_user_id' => $user->id,
             'file_count' => count($files),
+            'files' => array_map(static function ($file) {
+                if (! $file instanceof UploadedFile) {
+                    return null;
+                }
+
+                return [
+                    'name' => $file->getClientOriginalName(),
+                    'size' => $file->getSize(),
+                    'mime' => $file->getMimeType(),
+                ];
+            }, $files),
         ]);
 
         $urls = [];
@@ -36,9 +47,40 @@ class ProductImageService
         AppLog::info('[ProductImage] Uploads stored.', [
             'vendor_user_id' => $user->id,
             'stored_count' => count($urls),
+            'paths' => $urls,
         ]);
 
         return $urls;
+    }
+
+    /**
+     * Permanently remove every listing (and stored images) for a vendor.
+     */
+    public function deleteListingsForVendor(User $user): int
+    {
+        return $this->deleteListingsForVendorId($user->id);
+    }
+
+    public function deleteListingsForVendorId(int $userId): int
+    {
+        $deletedCount = 0;
+        $products = Product::query()->where('user_id', $userId)->get();
+
+        foreach ($products as $product) {
+            $this->deleteStoredUrls($product->image_urls ?? []);
+            if (is_string($product->image_url) && $product->image_url !== '') {
+                $this->deleteStoredUrl($product->image_url);
+            }
+            $product->delete();
+            $deletedCount++;
+        }
+
+        AppLog::info('[ProductImage] Vendor listings deleted.', [
+            'vendor_user_id' => $userId,
+            'deleted_count' => $deletedCount,
+        ]);
+
+        return $deletedCount;
     }
 
     /**

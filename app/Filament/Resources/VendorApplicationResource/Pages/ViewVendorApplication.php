@@ -91,6 +91,7 @@ class ViewVendorApplication extends ViewRecord
                 ->modalHeading('Update payment details')
                 ->modalDescription('This will replace the vendor’s saved payout details. Confirm only if you have verified the new information.')
                 ->modalSubmitActionLabel('Confirm update')
+                ->visible(fn (VendorApplication $record): bool => ! $record->isDeleted())
                 ->action(function (VendorApplication $record, array $data): void {
                     $record->applyPayoutDetails($data);
 

@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 import { Head, Link } from '@inertiajs/react';
@@ -305,6 +306,12 @@ export default function Edit({ auth, mustVerifyEmail, status, orders = [], shop 
                             <UpdatePasswordForm className="max-w-xl" />
                         </div>
                     </div>
+
+                    {auth.user?.role !== 'admin' ? (
+                        <div className="rounded-xl border border-red-200 bg-white p-5 shadow-sm sm:p-6">
+                            <DeleteUserForm className="max-w-xl" isVendor={isVendor} />
+                        </div>
+                    ) : null}
                 </div>
             </div>
         </AuthenticatedLayout>
