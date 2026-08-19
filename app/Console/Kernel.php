@@ -14,7 +14,7 @@ class Kernel extends ConsoleKernel
     {
         // Ghana is GMT year-round (Africa/Accra).
         $schedule->command('vendors:remind-missing-payout-details')
-            ->dailyAt('09:00')
+            ->weeklyOn(3, '09:00')
             ->timezone('Africa/Accra')
             ->withoutOverlapping();
     }
