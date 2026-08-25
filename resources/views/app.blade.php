@@ -14,7 +14,7 @@
                 $siteUrl = 'https://'.substr($siteUrl, strlen('http://'));
             }
 
-            $defaultSeoTitle = 'The Mummish';
+            $defaultSeoTitle = 'Mummish';
             $defaultSeoDescription = 'Marketplace for the modern mother. Shop baby clothes, kids products, and family essentials from trusted local sellers across Ghana.';
             $seoTitle = trim((string) config('seo.title', ''));
             $seoTitle = $seoTitle !== '' ? $seoTitle : $defaultSeoTitle;

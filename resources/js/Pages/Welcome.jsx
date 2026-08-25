@@ -72,9 +72,18 @@ function SectionHeading({ title, action }) {
 }
 
 function CategoryCard({ cat }) {
+    const href = cat.href || route('shop.index', { category: cat.id });
+    const countNoun = cat.count_label
+        ? cat.count === 1
+            ? cat.count_label.replace(/s$/, '') || cat.count_label
+            : cat.count_label
+        : cat.count === 1
+          ? 'item'
+          : 'items';
+
     return (
         <Link
-            href={route('shop.index', { category: cat.id })}
+            href={href}
             className="group flex min-w-0 flex-col"
         >
             <div className="aspect-square overflow-hidden rounded-2xl bg-neutral-100 ring-1 ring-neutral-200/80 transition group-hover:ring-market/40 group-active:scale-[0.98]">
@@ -90,7 +99,7 @@ function CategoryCard({ cat }) {
                 {cat.label}
             </p>
             <p className="mt-0.5 text-[11px] text-neutral-500 sm:text-xs">
-                {cat.count} {cat.count === 1 ? 'item' : 'items'}
+                {cat.count} {countNoun}
             </p>
         </Link>
     );
@@ -211,7 +220,7 @@ export default function Welcome({
     return (
         <>
             <SeoHead
-                documentTitle={seo?.title || 'The Mummish'}
+                documentTitle={seo?.title || 'Mummish'}
                 description={seoDescription}
                 url="/"
                 image="/images/logo.png"

@@ -58,17 +58,39 @@ class HomePageTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Welcome')
-                ->has('categories', count(config('marketplace.categories')))
-                ->where('categories.0.id', 'feeding_nursing')
-                ->where('categories.7.id', 'toys_development')
-                ->where('categories.0.count', 1)
-                ->where('categories.7.count', 1)
+                ->has('categories', count(config('marketplace.categories')) + 1)
+                ->where('categories.0.id', 'health_services')
+                ->where('categories.0.href', '/health-services')
+                ->where('categories.1.id', 'feeding_nursing')
+                ->where('categories.1.count', 1)
+                ->where('categories.8.id', 'toys_development')
+                ->where('categories.8.count', 1)
                 ->has('featured_stores', 1)
                 ->where('featured_stores.0.slug', 'oak-and-acorn')
                 ->where('featured_stores.0.name', 'Oak & Acorn')
                 ->where('featured_stores.0.product_count', 2)
                 ->has('popular_products', 2)
                 ->where('popular_products.0.name', 'Organic Bib')
+            );
+    }
+
+    public function test_homepage_health_services_count_matches_live_listings(): void
+    {
+        \App\Models\HealthProfessional::create([
+            'name' => 'Dr Live One',
+            'slug' => 'dr-live-one',
+            'title' => 'Pediatrician',
+            'specialty' => 'Pediatrics',
+            'is_active' => true,
+            'approval_status' => \App\Enums\HealthProfessionalApprovalStatus::Approved,
+        ]);
+
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('categories.0.id', 'health_services')
+                ->where('categories.0.count', 1)
+                ->where('categories.0.href', '/health-services')
             );
     }
 
@@ -110,8 +132,8 @@ class HomePageTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->has('featured_stores', 0)
-                ->has('categories', count(config('marketplace.categories')))
-                ->where('categories.7.count', 1)
+                ->has('categories', count(config('marketplace.categories')) + 1)
+                ->where('categories.8.count', 1)
                 ->has('popular_products', 1)
             );
     }

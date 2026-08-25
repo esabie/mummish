@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\VendorApplicationStatus;
 use App\Http\Requests\StoreVendorApplicationRequest;
+use App\Models\HealthProfessional;
 use App\Models\Product;
 use App\Models\VendorApplication;
 use Inertia\Inertia;
@@ -25,7 +26,7 @@ class HomeController extends Controller
     }
 
     /**
-     * @return array<int, array{id: string, label: string, count: int, image: string}>
+     * @return array<int, array{id: string, label: string, count: int, image: string, href?: string, count_label?: string}>
      */
     private function shopByCategories(): array
     {
@@ -38,7 +39,7 @@ class HomeController extends Controller
         $images = config('marketplace.homepage_category_images', []);
         $placeholder = (string) config('marketplace.product_placeholder_image');
 
-        return collect(StoreVendorApplicationRequest::categories())
+        $productCategories = collect(StoreVendorApplicationRequest::categories())
             ->map(fn (string $label, string $id) => [
                 'id' => $id,
                 'label' => $label,
@@ -47,6 +48,35 @@ class HomeController extends Controller
             ])
             ->values()
             ->all();
+
+        return [
+            [
+                'id' => 'health_services',
+                'label' => 'Health Services',
+                'count' => $this->healthServicesListingCount(),
+                'count_label' => 'professionals',
+                'image' => $this->categoryImageUrl('health_services', $images, $placeholder),
+                'href' => route('health-services.index', [], false),
+            ],
+            ...$productCategories,
+        ];
+    }
+
+    /**
+     * Match HealthServiceController: prefer live DB professionals when any exist,
+     * otherwise fall back to demo config entries.
+     */
+    private function healthServicesListingCount(): int
+    {
+        $dbCount = HealthProfessional::query()
+            ->publiclyVisible()
+            ->count();
+
+        if ($dbCount > 0) {
+            return $dbCount;
+        }
+
+        return count(config('marketplace.health_services_professionals', []));
     }
 
     /**

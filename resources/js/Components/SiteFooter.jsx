@@ -51,8 +51,18 @@ export default function SiteFooter() {
                                 </Link>
                             </li>
                             <li>
+                                <Link href={route('health-services.index')} className="hover:text-market">
+                                    Health Services
+                                </Link>
+                            </li>
+                            <li>
                                 <Link href="/shipping" className="hover:text-market">
                                     Shipping &amp; delivery
+                                </Link>
+                            </li>
+                            <li>
+                                <Link href={route('health-services.bookings.review')} className="hover:text-market">
+                                    Leave a review
                                 </Link>
                             </li>
                             <li>

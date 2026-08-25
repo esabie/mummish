@@ -14,8 +14,7 @@ import { debugLogger } from './utils/debugLogger';
 import { showHttpError } from './utils/httpErrorBus';
 import { httpErrorMessage } from './utils/httpErrorMessage';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
-const siteTitle = 'The Mummish';
+const siteTitle = 'Mummish';
 
 router.on('invalid', (event) => {
     const status = event.detail.response?.status;
@@ -44,18 +43,7 @@ router.on('exception', (event) => {
 });
 
 createInertiaApp({
-    title: (title) => {
-        if (!title || title === appName || title === siteTitle) {
-            return siteTitle;
-        }
-
-        // Already includes the brand — don't append again (avoids "The Mummish - Mummish").
-        if (/\bMummish\b/i.test(title)) {
-            return title;
-        }
-
-        return `${title} - ${siteTitle}`;
-    },
+    title: () => siteTitle,
     resolve: (name) => {
         debugLogger.info('Inertia', 'Resolving page component', { name });
         return resolvePageComponent(`./Pages/${name}.jsx`, import.meta.glob('./Pages/**/*.jsx'));

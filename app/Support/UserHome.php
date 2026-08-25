@@ -15,6 +15,7 @@ class UserHome
 
         return match ($user->role) {
             UserRole::Vendor => route('vendor.inventory.index', absolute: false),
+            UserRole::HealthProfessional => route('health-professionals.dashboard', absolute: false),
             UserRole::Admin => '/admin',
             default => route('dashboard', absolute: false),
         };

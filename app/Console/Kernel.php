@@ -17,6 +17,15 @@ class Kernel extends ConsoleKernel
             ->weeklyOn(3, '09:00')
             ->timezone('Africa/Accra')
             ->withoutOverlapping();
+
+        $schedule->command('health-professionals:remind-missing-payout-details')
+            ->weeklyOn(3, '09:15')
+            ->timezone('Africa/Accra')
+            ->withoutOverlapping();
+
+        $schedule->command('health-bookings:expire-payment-holds')
+            ->everyFiveMinutes()
+            ->withoutOverlapping();
     }
 
     /**

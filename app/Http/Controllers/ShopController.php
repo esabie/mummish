@@ -8,14 +8,19 @@ use App\Models\Product;
 use App\Models\User;
 use App\Support\AppLog;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ShopController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request): Response|RedirectResponse
     {
+        if ($request->query('category') === 'health_services') {
+            return redirect()->route('health-services.index');
+        }
+
         $query = trim((string) $request->query('q', ''));
         $category = $this->validCategory($request->query('category'));
         $priceMaxGhs = max(0, (int) $request->query('price_max', 0));

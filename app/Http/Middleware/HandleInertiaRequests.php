@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Support\SupportWhatsApp;
+use App\Support\UserHome;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Middleware;
@@ -40,7 +41,7 @@ class HandleInertiaRequests extends Middleware
             'seo' => [
                 'title' => (string) (filled(config('seo.title'))
                     ? config('seo.title')
-                    : 'The Mummish'),
+                    : 'Mummish'),
                 'description' => (string) (filled(config('seo.description'))
                     ? config('seo.description')
                     : 'Marketplace for the modern mother. Shop baby clothes, kids products, and family essentials from trusted local sellers across Ghana.'),
@@ -49,6 +50,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $user,
             ],
+            'homeUrl' => UserHome::path($user),
             'canLogin' => Route::has('login'),
             'canRegister' => Route::has('register'),
             'supportEmail' => (string) config('marketplace.support_email', 'info@themummish.com'),
