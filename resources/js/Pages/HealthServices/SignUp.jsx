@@ -653,7 +653,8 @@ export default function HealthServicesSignUp() {
                                             </div>
                                             <p className="mt-1 text-xs text-stone-500">
                                                 Shown on your public profile. You can crop and zoom after choosing a
-                                                photo. JPG or PNG up to 2 MB.
+                                                photo — the square crop matches how it appears publicly. JPG or PNG up
+                                                to 2 MB.
                                             </p>
                                             <InputError message={errors.image} className="mt-1" />
                                         </div>
@@ -747,6 +748,7 @@ export default function HealthServicesSignUp() {
                 imageSrc={cropSrc}
                 fileName={cropFileName}
                 title="Adjust profile photo"
+                aspect={1}
                 onCancel={handleCropCancel}
                 onSave={handleCropSave}
             />

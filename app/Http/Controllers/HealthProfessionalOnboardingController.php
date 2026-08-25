@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\HealthProfessionalApprovalStatus;
 use App\Enums\UserRole;
 use App\Http\Requests\StoreHealthProfessionalRequest;
 use App\Models\HealthProfessional;
@@ -69,6 +70,7 @@ class HealthProfessionalOnboardingController extends Controller
                 ),
                 'image_path' => $imagePath,
                 'is_active' => false,
+                'approval_status' => HealthProfessionalApprovalStatus::Pending,
             ]);
         });
 
@@ -77,7 +79,7 @@ class HealthProfessionalOnboardingController extends Controller
 
         return redirect()
             ->route('health-professionals.edit', $professional)
-            ->with('success', 'Account created. Add your visit modes, services, and weekly availability to go live.');
+            ->with('success', 'Account created. Finish your profile, then wait for admin approval before you appear on Health Services.');
     }
 
     private function uniqueSlug(string $name): string

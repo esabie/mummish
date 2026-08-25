@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Enums\UserRole;
 use App\Filament\Resources\AdminUserResource;
 use App\Filament\Resources\CustomerUserResource;
+use App\Filament\Resources\HealthProfessionalResource;
 use App\Filament\Resources\NewsletterCustomerResource;
 use App\Filament\Resources\VendorUserResource;
 use App\Models\NewsletterCustomer;
@@ -45,6 +46,13 @@ class UsersHub extends Page
                     'count' => User::query()->where('role', UserRole::Vendor)->count(),
                     'url' => VendorUserResource::getUrl('index'),
                     'icon' => 'heroicon-o-building-storefront',
+                ],
+                [
+                    'title' => 'Health professionals',
+                    'description' => 'Approve profiles and review Health Services providers',
+                    'count' => User::query()->where('role', UserRole::HealthProfessional)->count(),
+                    'url' => HealthProfessionalResource::getUrl('index'),
+                    'icon' => 'heroicon-o-heart',
                 ],
                 [
                     'title' => 'Newsletter list',

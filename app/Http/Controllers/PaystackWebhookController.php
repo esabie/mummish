@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\CheckoutService;
+use App\Services\HealthBookingPaymentService;
 use App\Services\PaystackService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -11,8 +12,12 @@ use Throwable;
 
 class PaystackWebhookController extends Controller
 {
-    public function __invoke(Request $request, PaystackService $paystack, CheckoutService $checkout): Response
-    {
+    public function __invoke(
+        Request $request,
+        PaystackService $paystack,
+        CheckoutService $checkout,
+        HealthBookingPaymentService $healthPayments,
+    ): Response {
         $payload = $request->getContent();
         $signature = $request->header('x-paystack-signature');
 
@@ -61,32 +66,56 @@ class PaystackWebhookController extends Controller
 
         $order = $checkout->findOrderByReference($reference);
 
-        if ($order === null) {
-            Log::warning('Paystack webhook: order not found.', [
+        if ($order !== null) {
+            Log::debug('Paystack webhook: order resolved.', [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'payment_status' => $order->payment_status->value,
+                'expected_amount' => $order->total_cents,
+            ]);
+
+            try {
+                $checkout->markOrderPaidFromPaystack($order, $data);
+
+                Log::info('Paystack webhook: order marked paid.', [
+                    'order_id' => $order->id,
+                    'reference' => $reference,
+                ]);
+            } catch (Throwable $exception) {
+                Log::error('Paystack webhook: failed to mark order paid.', [
+                    'reference' => $reference,
+                    'order_id' => $order->id,
+                    'message' => $exception->getMessage(),
+                    'exception' => $exception::class,
+                ]);
+
+                return response('Processing failed', 500);
+            }
+
+            return response('OK', 200);
+        }
+
+        $booking = $healthPayments->findByPaystackReference($reference);
+
+        if ($booking === null) {
+            Log::warning('Paystack webhook: order/booking not found.', [
                 'reference' => $reference,
             ]);
 
-            return response('Order not found', 404);
+            return response('Not found', 404);
         }
 
-        Log::debug('Paystack webhook: order resolved.', [
-            'order_id' => $order->id,
-            'order_number' => $order->order_number,
-            'payment_status' => $order->payment_status->value,
-            'expected_amount' => $order->total_cents,
-        ]);
-
         try {
-            $checkout->markOrderPaidFromPaystack($order, $data);
+            $healthPayments->markPaidFromPaystack($booking, $data);
 
-            Log::info('Paystack webhook: order marked paid.', [
-                'order_id' => $order->id,
+            Log::info('Paystack webhook: health booking marked paid.', [
+                'booking_id' => $booking->id,
                 'reference' => $reference,
             ]);
         } catch (Throwable $exception) {
-            Log::error('Paystack webhook: failed to mark order paid.', [
+            Log::error('Paystack webhook: failed to mark health booking paid.', [
                 'reference' => $reference,
-                'order_id' => $order->id,
+                'booking_id' => $booking->id,
                 'message' => $exception->getMessage(),
                 'exception' => $exception::class,
             ]);

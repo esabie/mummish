@@ -56,6 +56,9 @@ return [
     // Mummish commission on vendor sales (basis points: 1000 = 10%).
     'vendor_commission_bps' => (int) env('VENDOR_COMMISSION_BPS', 1000),
 
+    // Soft-hold window while a patient completes Paystack for a health booking.
+    'health_booking_payment_hold_minutes' => (int) env('HEALTH_BOOKING_PAYMENT_HOLD_MINUTES', 20),
+
     // Fallback when a region/city has no configured rate.
     'checkout_shipping_cents' => (int) env('CHECKOUT_SHIPPING_CENTS', 0),
 
@@ -223,7 +226,7 @@ return [
                 ['service' => 'Home postnatal visit',      'price' => 'GHS 200', 'mode' => 'In person'],
                 ['service' => 'Newborn care orientation',  'price' => 'GHS 160', 'mode' => 'In person'],
                 ['service' => 'Breastfeeding support',     'price' => 'GHS 170', 'mode' => 'Virtual'],
-                ['service' => 'Virtual postnatal check-in','price' => 'GHS 130', 'mode' => 'Virtual'],
+                ['service' => 'Virtual postnatal check-in', 'price' => 'GHS 130', 'mode' => 'Virtual'],
             ],
             'booking_note' => 'Same-day slots are available for bookings made before 11:00 AM.',
             'rating' => 4.9,
@@ -258,7 +261,7 @@ return [
             ],
             'rate_card' => [
                 ['service' => 'Family consultation',        'price' => 'GHS 220', 'mode' => 'In person'],
-                ['service' => 'Preventive screening review','price' => 'GHS 260', 'mode' => 'In person'],
+                ['service' => 'Preventive screening review', 'price' => 'GHS 260', 'mode' => 'In person'],
                 ['service' => 'Telehealth check-in',        'price' => 'GHS 140', 'mode' => 'Virtual'],
                 ['service' => 'Virtual family review',      'price' => 'GHS 160', 'mode' => 'Virtual'],
             ],

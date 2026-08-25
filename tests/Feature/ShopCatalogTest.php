@@ -17,6 +17,12 @@ class ShopCatalogTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_shop_health_services_category_redirects_to_health_services_page(): void
+    {
+        $this->get(route('shop.index', ['category' => 'health_services']))
+            ->assertRedirect(route('health-services.index'));
+    }
+
     public function test_shop_lists_active_products_from_vendors_with_open_applications(): void
     {
         $vendor = $this->createVendor(VendorApplicationStatus::Pending);

@@ -124,11 +124,11 @@ export default function HealthServicesIndex({ professionals = [] }) {
                                 className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md"
                             >
                                 <Link href={route('health-services.show', professional.slug)} className="block">
-                                    <div className="aspect-[4/3] bg-stone-100">
+                                    <div className="aspect-square bg-stone-100">
                                         <img
                                             src={professional.image}
                                             alt={professional.name}
-                                            className="h-full w-full object-cover"
+                                            className="h-full w-full object-cover object-center"
                                             loading="lazy"
                                         />
                                     </div>

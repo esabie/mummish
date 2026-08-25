@@ -3,9 +3,11 @@
 use App\Http\Controllers\AdminSetupController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\HealthServiceController;
-use App\Http\Controllers\HealthProfessionalOnboardingController;
+use App\Http\Controllers\HealthBookingPaymentController;
+use App\Http\Controllers\HealthBookingReviewController;
 use App\Http\Controllers\HealthProfessionalDashboardController;
+use App\Http\Controllers\HealthProfessionalOnboardingController;
+use App\Http\Controllers\HealthServiceController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsletterCustomerController;
 use App\Http\Controllers\OrderTrackingController;
@@ -14,7 +16,6 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\ShortLinkController;
 use App\Http\Controllers\SitemapController;
-use App\Http\Controllers\VendorStoreController;
 use App\Http\Controllers\Vendor\VendorDashboardController;
 use App\Http\Controllers\Vendor\VendorInventoryController;
 use App\Http\Controllers\Vendor\VendorNotificationController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\Vendor\VendorPlaceholderController;
 use App\Http\Controllers\Vendor\VendorProductController;
 use App\Http\Controllers\Vendor\VendorProductImageController;
 use App\Http\Controllers\VendorOnboardingController;
+use App\Http\Controllers\VendorStoreController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -102,13 +104,41 @@ Route::post('/health-services/join/register', [HealthProfessionalOnboardingContr
 Route::middleware(['auth', 'health_professional'])->group(function () {
     Route::get('/health-services/professionals/manage', [HealthProfessionalDashboardController::class, 'index'])
         ->name('health-professionals.dashboard');
+    Route::put('/health-services/professionals/payment-details', [HealthProfessionalDashboardController::class, 'updatePayoutDetails'])
+        ->name('health-professionals.payment-details.update');
+    Route::get('/health-services/professionals/schedule', [HealthProfessionalDashboardController::class, 'schedule'])
+        ->name('health-professionals.schedule');
     Route::get('/health-services/professionals/{professional}/edit', [HealthProfessionalDashboardController::class, 'edit'])
         ->name('health-professionals.edit');
     Route::put('/health-services/professionals/{professional}', [HealthProfessionalDashboardController::class, 'update'])
         ->name('health-professionals.update');
+    Route::post('/health-services/professionals/{professional}/bookings/{booking}/confirm', [HealthProfessionalDashboardController::class, 'confirmBooking'])
+        ->name('health-professionals.bookings.confirm');
+    Route::post('/health-services/professionals/{professional}/bookings/{booking}/decline', [HealthProfessionalDashboardController::class, 'declineBooking'])
+        ->name('health-professionals.bookings.decline');
+    Route::post('/health-services/professionals/{professional}/bookings/{booking}/cancel', [HealthProfessionalDashboardController::class, 'cancelBooking'])
+        ->name('health-professionals.bookings.cancel');
+    Route::post('/health-services/professionals/{professional}/bookings/{booking}/complete', [HealthProfessionalDashboardController::class, 'completeBooking'])
+        ->name('health-professionals.bookings.complete');
 });
 
+Route::get('/health-services/bookings/review', [HealthBookingReviewController::class, 'create'])
+    ->name('health-services.bookings.review');
+Route::post('/health-services/bookings/review', [HealthBookingReviewController::class, 'lookup'])
+    ->middleware('throttle:10,1')
+    ->name('health-services.bookings.review.lookup');
+Route::get('/health-services/bookings/{booking}/review', [HealthBookingReviewController::class, 'show'])
+    ->name('health-services.bookings.review.show');
+Route::post('/health-services/bookings/{booking}/review', [HealthBookingReviewController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('health-services.bookings.review.store');
+
 Route::get('/health-services/{slug}', [HealthServiceController::class, 'show'])->name('health-services.show');
+Route::post('/health-services/{slug}/bookings', [HealthServiceController::class, 'storeBooking'])
+    ->middleware('throttle:10,1')
+    ->name('health-services.bookings.store');
+Route::get('/health-services/bookings/payment/callback', [HealthBookingPaymentController::class, 'callback'])
+    ->name('health-services.bookings.callback');
 
 Route::get('/shops', [VendorStoreController::class, 'index'])->name('shops.index');
 Route::get('/shops/{slug}', [VendorStoreController::class, 'show'])

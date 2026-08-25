@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useForm, usePage } from '@inertiajs/react';
-import Breadcrumbs from '@/Components/Breadcrumbs';
-import LogoMark from '@/Components/LogoMark';
+import { useForm } from '@inertiajs/react';
+import HealthProfessionalLayout from '@/Layouts/HealthProfessionalLayout';
 import SeoHead from '@/Components/SeoHead';
-import SiteFooter from '@/Components/SiteFooter';
 import InputError from '@/Components/InputError';
 import ImageCropModal from '@/Components/ImageCropModal';
 
@@ -48,12 +46,11 @@ function RequiredLabel({ htmlFor, children }) {
 }
 
 export default function HealthServicesEdit({ professional }) {
-    const { flash } = usePage().props;
     const imageInputRef = useRef(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [cropSrc, setCropSrc] = useState(null);
     const [cropFileName, setCropFileName] = useState('profile.jpg');
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, put, post, processing, errors, transform } = useForm({
         name: professional.name ?? '',
         title: professional.title ?? '',
         specialty: professional.specialty ?? '',
@@ -174,10 +171,24 @@ export default function HealthServicesEdit({ professional }) {
         setData('services', next);
     };
 
+    const removeService = (index) => {
+        setData(
+            'services',
+            data.services.filter((_, i) => i !== index),
+        );
+    };
+
     const updateAvailability = (index, key, value) => {
         const next = [...data.availability];
         next[index] = { ...next[index], [key]: value };
         setData('availability', next);
+    };
+
+    const removeAvailability = (index) => {
+        setData(
+            'availability',
+            data.availability.filter((_, i) => i !== index),
+        );
     };
 
     const updateStringArray = (key, index, value) => {
@@ -188,14 +199,37 @@ export default function HealthServicesEdit({ professional }) {
 
     const submit = (e) => {
         e.preventDefault();
-        put(route('health-professionals.update', professional.id), {
+
+        const hasImage = Boolean(data.image);
+        const options = {
             preserveScroll: true,
-            forceFormData: Boolean(data.image),
-        });
+            forceFormData: hasImage,
+            onFinish: () => transform((formData) => formData),
+        };
+
+        if (!hasImage) {
+            put(route('health-professionals.update', professional.id), options);
+            return;
+        }
+
+        // Multipart uploads must POST with method spoofing, and nested arrays are
+        // JSON-encoded so PHP reliably receives visit_modes / services / availability.
+        transform((formData) => ({
+            ...formData,
+            visit_modes: JSON.stringify(formData.visit_modes ?? []),
+            services: JSON.stringify(formData.services ?? []),
+            availability: JSON.stringify(formData.availability ?? []),
+            languages: JSON.stringify(formData.languages ?? []),
+            highlights: JSON.stringify(formData.highlights ?? []),
+            is_active: formData.is_active ? 1 : 0,
+            _method: 'put',
+        }));
+
+        post(route('health-professionals.update', professional.id), options);
     };
 
     return (
-        <>
+        <HealthProfessionalLayout title="Settings" professional={professional}>
             <SeoHead
                 title={`Edit ${professional.name}`}
                 description="Edit healthcare professional profile."
@@ -203,58 +237,48 @@ export default function HealthServicesEdit({ professional }) {
                 image={professional.image_url || '/images/logo.png'}
             />
 
-            <div className="flex min-h-screen flex-col bg-[#faf9f7] text-stone-900 antialiased">
-                <header className="border-b border-stone-200/90 bg-white/95 backdrop-blur">
-                    <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">
-                        <LogoMark variant="shop" />
-                        <Link
-                            href={route('health-professionals.dashboard')}
-                            className="rounded-full border border-stone-200 px-3 py-1.5 text-xs font-semibold text-stone-700 transition hover:border-market hover:text-market"
-                        >
-                            Back to Dashboard
-                        </Link>
-                    </div>
-                </header>
+            <div className="mx-auto w-full max-w-4xl">
+                <h1 className="text-2xl font-bold text-stone-900 sm:text-3xl">
+                    Edit Professional Profile
+                </h1>
+                <p className="mt-2 text-sm text-stone-600">
+                    Update profile details, then set visit modes, services, rates, and weekly availability.
+                </p>
 
-                <div className="border-b border-stone-200/80 bg-white/95">
-                    <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
-                        <Breadcrumbs
-                            tone="shop"
-                            items={[
-                                { label: 'Home', href: route('home') },
-                                { label: 'Health Services', href: route('health-services.index') },
-                                { label: 'Professional Dashboard', href: route('health-professionals.dashboard') },
-                                { label: 'Edit Profile' },
-                            ]}
-                        />
-                    </div>
-                </div>
+                <form onSubmit={submit} className="mt-6 space-y-6 rounded-2xl border border-stone-200 bg-white p-5 sm:p-7">
+                        {professional.approval_status === 'pending' && (
+                            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                                Your profile is waiting for admin approval. You can finish setup now; it will not appear
+                                on Health Services until approved.
+                            </div>
+                        )}
+                        {professional.approval_status === 'rejected' && (
+                            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-950">
+                                Your profile was not approved
+                                {professional.rejection_reason ? `: ${professional.rejection_reason}` : '.'} Update your
+                                details and contact support if you need a re-review.
+                            </div>
+                        )}
+                        {professional.approval_status === 'suspended' && (
+                            <div className="rounded-lg border border-stone-300 bg-stone-100 px-4 py-3 text-sm text-stone-800">
+                                Your profile is suspended and hidden from Health Services
+                                {professional.rejection_reason ? `: ${professional.rejection_reason}` : '.'}
+                            </div>
+                        )}
 
-                <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-                    <h1 className="text-2xl font-bold text-stone-900 sm:text-3xl">
-                        Edit Professional Profile
-                    </h1>
-                    <p className="mt-2 text-sm text-stone-600">
-                        Update profile details, then set visit modes, services, rates, and weekly availability.
-                    </p>
-
-                    {flash?.success && (
-                        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
-                            {flash.success}
-                        </div>
-                    )}
-
-                    <form onSubmit={submit} className="mt-6 space-y-6 rounded-2xl border border-stone-200 bg-white p-5 sm:p-7">
                         <div className="flex items-center gap-3 rounded-lg border border-stone-200 bg-stone-50 px-4 py-3">
                             <input
                                 id="is_active"
                                 type="checkbox"
                                 checked={data.is_active}
+                                disabled={!professional.can_go_live}
                                 onChange={(e) => setData('is_active', e.target.checked)}
-                                className="rounded border-stone-300 text-[#5c4d3d] focus:ring-[#5c4d3d]"
+                                className="rounded border-stone-300 text-[#5c4d3d] focus:ring-[#5c4d3d] disabled:cursor-not-allowed disabled:opacity-50"
                             />
                             <label htmlFor="is_active" className="text-sm font-medium text-stone-700">
-                                Profile is active and visible on the Health Services page
+                                {professional.can_go_live
+                                    ? 'Profile is active and visible on the Health Services page'
+                                    : 'Listing visibility unlocks after admin approval'}
                             </label>
                         </div>
 
@@ -382,7 +406,8 @@ export default function HealthServicesEdit({ professional }) {
                                         </button>
                                     ) : null}
                                     <p className="mt-1 text-xs text-stone-500">
-                                        You can crop and zoom after choosing a photo.
+                                        You can crop and zoom after choosing a photo. Your crop is square and matches
+                                        how it appears on your public profile.
                                     </p>
                                 </div>
                             </div>
@@ -475,87 +500,111 @@ export default function HealthServicesEdit({ professional }) {
                                 </button>
                             </div>
                             <div className="space-y-3">
+                                {data.services.length === 0 ? (
+                                    <p className="rounded-xl border border-dashed border-stone-200 bg-stone-50 px-4 py-6 text-center text-sm text-stone-500">
+                                        No services yet. Add at least one service to accept bookings.
+                                    </p>
+                                ) : null}
                                 {data.services.map((service, index) => (
                                     <div
                                         key={`service-${index}`}
-                                        className={`grid gap-3 rounded-xl border border-stone-200 bg-stone-50 p-3 ${
-                                            onlyOneVisitMode ? 'sm:grid-cols-3' : 'sm:grid-cols-4'
-                                        }`}
+                                        className="rounded-xl border border-stone-200 bg-stone-50 p-3"
                                     >
-                                        <div>
-                                            <label
-                                                htmlFor={`service-name-${index}`}
-                                                className="text-xs font-medium text-stone-600"
-                                            >
-                                                Service name
-                                            </label>
-                                            <input
-                                                id={`service-name-${index}`}
-                                                className={inputClass}
-                                                placeholder="e.g. Eye consultation"
-                                                value={service.name}
-                                                onChange={(e) => updateService(index, 'name', e.target.value)}
-                                            />
-                                        </div>
-                                        {!onlyOneVisitMode ? (
+                                        <div
+                                            className={`grid gap-3 ${
+                                                onlyOneVisitMode ? 'sm:grid-cols-3' : 'sm:grid-cols-4'
+                                            }`}
+                                        >
                                             <div>
-                                                <label className="text-xs font-medium text-stone-600">Visit type</label>
-                                                <div className="mt-1 flex h-[42px] overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm">
-                                                    {data.visit_modes.map((mode) => {
-                                                        const active = service.visit_mode === mode;
-
-                                                        return (
-                                                            <button
-                                                                key={mode}
-                                                                type="button"
-                                                                onClick={() => updateService(index, 'visit_mode', mode)}
-                                                                className={`flex flex-1 items-center justify-center px-2 text-xs font-semibold transition ${
-                                                                    active
-                                                                        ? 'bg-[#5c4d3d] text-white'
-                                                                        : 'text-stone-600 hover:bg-stone-50'
-                                                                }`}
-                                                            >
-                                                                {mode}
-                                                            </button>
-                                                        );
-                                                    })}
-                                                </div>
+                                                <label
+                                                    htmlFor={`service-name-${index}`}
+                                                    className="text-xs font-medium text-stone-600"
+                                                >
+                                                    Service name
+                                                </label>
+                                                <input
+                                                    id={`service-name-${index}`}
+                                                    className={inputClass}
+                                                    placeholder="e.g. Eye consultation"
+                                                    value={service.name}
+                                                    onChange={(e) => updateService(index, 'name', e.target.value)}
+                                                />
                                             </div>
-                                        ) : null}
-                                        <div>
-                                            <label
-                                                htmlFor={`service-price-${index}`}
-                                                className="text-xs font-medium text-stone-600"
-                                            >
-                                                Price (GHS)
-                                            </label>
-                                            <input
-                                                id={`service-price-${index}`}
-                                                type="number"
-                                                min="1"
-                                                className={inputClass}
-                                                placeholder="e.g. 150"
-                                                value={service.price_cedis}
-                                                onChange={(e) => updateService(index, 'price_cedis', e.target.value)}
-                                            />
+                                            {!onlyOneVisitMode ? (
+                                                <div>
+                                                    <label className="text-xs font-medium text-stone-600">
+                                                        Visit type
+                                                    </label>
+                                                    <div className="mt-1 flex h-[42px] overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm">
+                                                        {data.visit_modes.map((mode) => {
+                                                            const active = service.visit_mode === mode;
+
+                                                            return (
+                                                                <button
+                                                                    key={mode}
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        updateService(index, 'visit_mode', mode)
+                                                                    }
+                                                                    className={`flex flex-1 items-center justify-center px-2 text-xs font-semibold transition ${
+                                                                        active
+                                                                            ? 'bg-[#5c4d3d] text-white'
+                                                                            : 'text-stone-600 hover:bg-stone-50'
+                                                                    }`}
+                                                                >
+                                                                    {mode}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            ) : null}
+                                            <div>
+                                                <label
+                                                    htmlFor={`service-price-${index}`}
+                                                    className="text-xs font-medium text-stone-600"
+                                                >
+                                                    Price (GHS)
+                                                </label>
+                                                <input
+                                                    id={`service-price-${index}`}
+                                                    type="number"
+                                                    min="1"
+                                                    className={inputClass}
+                                                    placeholder="e.g. 150"
+                                                    value={service.price_cedis}
+                                                    onChange={(e) =>
+                                                        updateService(index, 'price_cedis', e.target.value)
+                                                    }
+                                                />
+                                            </div>
+                                            <div>
+                                                <label
+                                                    htmlFor={`service-duration-${index}`}
+                                                    className="text-xs font-medium text-stone-600"
+                                                >
+                                                    Duration (mins)
+                                                </label>
+                                                <input
+                                                    id={`service-duration-${index}`}
+                                                    type="number"
+                                                    min="5"
+                                                    className={inputClass}
+                                                    value={service.duration_minutes}
+                                                    onChange={(e) =>
+                                                        updateService(index, 'duration_minutes', e.target.value)
+                                                    }
+                                                />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label
-                                                htmlFor={`service-duration-${index}`}
-                                                className="text-xs font-medium text-stone-600"
+                                        <div className="mt-2 flex justify-end">
+                                            <button
+                                                type="button"
+                                                onClick={() => removeService(index)}
+                                                className="text-xs font-semibold text-red-700 hover:underline"
                                             >
-                                                Duration (mins)
-                                            </label>
-                                            <input
-                                                id={`service-duration-${index}`}
-                                                type="number"
-                                                min="5"
-                                                className={inputClass}
-                                                value={service.duration_minutes}
-                                                onChange={(e) =>
-                                                    updateService(index, 'duration_minutes', e.target.value)
-                                                }
-                                            />
+                                                Remove service
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
@@ -594,66 +643,86 @@ export default function HealthServicesEdit({ professional }) {
                                 </button>
                             </div>
                             <div className="space-y-3">
+                                {data.availability.length === 0 ? (
+                                    <p className="rounded-xl border border-dashed border-stone-200 bg-stone-50 px-4 py-6 text-center text-sm text-stone-500">
+                                        No availability windows yet. Add at least one day and time range.
+                                    </p>
+                                ) : null}
                                 {data.availability.map((slot, index) => (
                                     <div
                                         key={`availability-${index}`}
-                                        className="grid gap-3 rounded-xl border border-stone-200 bg-stone-50 p-3 sm:grid-cols-3"
+                                        className="rounded-xl border border-stone-200 bg-stone-50 p-3"
                                     >
-                                        <div>
-                                            <label
-                                                htmlFor={`availability-day-${index}`}
-                                                className="text-xs font-medium text-stone-600"
-                                            >
-                                                Day
-                                            </label>
-                                            <select
-                                                id={`availability-day-${index}`}
-                                                className={inputClass}
-                                                value={slot.day_of_week}
-                                                onChange={(e) =>
-                                                    updateAvailability(index, 'day_of_week', Number(e.target.value))
-                                                }
-                                            >
-                                                {dayOptions.map((day) => (
-                                                    <option key={day.value} value={day.value}>
-                                                        {day.label}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                        <div className="grid gap-3 sm:grid-cols-3">
+                                            <div>
+                                                <label
+                                                    htmlFor={`availability-day-${index}`}
+                                                    className="text-xs font-medium text-stone-600"
+                                                >
+                                                    Day
+                                                </label>
+                                                <select
+                                                    id={`availability-day-${index}`}
+                                                    className={inputClass}
+                                                    value={slot.day_of_week}
+                                                    onChange={(e) =>
+                                                        updateAvailability(
+                                                            index,
+                                                            'day_of_week',
+                                                            Number(e.target.value),
+                                                        )
+                                                    }
+                                                >
+                                                    {dayOptions.map((day) => (
+                                                        <option key={day.value} value={day.value}>
+                                                            {day.label}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label
+                                                    htmlFor={`availability-start-${index}`}
+                                                    className="text-xs font-medium text-stone-600"
+                                                >
+                                                    Start time
+                                                </label>
+                                                <input
+                                                    id={`availability-start-${index}`}
+                                                    type="time"
+                                                    className={inputClass}
+                                                    value={slot.start_time}
+                                                    onChange={(e) =>
+                                                        updateAvailability(index, 'start_time', e.target.value)
+                                                    }
+                                                />
+                                            </div>
+                                            <div>
+                                                <label
+                                                    htmlFor={`availability-end-${index}`}
+                                                    className="text-xs font-medium text-stone-600"
+                                                >
+                                                    End time
+                                                </label>
+                                                <input
+                                                    id={`availability-end-${index}`}
+                                                    type="time"
+                                                    className={inputClass}
+                                                    value={slot.end_time}
+                                                    onChange={(e) =>
+                                                        updateAvailability(index, 'end_time', e.target.value)
+                                                    }
+                                                />
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label
-                                                htmlFor={`availability-start-${index}`}
-                                                className="text-xs font-medium text-stone-600"
+                                        <div className="mt-2 flex justify-end">
+                                            <button
+                                                type="button"
+                                                onClick={() => removeAvailability(index)}
+                                                className="text-xs font-semibold text-red-700 hover:underline"
                                             >
-                                                Start time
-                                            </label>
-                                            <input
-                                                id={`availability-start-${index}`}
-                                                type="time"
-                                                className={inputClass}
-                                                value={slot.start_time}
-                                                onChange={(e) =>
-                                                    updateAvailability(index, 'start_time', e.target.value)
-                                                }
-                                            />
-                                        </div>
-                                        <div>
-                                            <label
-                                                htmlFor={`availability-end-${index}`}
-                                                className="text-xs font-medium text-stone-600"
-                                            >
-                                                End time
-                                            </label>
-                                            <input
-                                                id={`availability-end-${index}`}
-                                                type="time"
-                                                className={inputClass}
-                                                value={slot.end_time}
-                                                onChange={(e) =>
-                                                    updateAvailability(index, 'end_time', e.target.value)
-                                                }
-                                            />
+                                                Remove window
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
@@ -687,9 +756,6 @@ export default function HealthServicesEdit({ professional }) {
                             {processing ? 'Saving…' : 'Save changes'}
                         </button>
                     </form>
-                </main>
-
-                <SiteFooter />
             </div>
 
             <ImageCropModal
@@ -697,9 +763,10 @@ export default function HealthServicesEdit({ professional }) {
                 imageSrc={cropSrc}
                 fileName={cropFileName}
                 title="Adjust profile photo"
+                aspect={1}
                 onCancel={handleCropCancel}
                 onSave={handleCropSave}
             />
-        </>
+        </HealthProfessionalLayout>
     );
 }

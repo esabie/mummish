@@ -1,8 +1,8 @@
-import { Link, usePage } from '@inertiajs/react';
-import Breadcrumbs from '@/Components/Breadcrumbs';
-import LogoMark from '@/Components/LogoMark';
+import { Link } from '@inertiajs/react';
+import HealthProfessionalLayout from '@/Layouts/HealthProfessionalLayout';
 import SeoHead from '@/Components/SeoHead';
-import SiteFooter from '@/Components/SiteFooter';
+import { BookingActionButtons, BookingRow, BookingStatusChip } from '@/Components/Health/BookingActions';
+import PaymentDetailsSection from '@/Components/Health/PaymentDetailsSection';
 
 function SetupStep({ done, number, title, body }) {
     return (
@@ -22,18 +22,32 @@ function SetupStep({ done, number, title, body }) {
     );
 }
 
-export default function HealthServicesDashboard({ professionals = [] }) {
-    const { flash, auth } = usePage().props;
-    const professional = professionals[0] ?? null;
+function StatTile({ label, value }) {
+    return (
+        <div className="rounded-2xl border border-stone-200 bg-white px-4 py-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">{label}</p>
+            <p className="mt-2 text-2xl font-bold text-stone-900">{value}</p>
+        </div>
+    );
+}
+
+export default function HealthServicesDashboard({
+    professional = null,
+    payoutDetails = null,
+    ghanaBanks = [],
+    stats = {},
+    next_appointment: nextAppointment = null,
+    todays_bookings: todaysBookings = [],
+    pending_bookings: pendingBookings = [],
+    today_label: todayLabel = '',
+    greeting = 'Hello',
+}) {
     const needsSetup =
         professional && (professional.services_count === 0 || professional.availability_count === 0);
-    const profileDone = Boolean(professional);
-    const servicesDone = (professional?.services_count ?? 0) > 0;
-    const availabilityDone = (professional?.availability_count ?? 0) > 0;
-    const activeDone = Boolean(professional?.is_active);
+    const firstName = professional?.name?.split(' ')[0] || 'there';
 
     return (
-        <>
+        <HealthProfessionalLayout title="Dashboard" professional={professional}>
             <SeoHead
                 title="Professional Dashboard"
                 description="Manage your healthcare profile, services, and availability."
@@ -41,210 +55,280 @@ export default function HealthServicesDashboard({ professionals = [] }) {
                 image="/images/logo.png"
             />
 
-            <div className="flex min-h-screen flex-col bg-[#faf9f7] text-stone-900 antialiased">
-                <header className="border-b border-stone-200/90 bg-white/95 backdrop-blur">
-                    <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">
-                        <LogoMark variant="shop" />
-                        <div className="flex items-center gap-2">
-                            <Link
-                                href={route('health-services.index')}
-                                className="rounded-full border border-stone-200 px-3 py-1.5 text-xs font-semibold text-stone-700 transition hover:border-market hover:text-market"
-                            >
-                                Browse Health Services
-                            </Link>
-                        </div>
-                    </div>
-                </header>
-
-                <div className="border-b border-stone-200/80 bg-white/95">
-                    <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
-                        <Breadcrumbs
-                            tone="shop"
-                            items={[
-                                { label: 'Home', href: route('home') },
-                                { label: 'Health Services', href: route('health-services.index') },
-                                { label: 'Your dashboard' },
-                            ]}
-                        />
-                    </div>
+            {!professional ? (
+                <div className="rounded-2xl border border-dashed border-stone-200 bg-white px-6 py-14 text-center">
+                    <p className="text-lg font-semibold text-stone-900">No professional profile yet</p>
+                    <p className="mt-2 text-sm text-stone-600">
+                        Create your healthcare account to manage bookings.
+                    </p>
+                    <Link
+                        href={route('health-professionals.signup')}
+                        className="mt-5 inline-flex rounded-lg bg-[#5c4d3d] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4a3e32]"
+                    >
+                        Register as a professional
+                    </Link>
                 </div>
+            ) : needsSetup ? (
+                <div className="mx-auto max-w-3xl space-y-6">
+                    <div>
+                        <h1 className="text-2xl font-bold text-stone-900 sm:text-3xl">
+                            {greeting}, {firstName}
+                        </h1>
+                        <p className="mt-2 text-sm leading-relaxed text-stone-600 sm:text-base">
+                            Finish setup so families can find you and request appointments. After your services and
+                            availability are ready, an admin must approve your profile before it goes live.
+                        </p>
+                    </div>
 
-                <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
-                    {flash?.success && (
-                        <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
-                            {flash.success}
+                    <section className="rounded-2xl border border-amber-200 bg-amber-50/80 p-5 sm:p-6">
+                        <h2 className="text-lg font-bold text-stone-900">Finish setup for admin review</h2>
+                        <ol className="mt-5 space-y-4">
+                            <SetupStep
+                                done
+                                number={1}
+                                title="Create your account & profile"
+                                body="Done — your login and professional details are saved."
+                            />
+                            <SetupStep
+                                done={(professional.visit_modes?.length ?? 0) > 0}
+                                number={2}
+                                title="Choose visit types"
+                                body="Say whether you offer Virtual, In person, or both."
+                            />
+                            <SetupStep
+                                done={professional.services_count > 0}
+                                number={3}
+                                title="Add services & rates"
+                                body="Tell patients what you offer and the price."
+                            />
+                            <SetupStep
+                                done={professional.availability_count > 0}
+                                number={4}
+                                title="Set weekly availability"
+                                body="Choose the days and hours you accept bookings."
+                            />
+                            <SetupStep
+                                done={Boolean(professional.has_payment_details)}
+                                number={5}
+                                title="Add payment details"
+                                body="Tell us where to send your payouts after completed consultations."
+                            />
+                            <SetupStep
+                                done={Boolean(professional.is_publicly_visible)}
+                                number={6}
+                                title="Get admin approval"
+                                body={
+                                    professional.approval_status === 'approved'
+                                        ? 'Approved — turn on visibility in Settings if you want to appear publicly.'
+                                        : professional.approval_status === 'rejected'
+                                          ? 'Not approved yet. Update your profile and contact support for a re-review.'
+                                          : professional.approval_status === 'suspended'
+                                            ? 'Your listing is suspended. Contact support for help.'
+                                            : 'Once setup is complete, wait for Mummish to approve your listing.'
+                                }
+                            />
+                        </ol>
+                        <Link
+                            href={route('health-professionals.edit', professional.id)}
+                            className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-[#5c4d3d] px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-[#4a3e32] sm:w-auto"
+                        >
+                            Continue setup
+                        </Link>
+                    </section>
+
+                    <PaymentDetailsSection payoutDetails={payoutDetails} ghanaBanks={ghanaBanks} />
+                </div>
+            ) : (
+                <div className="space-y-6">
+                    {!professional.is_publicly_visible && (
+                        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                            {professional.approval_status === 'approved'
+                                ? 'Your profile is approved but currently hidden. Turn on visibility in Settings to appear on Health Services.'
+                                : professional.approval_status === 'rejected'
+                                  ? `Your profile was not approved${professional.rejection_reason ? `: ${professional.rejection_reason}` : '.'}`
+                                  : professional.approval_status === 'suspended'
+                                    ? `Your profile is suspended${professional.rejection_reason ? `: ${professional.rejection_reason}` : '.'}`
+                                    : 'Your profile is waiting for admin approval before it appears on Health Services.'}
                         </div>
                     )}
-
-                    {!professional ? (
-                        <div className="rounded-2xl border border-dashed border-stone-200 bg-white px-6 py-14 text-center">
-                            <p className="text-lg font-semibold text-stone-900">No professional profile yet</p>
-                            <p className="mt-2 text-sm text-stone-600">
-                                Create your healthcare account to manage bookings.
+                    <div className="flex flex-wrap items-end justify-between gap-3">
+                        <div>
+                            <h1 className="text-2xl font-bold text-stone-900 sm:text-3xl">
+                                {greeting}, {firstName}
+                            </h1>
+                            <p className="mt-1 text-sm text-stone-600">
+                                Here is your schedule and practice overview for today.
                             </p>
-                            <Link
-                                href={route('health-professionals.signup')}
-                                className="mt-5 inline-flex rounded-lg bg-[#5c4d3d] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4a3e32]"
-                            >
-                                Register as a professional
-                            </Link>
                         </div>
-                    ) : needsSetup ? (
-                        <div className="space-y-6">
-                            <div>
-                                <p className="text-sm font-medium text-stone-500">
-                                    Signed in as {auth?.user?.email ?? professional.name}
-                                </p>
-                                <h1 className="mt-1 text-2xl font-bold text-stone-900 sm:text-3xl">
-                                    Welcome, {professional.name.split(' ')[0]}
-                                </h1>
-                                <p className="mt-2 text-sm leading-relaxed text-stone-600 sm:text-base">
-                                    Your account and profile are saved
-                                    {professional.title ? (
-                                        <>
-                                            {' '}
-                                            as <span className="font-semibold text-stone-800">{professional.title}</span>
-                                            {professional.specialty ? (
-                                                <>
-                                                    {' '}
-                                                    ({professional.specialty})
-                                                </>
-                                            ) : null}
-                                        </>
-                                    ) : null}
-                                    . Patients can&apos;t book you yet because your profile is still{' '}
-                                    <span className="font-semibold text-stone-800">Inactive</span>.
-                                </p>
-                            </div>
+                        <span className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-stone-600 ring-1 ring-stone-200">
+                            {todayLabel}
+                        </span>
+                    </div>
 
-                            <section className="rounded-2xl border border-amber-200 bg-amber-50/80 p-5 sm:p-6">
-                                <h2 className="text-lg font-bold text-stone-900">Finish setup to go live</h2>
-                                <p className="mt-1 text-sm text-stone-700">
-                                    Complete these steps so families can see your rates and request appointments.
-                                </p>
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                        <StatTile label="Pending requests" value={stats.pending_count ?? 0} />
+                        <StatTile label="Confirmed today" value={stats.today_confirmed_count ?? 0} />
+                        <StatTile label="Confirmed (7 days)" value={stats.upcoming_confirmed_count ?? 0} />
+                        <StatTile label="Completed this month" value={stats.completed_month_count ?? 0} />
+                    </div>
 
-                                <ol className="mt-5 space-y-4">
-                                    <SetupStep
-                                        done={profileDone}
-                                        number={1}
-                                        title="Create your account & profile"
-                                        body="Done — your login and professional details are saved."
-                                    />
-                                    <SetupStep
-                                        done={(professional.visit_modes?.length ?? 0) > 0}
-                                        number={2}
-                                        title="Choose visit types"
-                                        body="Say whether you offer Virtual, In person, or both."
-                                    />
-                                    <SetupStep
-                                        done={servicesDone}
-                                        number={3}
-                                        title="Add services & rates"
-                                        body="Tell patients what you offer (e.g. consultation) and the price."
-                                    />
-                                    <SetupStep
-                                        done={availabilityDone}
-                                        number={4}
-                                        title="Set weekly availability"
-                                        body="Choose the days and hours you accept bookings."
-                                    />
-                                    <SetupStep
-                                        done={activeDone}
-                                        number={5}
-                                        title="Mark your profile active"
-                                        body="Turn on visibility so you appear on the Health Services page."
-                                    />
-                                </ol>
+                    <PaymentDetailsSection payoutDetails={payoutDetails} ghanaBanks={ghanaBanks} />
 
-                                <Link
-                                    href={route('health-professionals.edit', professional.id)}
-                                    className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-[#5c4d3d] px-4 py-3.5 text-sm font-semibold text-white transition hover:bg-[#4a3e32] sm:w-auto"
-                                >
-                                    Continue setup
-                                </Link>
-                            </section>
-                        </div>
-                    ) : (
-                        <div className="space-y-6">
-                            <div>
-                                <h1 className="text-2xl font-bold text-stone-900 sm:text-3xl">Your dashboard</h1>
-                                <p className="mt-1 text-sm text-stone-600">
-                                    Manage your public profile, services, and weekly availability.
-                                </p>
-                            </div>
-
-                            <article className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
+                    <div className="grid gap-6 lg:grid-cols-5">
+                        <div className="space-y-6 lg:col-span-3">
+                            <section className="overflow-hidden rounded-2xl bg-[#5c4d3d] p-5 text-white shadow-sm sm:p-6">
                                 <div className="flex items-start justify-between gap-3">
                                     <div>
-                                        <h2 className="text-lg font-bold text-stone-900">{professional.name}</h2>
-                                        <p className="text-sm text-stone-600">{professional.title}</p>
-                                        <p className="mt-1 text-xs text-stone-500">{professional.specialty}</p>
-                                        {(professional.visit_modes?.length ?? 0) > 0 ? (
-                                            <div className="mt-3 flex flex-wrap gap-1.5">
-                                                {professional.visit_modes.map((mode) => (
-                                                    <span
-                                                        key={mode}
-                                                        className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-800 ring-1 ring-sky-100"
-                                                    >
-                                                        {mode}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        ) : null}
+                                        <p className="text-xs font-bold uppercase tracking-wide text-white/70">
+                                            Next appointment
+                                        </p>
+                                        {nextAppointment ? (
+                                            <>
+                                                <h2 className="mt-2 text-xl font-bold">{nextAppointment.patient_name}</h2>
+                                                <p className="mt-1 text-sm text-white/85">
+                                                    {nextAppointment.service_name || 'Consultation'}
+                                                    {nextAppointment.visit_mode
+                                                        ? ` · ${nextAppointment.visit_mode}`
+                                                        : ''}
+                                                </p>
+                                                <p className="mt-3 text-sm font-semibold">
+                                                    {nextAppointment.appointment_date_label} ·{' '}
+                                                    {nextAppointment.appointment_time}
+                                                </p>
+                                                <p className="mt-1 text-xs text-white/70">
+                                                    {nextAppointment.reference}
+                                                    {nextAppointment.patient_phone
+                                                        ? ` · ${nextAppointment.patient_phone}`
+                                                        : ''}
+                                                </p>
+                                            </>
+                                        ) : (
+                                            <p className="mt-3 text-sm text-white/80">
+                                                No upcoming appointments right now.
+                                            </p>
+                                        )}
                                     </div>
-                                    <span
-                                        className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                                            professional.is_active
-                                                ? 'bg-emerald-100 text-emerald-800'
-                                                : 'bg-stone-200 text-stone-700'
-                                        }`}
-                                    >
-                                        {professional.is_active ? 'Active' : 'Inactive'}
-                                    </span>
+                                    {nextAppointment ? (
+                                        <BookingStatusChip status={nextAppointment.status} />
+                                    ) : null}
                                 </div>
+                                {nextAppointment ? (
+                                    <div className="mt-5">
+                                        <BookingActionButtons
+                                            professionalId={professional.id}
+                                            booking={nextAppointment}
+                                        />
+                                    </div>
+                                ) : (
+                                    <Link
+                                        href={route('health-professionals.schedule')}
+                                        className="mt-5 inline-flex rounded-lg bg-white px-3 py-2 text-xs font-semibold text-[#5c4d3d]"
+                                    >
+                                        Open schedule
+                                    </Link>
+                                )}
+                            </section>
 
-                                <dl className="mt-4 space-y-1 text-sm">
-                                    <div className="flex items-center justify-between">
-                                        <dt className="text-stone-500">Visit types</dt>
-                                        <dd className="font-semibold text-stone-800">
-                                            {(professional.visit_modes?.length ?? 0) > 0
-                                                ? professional.visit_modes.join(' · ')
-                                                : 'Not set'}
-                                        </dd>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <dt className="text-stone-500">Services</dt>
-                                        <dd className="font-semibold text-stone-800">{professional.services_count}</dd>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <dt className="text-stone-500">Availability windows</dt>
-                                        <dd className="font-semibold text-stone-800">
-                                            {professional.availability_count}
-                                        </dd>
-                                    </div>
-                                </dl>
+                            <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
+                                <div className="flex items-center justify-between gap-3">
+                                    <h2 className="text-lg font-bold text-stone-900">Today&apos;s schedule</h2>
+                                    <Link
+                                        href={route('health-professionals.schedule')}
+                                        className="text-xs font-semibold text-[#5c4d3d] hover:underline"
+                                    >
+                                        Full schedule
+                                    </Link>
+                                </div>
+                                {todaysBookings.length === 0 ? (
+                                    <p className="mt-5 rounded-xl border border-dashed border-stone-200 bg-stone-50 px-4 py-6 text-center text-sm text-stone-500">
+                                        No appointments scheduled for today.
+                                    </p>
+                                ) : (
+                                    <ul className="mt-4 space-y-3">
+                                        {todaysBookings.map((booking) => (
+                                            <li
+                                                key={booking.id}
+                                                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-stone-100 bg-stone-50/80 px-3 py-3"
+                                            >
+                                                <div className="min-w-0">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <span className="text-sm font-bold text-stone-900">
+                                                            {booking.appointment_time}
+                                                        </span>
+                                                        <BookingStatusChip status={booking.status} />
+                                                    </div>
+                                                    <p className="mt-0.5 text-sm font-semibold text-stone-800">
+                                                        {booking.patient_name}
+                                                    </p>
+                                                    <p className="text-xs text-stone-500">
+                                                        {booking.service_name || 'Consultation'}
+                                                        {booking.visit_mode ? ` · ${booking.visit_mode}` : ''}
+                                                    </p>
+                                                </div>
+                                                <BookingActionButtons
+                                                    professionalId={professional.id}
+                                                    booking={booking}
+                                                    compact
+                                                />
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </section>
+                        </div>
 
-                                <div className="mt-5 flex flex-wrap gap-2">
+                        <div className="space-y-6 lg:col-span-2">
+                            <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
+                                <div className="flex items-center justify-between gap-3">
+                                    <h2 className="text-lg font-bold text-stone-900">Pending requests</h2>
+                                    {(stats.pending_count ?? 0) > 0 ? (
+                                        <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-900">
+                                            {stats.pending_count}
+                                        </span>
+                                    ) : null}
+                                </div>
+                                {pendingBookings.length === 0 ? (
+                                    <p className="mt-5 text-sm text-stone-500">No pending requests.</p>
+                                ) : (
+                                    <ul className="mt-4 space-y-3">
+                                        {pendingBookings.slice(0, 5).map((booking) => (
+                                            <BookingRow
+                                                key={booking.id}
+                                                professionalId={professional.id}
+                                                booking={booking}
+                                            />
+                                        ))}
+                                    </ul>
+                                )}
+                            </section>
+
+                            <section className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
+                                <h2 className="text-lg font-bold text-stone-900">Quick actions</h2>
+                                <div className="mt-4 flex flex-col gap-2">
+                                    <Link
+                                        href={route('health-professionals.schedule')}
+                                        className="inline-flex items-center justify-center rounded-lg bg-[#5c4d3d] px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-[#4a3e32]"
+                                    >
+                                        Open schedule
+                                    </Link>
                                     <Link
                                         href={route('health-professionals.edit', professional.id)}
-                                        className="inline-flex rounded-lg bg-[#5c4d3d] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#4a3e32]"
+                                        className="inline-flex items-center justify-center rounded-lg border border-stone-200 px-3 py-2.5 text-xs font-semibold text-stone-700 transition hover:border-[#5c4d3d] hover:text-[#5c4d3d]"
                                     >
-                                        Edit profile
+                                        Edit profile & rates
                                     </Link>
                                     <Link
                                         href={route('health-services.show', professional.slug)}
-                                        className="inline-flex rounded-lg border border-stone-200 px-3 py-2 text-xs font-semibold text-stone-700 transition hover:border-market hover:text-market"
+                                        className="inline-flex items-center justify-center rounded-lg border border-stone-200 px-3 py-2.5 text-xs font-semibold text-stone-700 transition hover:border-[#5c4d3d] hover:text-[#5c4d3d]"
                                     >
                                         View public page
                                     </Link>
                                 </div>
-                            </article>
+                            </section>
                         </div>
-                    )}
-                </main>
-
-                <SiteFooter />
-            </div>
-        </>
+                    </div>
+                </div>
+            )}
+        </HealthProfessionalLayout>
     );
 }

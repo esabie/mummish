@@ -14,6 +14,31 @@ class StoreHealthProfessionalRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        // When an image upload forces multipart FormData, nested arrays can arrive
+        // as JSON strings from the frontend — decode them before validation.
+        foreach (['visit_modes', 'services', 'availability', 'languages', 'highlights'] as $key) {
+            $value = $this->input($key);
+
+            if (! is_string($value) || $value === '') {
+                continue;
+            }
+
+            $decoded = json_decode($value, true);
+
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $this->merge([$key => $decoded]);
+            }
+        }
+
+        if ($this->has('is_active')) {
+            $this->merge([
+                'is_active' => filter_var($this->input('is_active'), FILTER_VALIDATE_BOOLEAN),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         $isSignup = $this->routeIs('health-professionals.signup.store');
@@ -56,6 +81,7 @@ class StoreHealthProfessionalRequest extends FormRequest
 
         $rules['image'] = ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'];
         $rules['booking_note'] = ['nullable', 'string', 'max:500'];
+        $rules['is_active'] = ['sometimes', 'boolean'];
         $rules['visit_modes'] = ['required', 'array', 'min:1'];
         $rules['visit_modes.*'] = ['required', 'string', Rule::in(['Virtual', 'In person'])];
         $rules['languages'] = ['nullable', 'array'];
