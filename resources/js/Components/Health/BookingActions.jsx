@@ -26,7 +26,7 @@ export function BookingStatusChip({ status }) {
     );
 }
 
-export function BookingActionButtons({ professionalId, booking, compact = false }) {
+export function BookingActionButtons({ professionalId, booking, compact = false, tone = 'default' }) {
     const [reasonModal, setReasonModal] = useState(null);
     const [reason, setReason] = useState('');
     const [processing, setProcessing] = useState(false);
@@ -47,19 +47,36 @@ export function BookingActionButtons({ professionalId, booking, compact = false 
         });
     };
 
+    const onDark = tone === 'onDark';
     const btnBase = compact
-        ? 'rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition'
-        : 'rounded-lg px-3 py-2 text-xs font-semibold transition';
+        ? 'w-full rounded-lg px-2.5 py-2 text-[11px] font-semibold transition sm:w-auto sm:py-1.5'
+        : 'w-full rounded-lg px-3 py-2.5 text-xs font-semibold transition sm:w-auto sm:py-2';
+
+    const confirmClass = onDark
+        ? 'bg-white text-[#5c4d3d] hover:bg-stone-100 disabled:opacity-50'
+        : 'bg-[#5c4d3d] text-white hover:bg-[#4a3e32] disabled:opacity-50';
+
+    const secondaryClass = onDark
+        ? 'border border-white/40 bg-transparent text-white hover:bg-white/10 disabled:opacity-50'
+        : 'border border-stone-300 bg-white text-stone-700 hover:border-stone-400 disabled:opacity-50';
+
+    const completeClass = onDark
+        ? 'bg-emerald-400 text-emerald-950 hover:bg-emerald-300 disabled:opacity-50'
+        : 'bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-50';
+
+    const cancelClass = onDark
+        ? 'border border-red-300/70 bg-transparent text-red-100 hover:bg-red-500/20 disabled:opacity-50'
+        : 'border border-red-200 bg-white text-red-700 hover:bg-red-50 disabled:opacity-50';
 
     return (
         <>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
                 {booking.can_confirm ? (
                     <button
                         type="button"
                         disabled={processing}
                         onClick={() => postAction('health-professionals.bookings.confirm')}
-                        className={`${btnBase} bg-[#5c4d3d] text-white hover:bg-[#4a3e32] disabled:opacity-50`}
+                        className={`${btnBase} ${confirmClass}`}
                     >
                         Confirm
                     </button>
@@ -69,7 +86,7 @@ export function BookingActionButtons({ professionalId, booking, compact = false 
                         type="button"
                         disabled={processing}
                         onClick={() => setReasonModal('decline')}
-                        className={`${btnBase} border border-stone-300 bg-white text-stone-700 hover:border-stone-400 disabled:opacity-50`}
+                        className={`${btnBase} ${secondaryClass}`}
                     >
                         Decline
                     </button>
@@ -79,7 +96,7 @@ export function BookingActionButtons({ professionalId, booking, compact = false 
                         type="button"
                         disabled={processing}
                         onClick={() => postAction('health-professionals.bookings.complete')}
-                        className={`${btnBase} bg-emerald-700 text-white hover:bg-emerald-800 disabled:opacity-50`}
+                        className={`${btnBase} ${completeClass}`}
                     >
                         Mark completed
                     </button>
@@ -89,7 +106,7 @@ export function BookingActionButtons({ professionalId, booking, compact = false 
                         type="button"
                         disabled={processing}
                         onClick={() => setReasonModal('cancel')}
-                        className={`${btnBase} border border-red-200 bg-white text-red-700 hover:bg-red-50 disabled:opacity-50`}
+                        className={`${btnBase} ${cancelClass}`}
                     >
                         Cancel
                     </button>
@@ -107,7 +124,7 @@ export function BookingActionButtons({ professionalId, booking, compact = false 
                 maxWidth="md"
                 closeable={!processing}
             >
-                <div className="px-6 py-6">
+                <div className="px-4 py-5 sm:px-6 sm:py-6">
                     <h2 className="text-lg font-bold text-stone-900">
                         {reasonModal === 'decline' ? 'Decline booking request' : 'Cancel booking'}
                     </h2>
@@ -126,7 +143,7 @@ export function BookingActionButtons({ professionalId, booking, compact = false 
                         placeholder="Shown to the patient in their SMS notification"
                         disabled={processing}
                     />
-                    <div className="mt-5 flex justify-end gap-2">
+                    <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                         <button
                             type="button"
                             disabled={processing}
@@ -134,7 +151,7 @@ export function BookingActionButtons({ professionalId, booking, compact = false 
                                 setReasonModal(null);
                                 setReason('');
                             }}
-                            className="rounded-lg border border-stone-200 px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50"
+                            className="rounded-lg border border-stone-200 px-3 py-2.5 text-xs font-semibold text-stone-700 hover:bg-stone-50 sm:py-2"
                         >
                             Keep booking
                         </button>
@@ -149,7 +166,7 @@ export function BookingActionButtons({ professionalId, booking, compact = false 
                                     { cancellation_reason: reason },
                                 )
                             }
-                            className="rounded-lg bg-red-700 px-3 py-2 text-xs font-semibold text-white hover:bg-red-800 disabled:opacity-50"
+                            className="rounded-lg bg-red-700 px-3 py-2.5 text-xs font-semibold text-white hover:bg-red-800 disabled:opacity-50 sm:py-2"
                         >
                             {processing
                                 ? 'Sending…'
@@ -166,8 +183,8 @@ export function BookingActionButtons({ professionalId, booking, compact = false 
 
 export function BookingRow({ professionalId, booking }) {
     return (
-        <li className="rounded-xl border border-stone-200 bg-white px-4 py-3">
-            <div className="flex flex-wrap items-start justify-between gap-3">
+        <li className="rounded-xl border border-stone-200 bg-white px-3 py-3 sm:px-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
                 <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                         <p className="text-sm font-semibold text-stone-900">{booking.patient_name}</p>
@@ -177,7 +194,7 @@ export function BookingRow({ professionalId, booking }) {
                         {booking.appointment_date_label} · {booking.appointment_time}
                         {booking.visit_mode ? ` · ${booking.visit_mode}` : ''}
                     </p>
-                    <p className="mt-0.5 text-xs text-stone-500">
+                    <p className="mt-0.5 break-words text-xs text-stone-500">
                         {booking.reference}
                         {booking.service_name ? ` · ${booking.service_name}` : ''}
                         {booking.patient_phone ? ` · ${booking.patient_phone}` : ''}

@@ -217,6 +217,7 @@ export default function HealthServicesDashboard({
                                         <BookingActionButtons
                                             professionalId={professional.id}
                                             booking={nextAppointment}
+                                            tone="onDark"
                                         />
                                     </div>
                                 ) : (
@@ -248,7 +249,7 @@ export default function HealthServicesDashboard({
                                         {todaysBookings.map((booking) => (
                                             <li
                                                 key={booking.id}
-                                                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-stone-100 bg-stone-50/80 px-3 py-3"
+                                                className="flex flex-col gap-3 rounded-xl border border-stone-100 bg-stone-50/80 px-3 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between"
                                             >
                                                 <div className="min-w-0">
                                                     <div className="flex flex-wrap items-center gap-2">

@@ -232,17 +232,18 @@ export default function HealthServicesShow({ professional }) {
 
             <div className="flex min-h-screen flex-col bg-[#f7f5f2] text-stone-900 antialiased">
                 <header className="border-b border-stone-200/90 bg-white/95 backdrop-blur">
-                    <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">
+                    <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-3 sm:gap-3 sm:px-6 sm:py-4 lg:px-8">
                         <Link
                             href={route('health-services.index')}
                             className="shrink-0 text-sm font-semibold text-[#5c4d3d] hover:text-market hover:underline"
                         >
-                            ← Back to Health Services
+                            <span className="sm:hidden">← Back</span>
+                            <span className="hidden sm:inline">← Back to Health Services</span>
                         </Link>
                         <LogoMark variant="shop" className="min-w-0 flex-1 justify-center" />
                         <Link
                             href={route('shop.index')}
-                            className="shrink-0 rounded-full border border-stone-200 px-3 py-1.5 text-xs font-semibold text-stone-700 transition hover:border-market hover:text-market"
+                            className="shrink-0 rounded-full border border-stone-200 px-2.5 py-1.5 text-xs font-semibold text-stone-700 transition hover:border-market hover:text-market sm:px-3"
                         >
                             Shop
                         </Link>
@@ -262,7 +263,7 @@ export default function HealthServicesShow({ professional }) {
                     </div>
                 </div>
 
-                <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+                <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 pb-28 sm:px-6 sm:py-10 lg:px-8 lg:pb-10">
                     {flash?.success ? (
                         <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
                             {flash.success}
@@ -458,7 +459,10 @@ export default function HealthServicesShow({ professional }) {
                         </div>
 
                         {/* ── Right column: booking panel ── */}
-                        <aside className="self-start rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6">
+                        <aside
+                            id="book-panel"
+                            className="self-start rounded-2xl border border-stone-200 bg-white p-5 shadow-sm sm:p-6"
+                        >
                             <h2 className="text-xl font-bold text-stone-900">Book a consultation</h2>
                             <p className="mt-1 text-sm text-stone-600">
                                 Choose a visit type, pick a slot, and request your booking.
@@ -665,6 +669,25 @@ export default function HealthServicesShow({ professional }) {
                 </main>
 
                 <SiteFooter />
+
+                {bookable ? (
+                    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200/90 bg-white/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_20px_rgba(0,0,0,0.06)] backdrop-blur lg:hidden">
+                        <button
+                            type="button"
+                            disabled={!canRequest}
+                            onClick={() => {
+                                if (canRequest) {
+                                    openPatientModal();
+                                    return;
+                                }
+                                document.getElementById('book-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }}
+                            className="inline-flex w-full items-center justify-center rounded-xl bg-[#5c4d3d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#4a3e32] disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                            {canRequest ? requestButtonLabel : 'Choose a time to book'}
+                        </button>
+                    </div>
+                ) : null}
             </div>
 
             <Modal
@@ -677,7 +700,7 @@ export default function HealthServicesShow({ professional }) {
                 maxWidth="md"
                 closeable={!processing}
             >
-                <form onSubmit={submitBooking} className="px-6 py-6">
+                <form onSubmit={submitBooking} className="px-4 py-5 sm:px-6 sm:py-6">
                     <h2 className="text-lg font-bold text-stone-900">Pay to reserve</h2>
                     <p className="mt-1 text-sm text-stone-600">
                         Enter your details, then pay securely to reserve this slot with {professional.name}.

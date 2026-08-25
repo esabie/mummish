@@ -4,6 +4,7 @@ import SeoHead from '@/Components/SeoHead';
 import { BookingRow } from '@/Components/Health/BookingActions';
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const WEEKDAYS_SHORT = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 function pad2(n) {
     return String(n).padStart(2, '0');
@@ -200,9 +201,9 @@ export default function HealthServicesSchedule({
 
                 {viewMode === 'calendar' ? (
                     <div className="grid gap-6 lg:grid-cols-5">
-                        <section className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5 lg:col-span-3">
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                                <h2 className="text-lg font-bold text-stone-900">
+                        <section className="order-2 rounded-2xl border border-stone-200 bg-white p-3 shadow-sm sm:p-5 lg:order-1 lg:col-span-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+                                <h2 className="text-base font-bold text-stone-900 sm:text-lg">
                                     {formatMonthLabel(cursorYear, cursorMonth)}
                                 </h2>
                                 <div className="flex items-center gap-1">
@@ -232,18 +233,19 @@ export default function HealthServicesSchedule({
                                 </div>
                             </div>
 
-                            <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-wide text-stone-400">
-                                {WEEKDAYS.map((day) => (
+                            <div className="mt-3 grid grid-cols-7 gap-0.5 text-center text-[10px] font-semibold uppercase tracking-wide text-stone-400 sm:mt-4 sm:gap-1 sm:text-[11px]">
+                                {WEEKDAYS.map((day, index) => (
                                     <div key={day} className="py-1">
-                                        {day}
+                                        <span className="sm:hidden">{WEEKDAYS_SHORT[index]}</span>
+                                        <span className="hidden sm:inline">{day}</span>
                                     </div>
                                 ))}
                             </div>
 
-                            <div className="mt-1 grid grid-cols-7 gap-1">
+                            <div className="mt-1 grid grid-cols-7 gap-0.5 sm:gap-1">
                                 {monthCells.map((cell, index) => {
                                     if (!cell) {
-                                        return <div key={`empty-${index}`} className="min-h-[4.5rem]" />;
+                                        return <div key={`empty-${index}`} className="min-h-10 sm:min-h-[4.5rem]" />;
                                     }
 
                                     const dayBookings = bookingsByDate[cell.iso] ?? [];
@@ -256,7 +258,7 @@ export default function HealthServicesSchedule({
                                             key={cell.iso}
                                             type="button"
                                             onClick={() => setSelectedDate(cell.iso)}
-                                            className={`flex min-h-[4.5rem] flex-col rounded-xl border p-1.5 text-left transition sm:p-2 ${
+                                            className={`flex min-h-10 flex-col items-center rounded-lg border p-1 text-center transition sm:min-h-[4.5rem] sm:items-stretch sm:rounded-xl sm:p-2 sm:text-left ${
                                                 isSelected
                                                     ? 'border-[#5c4d3d] bg-[#5c4d3d]/5 ring-1 ring-[#5c4d3d]/30'
                                                     : isToday
@@ -274,7 +276,7 @@ export default function HealthServicesSchedule({
                                                 {cell.day}
                                             </span>
                                             {summary.total > 0 ? (
-                                                <div className="mt-auto flex flex-wrap gap-0.5 pt-1">
+                                                <div className="mt-0.5 flex flex-wrap items-center justify-center gap-0.5 sm:mt-auto sm:justify-start sm:pt-1">
                                                     {summary.pending > 0 ? (
                                                         <span className="h-1.5 w-1.5 rounded-full bg-amber-500" title={`${summary.pending} pending`} />
                                                     ) : null}
@@ -284,7 +286,7 @@ export default function HealthServicesSchedule({
                                                     {summary.other > 0 ? (
                                                         <span className="h-1.5 w-1.5 rounded-full bg-stone-400" title={`${summary.other} other`} />
                                                     ) : null}
-                                                    <span className="ml-0.5 text-[10px] font-semibold text-stone-500">
+                                                    <span className="hidden text-[10px] font-semibold text-stone-500 sm:ml-0.5 sm:inline">
                                                         {summary.total}
                                                     </span>
                                                 </div>
@@ -294,7 +296,7 @@ export default function HealthServicesSchedule({
                                 })}
                             </div>
 
-                            <div className="mt-4 flex flex-wrap gap-3 text-[11px] text-stone-500">
+                            <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] text-stone-500 sm:mt-4">
                                 <span className="inline-flex items-center gap-1.5">
                                     <span className="h-1.5 w-1.5 rounded-full bg-amber-500" /> Pending
                                 </span>
@@ -307,8 +309,8 @@ export default function HealthServicesSchedule({
                             </div>
                         </section>
 
-                        <section className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5 lg:col-span-2">
-                            <h2 className="text-lg font-bold text-stone-900">{formatDayHeading(selectedDate)}</h2>
+                        <section className="order-1 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5 lg:order-2 lg:col-span-2">
+                            <h2 className="text-base font-bold text-stone-900 sm:text-lg">{formatDayHeading(selectedDate)}</h2>
                             <p className="mt-1 text-xs text-stone-500">
                                 {selectedBookings.length === 0
                                     ? 'No bookings on this day.'

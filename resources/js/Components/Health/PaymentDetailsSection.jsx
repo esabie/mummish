@@ -217,7 +217,7 @@ export default function PaymentDetailsSection({ payoutDetails, ghanaBanks = [] }
                     <button
                         type="submit"
                         disabled={processing}
-                        className="inline-flex items-center justify-center rounded-lg bg-[#5c4d3d] px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#4a3e32] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex w-full items-center justify-center rounded-lg bg-[#5c4d3d] px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#4a3e32] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-2.5"
                     >
                         {processing ? 'Saving…' : 'Save payment details'}
                     </button>

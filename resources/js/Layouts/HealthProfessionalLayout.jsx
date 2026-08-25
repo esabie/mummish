@@ -117,7 +117,7 @@ export default function HealthProfessionalLayout({ title, professional = null, c
                     </button>
                     <Link href={route('health-professionals.dashboard')} className="flex min-w-0 items-center gap-2">
                         <LogoIcon className="h-8 w-auto shrink-0 sm:h-10 lg:h-12" />
-                        <span className="truncate text-xs font-semibold text-stone-500 sm:text-sm">
+                        <span className="hidden truncate text-sm font-semibold text-stone-500 sm:inline">
                             Health Professional
                         </span>
                     </Link>
@@ -185,7 +185,7 @@ export default function HealthProfessionalLayout({ title, professional = null, c
                     />
                 )}
 
-                <main className="min-h-[calc(100vh-3.5rem)] flex-1 p-3 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
+                <main className="min-h-[calc(100vh-3.5rem)] min-w-0 flex-1 overflow-x-hidden p-3 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
                     {flash?.success && (
                         <div
                             className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"

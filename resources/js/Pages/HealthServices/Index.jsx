@@ -41,12 +41,13 @@ export default function HealthServicesIndex({ professionals = [] }) {
 
             <div className="flex min-h-screen flex-col bg-[#f7f5f2] text-stone-900 antialiased">
                 <header className="border-b border-stone-200/90 bg-white/95 backdrop-blur">
-                    <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">
+                    <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-3 sm:gap-3 sm:px-6 sm:py-4 lg:px-8">
                         <Link
                             href={route('home')}
                             className="shrink-0 text-sm font-semibold text-[#5c4d3d] hover:text-market hover:underline"
                         >
-                            ← Back to home
+                            <span className="sm:hidden">← Home</span>
+                            <span className="hidden sm:inline">← Back to home</span>
                         </Link>
                         <LogoMark variant="shop" className="min-w-0 flex-1 justify-center" />
                         <Link
@@ -134,8 +135,8 @@ export default function HealthServicesIndex({ professionals = [] }) {
                                     </div>
                                     <div className="space-y-2 p-3 sm:space-y-3 sm:p-5">
                                         <div>
-                                            <h2 className="text-sm font-bold text-stone-900 sm:text-lg">{professional.name}</h2>
-                                            <p className="text-xs font-medium text-stone-600 sm:text-sm">{professional.title}</p>
+                                            <h2 className="line-clamp-2 text-sm font-bold text-stone-900 sm:text-lg">{professional.name}</h2>
+                                            <p className="mt-0.5 line-clamp-2 text-xs font-medium text-stone-600 sm:text-sm">{professional.title}</p>
                                         </div>
                                         <div className="flex flex-wrap gap-1.5 sm:gap-2">
                                             <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700 ring-1 ring-sky-100 sm:px-2.5 sm:py-1 sm:text-xs">
@@ -144,7 +145,7 @@ export default function HealthServicesIndex({ professionals = [] }) {
                                             {professional.visit_modes?.map((mode) => (
                                                 <span
                                                     key={`${professional.slug}-${mode}`}
-                                                    className="rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-semibold text-stone-700 sm:px-2.5 sm:py-1 sm:text-xs"
+                                                    className="hidden rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-semibold text-stone-700 sm:inline-flex sm:px-2.5 sm:py-1 sm:text-xs"
                                                 >
                                                     {mode}
                                                 </span>
@@ -155,11 +156,11 @@ export default function HealthServicesIndex({ professionals = [] }) {
                                                 <dt className="text-stone-500">From</dt>
                                                 <dd className="font-semibold text-stone-800">GH₵{professional.rate_value}</dd>
                                             </div>
-                                            <div className="flex items-center justify-between gap-2">
+                                            <div className="hidden items-center justify-between gap-2 sm:flex">
                                                 <dt className="text-stone-500">Service</dt>
                                                 <dd className="truncate text-right font-semibold text-market">{professional.service}</dd>
                                             </div>
-                                            <div className="flex items-center justify-between gap-2">
+                                            <div className="hidden items-center justify-between gap-2 sm:flex">
                                                 <dt className="shrink-0 text-stone-500">Next available</dt>
                                                 <dd className="text-right text-stone-700">
                                                     {professional.next_available}
@@ -171,7 +172,7 @@ export default function HealthServicesIndex({ professionals = [] }) {
                                             const firstDay = upcoming[0];
                                             if (!firstDay?.times?.length) return null;
                                             return (
-                                                <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                                                <div className="hidden flex-wrap gap-1.5 sm:flex sm:gap-2">
                                                     {firstDay.times.slice(0, 3).map((time) => (
                                                         <span
                                                             key={`${professional.slug}-${firstDay.date}-${time}`}
