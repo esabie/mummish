@@ -105,7 +105,7 @@ export default function VendorLayout({ title, children }) {
         .toUpperCase();
 
     return (
-        <div className="min-h-screen bg-[#f5f4f2] text-stone-900">
+        <div className="min-h-screen overflow-x-hidden bg-[#f5f4f2] text-stone-900">
             {/* Top bar */}
             <header className="sticky top-0 z-30 border-b border-stone-200/80 bg-white">
                 <div className="flex h-14 items-center gap-3 px-3 sm:gap-4 sm:px-4 lg:px-6">
@@ -198,7 +198,7 @@ export default function VendorLayout({ title, children }) {
                     />
                 )}
 
-                <main className="min-h-[calc(100vh-3.5rem)] flex-1 p-3 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
+                <main className="min-h-[calc(100vh-3.5rem)] min-w-0 flex-1 p-3 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8">
                     {flash?.success && (
                         <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900" role="status">
                             {flash.success}

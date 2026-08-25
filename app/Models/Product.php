@@ -211,6 +211,21 @@ class Product extends Model
         return $this->stock_quantity === 0;
     }
 
+    /**
+     * Vendor-initiated sale: zero stock so the listing follows the normal
+     * sold-out grace period on the public shop, then drops off afterward.
+     */
+    public function markAsSold(): void
+    {
+        if ($this->stock_quantity === 0) {
+            return;
+        }
+
+        $this->update([
+            'stock_quantity' => 0,
+        ]);
+    }
+
     public function categoryLabel(): string
     {
         if ($this->category === null) {
@@ -330,6 +345,10 @@ class Product extends Model
      */
     public function shopBadges(): array
     {
+        if ($this->isOutOfStock()) {
+            return [['text' => 'SOLD OUT', 'variant' => 'sold']];
+        }
+
         $badges = [];
 
         if ($this->isOnSale()) {

@@ -13,7 +13,7 @@ class EmailRoleConflict
      */
     public static function customerRegistrationMessage(string $email): ?string
     {
-        $existing = self::find($email);
+        $existing = self::findActiveOrHealDeleted($email);
 
         if ($existing === null) {
             return null;
@@ -33,7 +33,7 @@ class EmailRoleConflict
      */
     public static function vendorRegistrationMessage(string $email): ?string
     {
-        $existing = self::find($email);
+        $existing = self::findActiveOrHealDeleted($email);
 
         if ($existing === null) {
             return null;
@@ -48,26 +48,10 @@ class EmailRoleConflict
     }
 
     /**
-     * Message when an email is already taken on health professional signup.
-     * Returns null when the email is available.
+     * Soft-deleted accounts should not block reuse. If a deleted row still
+     * holds the live email (legacy data), release it and treat as available.
      */
-    public static function healthProfessionalRegistrationMessage(string $email): ?string
-    {
-        $existing = self::find($email);
-
-        if ($existing === null) {
-            return null;
-        }
-
-        return match ($existing->role) {
-            UserRole::Admin => 'This email belongs to an admin account and cannot be used for health professional registration. Use a different email.',
-            UserRole::Vendor => 'This email already belongs to a vendor account. Sign in with that account, or use a different email.',
-            UserRole::HealthProfessional => 'A healthcare professional account with this email already exists. Please sign in instead.',
-            default => 'This email already belongs to a customer account. Sign in with that account, or use a different email to register as a healthcare professional.',
-        };
-    }
-
-    private static function find(string $email): ?User
+    private static function findActiveOrHealDeleted(string $email): ?User
     {
         $email = strtolower(trim($email));
 
@@ -75,6 +59,24 @@ class EmailRoleConflict
             return null;
         }
 
-        return User::query()->where('email', $email)->first();
+        $existing = User::query()->withTrashed()->where('email', $email)->first();
+
+        if ($existing === null) {
+            return null;
+        }
+
+        if ($existing->trashed()) {
+            $existing->releaseEmailForReuse();
+
+            AppLog::info('[Account] Freed email held by soft-deleted user during signup check.', [
+                'user_id' => $existing->id,
+                'email_masked' => LogSanitizer::maskEmail($email),
+                'role' => $existing->role?->value,
+            ]);
+
+            return null;
+        }
+
+        return $existing;
     }
 }

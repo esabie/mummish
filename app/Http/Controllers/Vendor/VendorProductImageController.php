@@ -15,7 +15,7 @@ class VendorProductImageController extends Controller
         /** @var \Illuminate\Http\UploadedFile $file */
         $file = $request->file('image');
 
-        AppLog::debug('[Vendor] Product image quality check requested.', [
+        AppLog::info('[Vendor] Product image quality check requested.', [
             'vendor_user_id' => $request->user()?->id,
             'file_name' => $file->getClientOriginalName(),
             'file_size' => $file->getSize(),
@@ -24,10 +24,13 @@ class VendorProductImageController extends Controller
 
         $result = $checker->check($file);
 
-        AppLog::debug('[Vendor] Product image quality check completed.', [
+        AppLog::info('[Vendor] Product image quality check completed.', [
             'vendor_user_id' => $request->user()?->id,
             'pass' => $result->pass,
             'issue_count' => count($result->issues),
+            'issues' => $result->issues,
+            'width' => $result->width,
+            'height' => $result->height,
         ]);
 
         return response()->json($result->toArray());

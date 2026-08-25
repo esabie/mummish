@@ -1,3 +1,4 @@
+import Modal from '@/Components/Modal';
 import VendorLayout from '@/Layouts/VendorLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
@@ -60,7 +61,15 @@ function StockBar({ product, className = 'min-w-[120px]' }) {
     );
 }
 
-function StatusPill({ label, status }) {
+function StatusPill({ label, status, soldOut = false }) {
+    if (soldOut) {
+        return (
+            <span className="inline-flex rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-800">
+                Sold
+            </span>
+        );
+    }
+
     const styles =
         status === 'active'
             ? 'bg-emerald-100 text-emerald-800'
@@ -79,7 +88,29 @@ function CategoryPill({ label }) {
     );
 }
 
-function ProductCard({ product, selected, onToggle }) {
+function ProductActions({ product, onRequestMarkSold }) {
+    return (
+        <div className="flex flex-wrap items-center gap-2">
+            <Link
+                href={route('vendor.inventory.edit', product.id)}
+                className="inline-flex whitespace-nowrap items-center justify-center rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 shadow-sm transition hover:bg-stone-50"
+            >
+                Edit
+            </Link>
+            {!product.is_out_of_stock ? (
+                <button
+                    type="button"
+                    onClick={() => onRequestMarkSold(product)}
+                    className="inline-flex whitespace-nowrap items-center justify-center rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-800 shadow-sm transition hover:bg-rose-100"
+                >
+                    Mark as sold
+                </button>
+            ) : null}
+        </div>
+    );
+}
+
+function ProductCard({ product, selected, onToggle, onRequestMarkSold }) {
     return (
         <article className="border-b border-stone-100 p-4 last:border-b-0">
             <div className="flex gap-3">
@@ -106,17 +137,18 @@ function ProductCard({ product, selected, onToggle }) {
                     </div>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                         <CategoryPill label={product.category_label} />
-                        <StatusPill label={product.status_label} status={product.status} />
+                        <StatusPill
+                            label={product.status_label}
+                            status={product.status}
+                            soldOut={product.is_out_of_stock}
+                        />
                     </div>
                     <div className="mt-3">
                         <StockBar product={product} className="w-full max-w-[200px]" />
                     </div>
-                    <Link
-                        href={route('vendor.inventory.edit', product.id)}
-                        className="mt-3 inline-block text-sm font-medium text-[#5c4d3d] hover:underline"
-                    >
-                        Edit
-                    </Link>
+                    <div className="mt-3">
+                        <ProductActions product={product} onRequestMarkSold={onRequestMarkSold} />
+                    </div>
                 </div>
             </div>
         </article>
@@ -134,6 +166,34 @@ export default function VendorInventoryIndex({
 }) {
     const [search, setSearch] = useState(filters.q ?? '');
     const [selected, setSelected] = useState([]);
+    const [productToMarkSold, setProductToMarkSold] = useState(null);
+    const [markingSold, setMarkingSold] = useState(false);
+
+    const closeMarkSoldModal = () => {
+        if (markingSold) {
+            return;
+        }
+        setProductToMarkSold(null);
+    };
+
+    const confirmMarkSold = () => {
+        if (!productToMarkSold || markingSold) {
+            return;
+        }
+
+        setMarkingSold(true);
+        router.post(
+            route('vendor.inventory.mark-sold', productToMarkSold.id),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setMarkingSold(false);
+                    setProductToMarkSold(null);
+                },
+            },
+        );
+    };
 
     const applySearch = (e) => {
         e.preventDefault();
@@ -318,6 +378,7 @@ export default function VendorInventoryIndex({
                                 product={product}
                                 selected={selected.includes(product.id)}
                                 onToggle={() => toggleOne(product.id)}
+                                onRequestMarkSold={setProductToMarkSold}
                             />
                         ))
                     )}
@@ -334,7 +395,7 @@ export default function VendorInventoryIndex({
                                 <th className="px-4 py-3">Price</th>
                                 <th className="px-4 py-3">Stock Level</th>
                                 <th className="px-4 py-3">Status</th>
-                                <th className="w-12 px-4 py-3" />
+                                <th className="whitespace-nowrap px-4 py-3">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-stone-100">
@@ -380,15 +441,17 @@ export default function VendorInventoryIndex({
                                             <StockBar product={product} />
                                         </td>
                                         <td className="px-4 py-4">
-                                            <StatusPill label={product.status_label} status={product.status} />
+                                            <StatusPill
+                                                label={product.status_label}
+                                                status={product.status}
+                                                soldOut={product.is_out_of_stock}
+                                            />
                                         </td>
-                                        <td className="px-4 py-4">
-                                            <Link
-                                                href={route('vendor.inventory.edit', product.id)}
-                                                className="text-sm font-medium text-[#5c4d3d] hover:underline"
-                                            >
-                                                Edit
-                                            </Link>
+                                        <td className="whitespace-nowrap px-4 py-4">
+                                            <ProductActions
+                                                product={product}
+                                                onRequestMarkSold={setProductToMarkSold}
+                                            />
                                         </td>
                                     </tr>
                                 ))
@@ -457,6 +520,40 @@ export default function VendorInventoryIndex({
                     </div>
                 )}
             </div>
+
+            <Modal
+                show={productToMarkSold !== null}
+                onClose={closeMarkSoldModal}
+                maxWidth="md"
+                closeable={!markingSold}
+            >
+                <div className="px-6 py-6">
+                    <h2 className="text-lg font-bold text-stone-900">Mark as sold?</h2>
+                    <p className="mt-3 text-sm leading-relaxed text-stone-600">
+                        {productToMarkSold
+                            ? `Mark “${productToMarkSold.title}” as sold? Stock will be set to 0. It will show as Sold out on the shop for a short period, then be removed automatically.`
+                            : null}
+                    </p>
+                    <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                        <button
+                            type="button"
+                            onClick={closeMarkSoldModal}
+                            disabled={markingSold}
+                            className="inline-flex items-center justify-center rounded-lg border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 transition hover:bg-stone-50 disabled:opacity-50"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={confirmMarkSold}
+                            disabled={markingSold}
+                            className="inline-flex items-center justify-center rounded-lg bg-rose-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-800 disabled:opacity-50"
+                        >
+                            {markingSold ? 'Marking…' : 'Mark as sold'}
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </VendorLayout>
     );
 }

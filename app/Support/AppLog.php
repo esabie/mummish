@@ -83,6 +83,15 @@ class AppLog
             'exception_message' => self::limitString($exception->getMessage()),
             'exception_file' => $exception->getFile(),
             'exception_line' => $exception->getLine(),
+            'exception_code' => $exception->getCode(),
+            'exception_trace' => self::limitString($exception->getTraceAsString()),
+            'previous' => $exception->getPrevious() !== null
+                ? sprintf(
+                    '%s: %s',
+                    $exception->getPrevious()::class,
+                    self::limitString($exception->getPrevious()->getMessage())
+                )
+                : null,
         ]));
     }
 
@@ -111,7 +120,11 @@ class AppLog
             $context['route_name'] = $request->route()?->getName();
             $context['ip'] = $request->ip();
             $context['user_id'] = $request->user()?->id;
+            $context['user_role'] = $request->user()?->role?->value ?? $request->user()?->role;
             $context['is_inertia'] = $request->header('X-Inertia') === 'true';
+            $context['referer'] = $request->headers->get('referer');
+            $context['user_agent'] = self::limitString((string) $request->userAgent(), 200);
+            $context['content_length'] = $request->header('Content-Length');
         }
 
         return $context;
@@ -154,6 +167,13 @@ class AppLog
                     break;
                 }
 
+                if (self::isSensitiveKey((string) $key)) {
+                    $normalized[$key] = '***';
+                    $count++;
+
+                    continue;
+                }
+
                 $normalized[$key] = self::normalizeValue($item, $depth + 1);
                 $count++;
             }
@@ -180,13 +200,15 @@ class AppLog
         return $value;
     }
 
-    private static function limitString(string $value): string
+    private static function limitString(string $value, ?int $max = null): string
     {
-        if (mb_strlen($value) <= self::MAX_STRING_LENGTH) {
+        $max ??= self::MAX_STRING_LENGTH;
+
+        if (mb_strlen($value) <= $max) {
             return $value;
         }
 
-        return mb_substr($value, 0, self::MAX_STRING_LENGTH).'...[truncated]';
+        return mb_substr($value, 0, $max).'...[truncated]';
     }
 
     private static function isSensitiveKey(string $key): bool

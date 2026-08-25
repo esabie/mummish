@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\VendorApplicationStatus;
 use App\Models\VendorReferrer;
 use App\Support\EmailRoleConflict;
 use Illuminate\Foundation\Http\FormRequest;
@@ -45,7 +46,13 @@ class StoreVendorApplicationRequest extends FormRequest
             'last_name' => ['required', 'string', 'max:100'],
             'shop_name' => ['required', 'string', 'max:150'],
             'phone' => ['required', 'string', 'min:9', 'max:20', 'regex:/^[\d\s+()-]+$/'],
-            'ghana_card_id' => ['required', 'string', 'regex:/^GHA-\d{9}-\d$/', 'unique:vendor_applications,ghana_card_id'],
+            'ghana_card_id' => [
+                'required',
+                'string',
+                'regex:/^GHA-\d{9}-\d$/',
+                Rule::unique('vendor_applications', 'ghana_card_id')
+                    ->where(fn ($query) => $query->where('status', '!=', VendorApplicationStatus::Deleted->value)),
+            ],
             'category' => ['required', 'string', Rule::in(array_keys(self::categories()))],
             'referral_code' => [
                 'nullable',

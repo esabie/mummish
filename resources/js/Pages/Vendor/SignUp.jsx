@@ -6,6 +6,8 @@ import LogoMark from '@/Components/LogoMark';
 import SeoHead from '@/Components/SeoHead';
 import SiteFooter from '@/Components/SiteFooter';
 import InputError from '@/Components/InputError';
+import { compressImageForUpload } from '@/utils/compressImageForUpload';
+import { showHttpError } from '@/utils/httpErrorBus';
 
 const vendorBrown = 'bg-[#5c4d3d] hover:bg-[#4a3e32]';
 const vendorBrownOutline =
@@ -193,45 +195,55 @@ export default function VendorSignUp({
         };
     }, [logoPreview, cropSrc]);
 
-    const handleLogoChange = (e) => {
+    const handleLogoChange = async (e) => {
         const file = e.target.files?.[0];
 
         if (!file) {
             return;
         }
 
-        if (cropSrc) {
-            URL.revokeObjectURL(cropSrc);
+        if (!file.type.startsWith('image/')) {
+            showHttpError({
+                message: 'Please choose a JPG, PNG, or WEBP image for your shop logo.',
+            });
+            if (logoInputRef.current) {
+                logoInputRef.current.value = '';
+            }
+            return;
         }
 
-        setCropFileName(file.name || 'logo.jpg');
-        setCropSrc(URL.createObjectURL(file));
-
-        // Allow selecting the same file again after cancel.
-        if (logoInputRef.current) {
-            logoInputRef.current.value = '';
-        }
-    };
-
-    const handleCropCancel = () => {
-        if (cropSrc) {
-            URL.revokeObjectURL(cropSrc);
-        }
-        setCropSrc(null);
-    };
-
-    const handleCropSave = (file, previewUrl) => {
-        if (cropSrc) {
-            URL.revokeObjectURL(cropSrc);
-        }
-        setCropSrc(null);
-
-        if (logoPreview) {
-            URL.revokeObjectURL(logoPreview);
+        // Soft client limit before compression (~8 MB originals are common from phones).
+        if (file.size > 8 * 1024 * 1024) {
+            showHttpError({
+                message: 'That image is too large. Please choose a file under 8 MB.',
+                status: 413,
+            });
+            if (logoInputRef.current) {
+                logoInputRef.current.value = '';
+            }
+            return;
         }
 
-        setData('logo', file);
-        setLogoPreview(previewUrl);
+        try {
+            const compressed = await compressImageForUpload(file, {
+                maxDimension: 1200,
+                maxBytes: 1_200_000,
+            });
+            setData('logo', compressed);
+
+            if (logoPreview) {
+                URL.revokeObjectURL(logoPreview);
+            }
+
+            setLogoPreview(URL.createObjectURL(compressed));
+        } catch {
+            showHttpError({
+                message: 'Could not process that image. Please try a different file.',
+            });
+            if (logoInputRef.current) {
+                logoInputRef.current.value = '';
+            }
+        }
     };
 
     const clearLogo = () => {

@@ -8,16 +8,38 @@ import { Fragment } from 'react';
 import NavigationLoader from './Components/NavigationLoader';
 import CartDrawer from './Components/CartDrawer';
 import VendorCartConflictModal from './Components/VendorCartConflictModal';
+import HttpErrorToast from './Components/HttpErrorToast';
 import { CartProvider } from './context/CartContext';
 import { debugLogger } from './utils/debugLogger';
+import { showHttpError } from './utils/httpErrorBus';
+import { httpErrorMessage } from './utils/httpErrorMessage';
 
 const siteTitle = 'Mummish';
 
 router.on('invalid', (event) => {
-    if (event.detail.response?.status === 419) {
-        event.preventDefault();
-        window.location.reload();
+    const status = event.detail.response?.status;
+    const message = httpErrorMessage(status);
+
+    debugLogger.error('Inertia', 'Non-Inertia response', { status });
+
+    // Always take over the default modal so users see a clear message.
+    event.preventDefault();
+    showHttpError({ message, status });
+
+    if (status === 419) {
+        window.setTimeout(() => window.location.reload(), 1200);
     }
+});
+
+router.on('exception', (event) => {
+    debugLogger.error('Inertia', 'Visit exception', {
+        exception: event.detail.exception,
+    });
+    event.preventDefault();
+    showHttpError({
+        message: httpErrorMessage(0, event.detail.exception),
+        status: 0,
+    });
 });
 
 createInertiaApp({
@@ -37,6 +59,7 @@ createInertiaApp({
             <CartProvider>
                 <Fragment>
                     <NavigationLoader />
+                    <HttpErrorToast />
                     <App {...props} />
                     <CartDrawer />
                     <VendorCartConflictModal />

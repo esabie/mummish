@@ -160,6 +160,31 @@ class VendorProductController extends Controller
             ->with('success', 'Product removed.');
     }
 
+    public function markSold(Request $request, Product $product): RedirectResponse
+    {
+        $this->ensureOwnsProduct($request, $product);
+
+        if ($product->stock_quantity === 0) {
+            return back()->with('success', 'This product is already marked as sold.');
+        }
+
+        AppLog::info('[Vendor] Marking product as sold.', [
+            'product_id' => $product->id,
+            'vendor_user_id' => $request->user()->id,
+            'previous_stock' => $product->stock_quantity,
+            'sku' => $product->sku,
+        ]);
+
+        $product->markAsSold();
+
+        $graceDays = (int) config('marketplace.sold_out_hidden_after_days', 10);
+
+        return back()->with(
+            'success',
+            "Product marked as sold. It will show as Sold out on the shop for {$graceDays} days, then be removed."
+        );
+    }
+
     private function ensureOwnsProduct(Request $request, Product $product): void
     {
         if ($product->user_id !== $request->user()->id) {
@@ -230,8 +255,8 @@ class VendorProductController extends Controller
             'minImages' => (int) config('marketplace.min_product_images', 3),
             'maxImages' => (int) config('marketplace.max_product_images', 8),
             'imageRequirements' => [
-                'minWidth' => (int) config('marketplace.product_image_min_width', 800),
-                'minHeight' => (int) config('marketplace.product_image_min_height', 800),
+                'minWidth' => (int) config('marketplace.product_image_min_width', 300),
+                'minHeight' => (int) config('marketplace.product_image_min_height', 300),
             ],
             'categoriesRequiringSize' => config('marketplace.categories_requiring_size', []),
             'categoryBrands' => collect(config('marketplace.category_brands', []))

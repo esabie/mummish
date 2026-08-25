@@ -1,4 +1,6 @@
 import InputError from '@/Components/InputError';
+import { showHttpError } from '@/utils/httpErrorBus';
+import { compressImagesForUpload } from '@/utils/compressImageForUpload';
 import axios from 'axios';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -57,12 +59,13 @@ export default function ProductImagesUpload({
 }) {
     const [dragOver, setDragOver] = useState(false);
     const [quality, setQuality] = useState({});
+    const [preparing, setPreparing] = useState(false);
     const fileRef = useRef(null);
     const checkingRef = useRef(new Set());
     const startedRef = useRef(new Set());
     const total = existingImages.length + newFiles.length;
-    const minWidth = imageRequirements?.minWidth ?? 500;
-    const minHeight = imageRequirements?.minHeight ?? 500;
+    const minWidth = imageRequirements?.minWidth ?? 300;
+    const minHeight = imageRequirements?.minHeight ?? 300;
 
     const newPreviewUrls = useMemo(
         () => newFiles.map((file) => URL.createObjectURL(file)),
@@ -108,12 +111,17 @@ export default function ProductImagesUpload({
                     issues: data.issues ?? [],
                 },
             }));
-        } catch {
+        } catch (error) {
+            const status = error?.response?.status;
             setQuality((current) => ({
                 ...current,
                 [key]: {
                     status: 'error',
-                    messages: ['Could not check this image. Please try uploading it again.'],
+                    messages: [
+                        status === 413
+                            ? 'This image is too large to check. Try a smaller photo (under 2 MB).'
+                            : 'Could not check this image. Please try uploading it again.',
+                    ],
                 },
             }));
         } finally {
@@ -177,7 +185,7 @@ export default function ProductImagesUpload({
         onQualityChange({ allPassed, checking, failedMessages });
     }, [newFiles, quality, onQualityChange]);
 
-    const addFiles = (fileList) => {
+    const addFiles = async (fileList) => {
         const incoming = Array.from(fileList || []).filter((f) => f.type?.startsWith('image/'));
         if (incoming.length === 0) {
             return;
@@ -186,7 +194,28 @@ export default function ProductImagesUpload({
         if (room <= 0) {
             return;
         }
-        onNewFilesChange([...newFiles, ...incoming.slice(0, room)]);
+
+        setPreparing(true);
+        try {
+            const compressed = await compressImagesForUpload(incoming.slice(0, room));
+            const usable = compressed.filter((file) => file.size <= 1_800_000);
+            if (usable.length > 0) {
+                onNewFilesChange([...newFiles, ...usable]);
+            }
+            if (usable.length < compressed.length) {
+                showHttpError({
+                    message:
+                        'One or more photos are still too large after compression. Try a different photo or export a smaller JPG.',
+                    status: 413,
+                });
+            }
+        } catch {
+            showHttpError({
+                message: 'Could not prepare those photos. Please try different images.',
+            });
+        } finally {
+            setPreparing(false);
+        }
     };
 
     const removeAt = (index) => {
@@ -233,7 +262,9 @@ export default function ProductImagesUpload({
                     dragOver ? 'border-[#5c4d3d] bg-[#5c4d3d]/5' : 'border-stone-300 bg-stone-50/80 hover:border-stone-400'
                 } ${total < minImages ? 'border-amber-300' : ''}`}
             >
-                {mainPreview ? (
+                {preparing ? (
+                    <p className="text-sm font-medium text-stone-700">Preparing photos…</p>
+                ) : mainPreview ? (
                     <img src={mainPreview.src} alt="" className="max-h-48 w-full rounded-lg object-contain" />
                 ) : (
                     <>
@@ -321,7 +352,8 @@ export default function ProductImagesUpload({
 
             <p className="mt-4 rounded-lg bg-stone-50 px-3 py-2 text-xs leading-relaxed text-stone-600">
                 <span className="font-semibold text-stone-800">Tip:</span> Use your phone&apos;s camera app in good
-                light. We only check that photos are large enough and not extremely blurry.
+                light. Photos are compressed automatically before upload — we only check that they are large enough
+                and not extremely blurry.
             </p>
             <InputError message={error} className="mt-1" />
         </div>

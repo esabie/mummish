@@ -27,6 +27,7 @@ class VendorUserResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->withTrashed()
             ->where('role', UserRole::Vendor)
             ->with('vendorApplication');
     }
@@ -49,7 +50,14 @@ class VendorUserResource extends Resource
                     ->placeholder('—')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
-                    ->searchable()
+                    ->label('Email')
+                    ->state(fn (User $record): string => $record->displayEmail())
+                    ->searchable(query: function (Builder $query, string $search): Builder {
+                        return $query->where(function (Builder $inner) use ($search) {
+                            $inner->where('email', 'like', "%{$search}%")
+                                ->orWhere('email_before_deletion', 'like', "%{$search}%");
+                        });
+                    })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('vendorApplication.phone')
                     ->label('Phone')
@@ -78,14 +86,37 @@ class VendorUserResource extends Resource
                         VendorApplicationStatus::Approved => 'success',
                         VendorApplicationStatus::Rejected => 'danger',
                         VendorApplicationStatus::Closed => 'gray',
+                        VendorApplicationStatus::Deleted => 'danger',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (?VendorApplicationStatus $state): string => $state?->label() ?? '—'),
+                Tables\Columns\TextColumn::make('account_status')
+                    ->label('Account')
+                    ->badge()
+                    ->state(fn (User $record): string => $record->trashed() ? 'Deleted' : 'Active')
+                    ->color(fn (User $record): string => $record->trashed() ? 'danger' : 'success'),
+                Tables\Columns\TextColumn::make('deleted_at')
+                    ->label('Deleted at')
+                    ->dateTime()
+                    ->placeholder('—')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Joined')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                Tables\Filters\TernaryFilter::make('deleted_at')
+                    ->label('Account deleted')
+                    ->placeholder('All vendors')
+                    ->trueLabel('Deleted')
+                    ->falseLabel('Active')
+                    ->queries(
+                        true: fn (Builder $query) => $query->onlyTrashed(),
+                        false: fn (Builder $query) => $query->withoutTrashed(),
+                        blank: fn (Builder $query) => $query,
+                    ),
             ])
             ->actions([])
             ->bulkActions([]);

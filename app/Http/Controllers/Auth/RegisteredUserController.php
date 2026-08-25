@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
+use App\Jobs\SendCustomerWelcomeSms;
 use App\Models\User;
 use App\Support\EmailRoleConflict;
 use App\Support\SafeRedirect;
@@ -67,6 +68,13 @@ class RegisteredUserController extends Controller
         ]);
 
         event(new Registered($user));
+
+        $firstName = strtok(trim((string) $request->name), ' ') ?: '';
+
+        SendCustomerWelcomeSms::dispatch(
+            (string) $request->phone,
+            $firstName,
+        );
 
         Auth::login($user);
 

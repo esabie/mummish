@@ -27,9 +27,9 @@ class ProductImageQualityChecker
 
         $width = imagesx($image);
         $height = imagesy($image);
-        $minWidth = (int) config('marketplace.product_image_min_width', 500);
-        $minHeight = (int) config('marketplace.product_image_min_height', 500);
-        $minSharpness = (float) config('marketplace.product_image_min_sharpness', 20);
+        $minWidth = (int) config('marketplace.product_image_min_width', 300);
+        $minHeight = (int) config('marketplace.product_image_min_height', 300);
+        $minSharpness = (float) config('marketplace.product_image_min_sharpness', 5);
 
         $issues = [];
         $messages = [];
@@ -44,7 +44,7 @@ class ProductImageQualityChecker
 
         if ($sharpness < $minSharpness) {
             $issues[] = 'blur';
-            $messages[] = 'Photo looks very blurry. Hold steady and tap to focus on the product before retaking.';
+            $messages[] = 'Photo looks too blurry to use. Hold steady and retake in better light.';
         }
 
         imagedestroy($image);
