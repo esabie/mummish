@@ -94,6 +94,26 @@ class HomePageTest extends TestCase
             );
     }
 
+    public function test_homepage_health_services_count_is_zero_without_listings(): void
+    {
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('categories.0.id', 'health_services')
+                ->where('categories.0.count', 0)
+            );
+    }
+
+    public function test_health_services_index_shows_empty_state_without_listings(): void
+    {
+        $this->get(route('health-services.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('HealthServices/Index')
+                ->has('professionals', 0)
+            );
+    }
+
     public function test_homepage_excludes_unapproved_stores(): void
     {
         $vendor = User::factory()->create(['role' => UserRole::Vendor]);

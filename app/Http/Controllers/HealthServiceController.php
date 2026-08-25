@@ -28,60 +28,31 @@ class HealthServiceController extends Controller
             ->latest('id')
             ->get();
 
-        $professionals = $dbProfessionals->isNotEmpty()
-            ? $dbProfessionals->map(function (HealthProfessional $professional) {
-                $firstService = $professional->services->first();
+        $professionals = $dbProfessionals->map(function (HealthProfessional $professional) {
+            $firstService = $professional->services->first();
 
-                return [
-                    'slug' => $professional->slug,
-                    'name' => $professional->name,
-                    'title' => $professional->title,
-                    'specialty' => $professional->specialty,
-                    'service' => $firstService?->name ?? 'Consultation',
-                    'rate' => $firstService ? 'GHS '.$firstService->price_cedis : 'GHS 0 / session',
-                    'rate_value' => $firstService?->price_cedis ?? 0,
-                    'visit_modes' => $professional->visit_modes ?? [],
-                    'experience' => $professional->experience ?? '',
-                    'location' => $professional->location ?? '',
-                    'availability' => 'Set from weekly schedule',
-                    'rating' => (float) $professional->rating,
-                    'review_count' => (int) $professional->review_count,
-                    'next_available' => 'Check profile for next slot',
-                    'response_time' => $professional->response_time ?? '',
-                    'slots' => [],
-                    'image' => $professional->image_path
-                        ? asset('storage/'.$professional->image_path)
-                        : (string) ($professional->image_url ?? ''),
-                ];
-            })->values()->all()
-            : collect(config('marketplace.health_services_professionals', []))
-                ->map(fn (array $professional) => [
-                    'slug' => (string) ($professional['slug'] ?? ''),
-                    'name' => (string) ($professional['name'] ?? 'Healthcare Professional'),
-                    'title' => (string) ($professional['title'] ?? 'Specialist'),
-                    'specialty' => (string) ($professional['specialty'] ?? 'General Care'),
-                    'service' => (string) ($professional['service'] ?? 'Consultation'),
-                    'rate' => (string) ($professional['rate'] ?? 'GHS 0 / session'),
-                    'rate_value' => (int) ($professional['rate_value'] ?? 0),
-                    'visit_modes' => collect($professional['visit_modes'] ?? [])->values()->all(),
-                    'experience' => (string) ($professional['experience'] ?? ''),
-                    'location' => (string) ($professional['location'] ?? ''),
-                    'availability' => (string) ($professional['availability'] ?? ''),
-                    'rating' => (float) ($professional['rating'] ?? 0),
-                    'review_count' => (int) ($professional['review_count'] ?? 0),
-                    'next_available' => (string) ($professional['next_available'] ?? ''),
-                    'response_time' => (string) ($professional['response_time'] ?? ''),
-                    'slots' => collect($professional['slots'] ?? [])
-                        ->map(fn (array $day) => [
-                            'date' => (string) ($day['date'] ?? ''),
-                            'day' => (string) ($day['day'] ?? ''),
-                            'date_iso' => null,
-                            'times' => collect($day['times'] ?? [])->values()->all(),
-                        ])->values()->all(),
-                    'image' => (string) ($professional['image'] ?? ''),
-                ])
-                ->values()
-                ->all();
+            return [
+                'slug' => $professional->slug,
+                'name' => $professional->name,
+                'title' => $professional->title,
+                'specialty' => $professional->specialty,
+                'service' => $firstService?->name ?? 'Consultation',
+                'rate' => $firstService ? 'GHS '.$firstService->price_cedis : 'GHS 0 / session',
+                'rate_value' => $firstService?->price_cedis ?? 0,
+                'visit_modes' => $professional->visit_modes ?? [],
+                'experience' => $professional->experience ?? '',
+                'location' => $professional->location ?? '',
+                'availability' => 'Set from weekly schedule',
+                'rating' => (float) $professional->rating,
+                'review_count' => (int) $professional->review_count,
+                'next_available' => 'Check profile for next slot',
+                'response_time' => $professional->response_time ?? '',
+                'slots' => [],
+                'image' => $professional->image_path
+                    ? asset('storage/'.$professional->image_path)
+                    : (string) ($professional->image_url ?? ''),
+            ];
+        })->values()->all();
 
         return Inertia::render('HealthServices/Index', [
             'professionals' => $professionals,
@@ -100,82 +71,48 @@ class HealthServiceController extends Controller
             ->publiclyVisible()
             ->first();
 
-        if ($dbProfessional !== null) {
-            $professional = [
-                'id' => $dbProfessional->id,
-                'slug' => $dbProfessional->slug,
-                'name' => $dbProfessional->name,
-                'title' => $dbProfessional->title,
-                'specialty' => $dbProfessional->specialty,
-                'service' => $dbProfessional->services->first()?->name ?? 'Consultation',
-                'rate' => $dbProfessional->services->first()
-                    ? 'GHS '.$dbProfessional->services->first()->price_cedis
-                    : 'GHS 0 / session',
-                'rate_value' => $dbProfessional->services->first()?->price_cedis ?? 0,
-                'visit_modes' => $dbProfessional->visit_modes ?? [],
-                'experience' => $dbProfessional->experience ?? '',
-                'location' => $dbProfessional->location ?? '',
-                'availability' => 'Based on weekly schedule',
-                'next_available' => 'Choose a date to view times',
-                'response_time' => $dbProfessional->response_time ?? '',
-                'languages' => $dbProfessional->languages ?? [],
-                'about' => $dbProfessional->about ?? '',
-                'highlights' => $dbProfessional->highlights ?? [],
-                'bookable' => $dbProfessional->services->isNotEmpty() && $dbProfessional->availability->isNotEmpty(),
-                'rate_card' => $dbProfessional->services->map(fn ($service) => [
-                    'id' => $service->id,
-                    'service' => $service->name,
-                    'price' => 'GHS '.$service->price_cedis,
-                    'mode' => $service->visit_mode,
-                    'duration_minutes' => $service->duration_minutes,
-                ])->values()->all(),
-                'slots' => $this->upcomingSlots($dbProfessional),
-                'booking_note' => $dbProfessional->booking_note ?? 'Appointments are confirmed after review.',
-                'rating' => (float) $dbProfessional->rating,
-                'review_count' => (int) $dbProfessional->review_count,
-                'reviews' => $dbProfessional->reviews
-                    ->map(fn ($review) => $reviews->formatReviewCard($review))
-                    ->values()
-                    ->all(),
-                'image' => $dbProfessional->image_path
-                    ? asset('storage/'.$dbProfessional->image_path)
-                    : (string) ($dbProfessional->image_url ?? ''),
-            ];
-        } else {
-            $configProfessional = collect(config('marketplace.health_services_professionals', []))
-                ->first(fn (array $item) => ($item['slug'] ?? null) === $slug);
+        abort_if($dbProfessional === null, 404);
 
-            abort_if($configProfessional === null, 404);
-
-            $professional = array_merge($configProfessional, [
-                'bookable' => false,
-                'rate_card' => collect($configProfessional['rate_card'] ?? [])
-                    ->map(fn (array $item) => [
-                        'id' => null,
-                        'service' => (string) ($item['service'] ?? 'Consultation'),
-                        'price' => (string) ($item['price'] ?? 'GHS 0'),
-                        'mode' => (string) ($item['mode'] ?? 'Virtual'),
-                    ])->values()->all(),
-                'slots' => collect($configProfessional['slots'] ?? [])
-                    ->map(fn (array $day) => [
-                        'date' => (string) ($day['date'] ?? ''),
-                        'day' => (string) ($day['day'] ?? ''),
-                        'date_iso' => null,
-                        'times' => collect($day['times'] ?? [])
-                            ->map(fn ($time) => is_array($time)
-                                ? [
-                                    'label' => (string) ($time['label'] ?? ''),
-                                    'booked' => (bool) ($time['booked'] ?? false),
-                                ]
-                                : [
-                                    'label' => (string) $time,
-                                    'booked' => false,
-                                ])
-                            ->values()
-                            ->all(),
-                    ])->values()->all(),
-            ]);
-        }
+        $professional = [
+            'id' => $dbProfessional->id,
+            'slug' => $dbProfessional->slug,
+            'name' => $dbProfessional->name,
+            'title' => $dbProfessional->title,
+            'specialty' => $dbProfessional->specialty,
+            'service' => $dbProfessional->services->first()?->name ?? 'Consultation',
+            'rate' => $dbProfessional->services->first()
+                ? 'GHS '.$dbProfessional->services->first()->price_cedis
+                : 'GHS 0 / session',
+            'rate_value' => $dbProfessional->services->first()?->price_cedis ?? 0,
+            'visit_modes' => $dbProfessional->visit_modes ?? [],
+            'experience' => $dbProfessional->experience ?? '',
+            'location' => $dbProfessional->location ?? '',
+            'availability' => 'Based on weekly schedule',
+            'next_available' => 'Choose a date to view times',
+            'response_time' => $dbProfessional->response_time ?? '',
+            'languages' => $dbProfessional->languages ?? [],
+            'about' => $dbProfessional->about ?? '',
+            'highlights' => $dbProfessional->highlights ?? [],
+            'bookable' => $dbProfessional->services->isNotEmpty() && $dbProfessional->availability->isNotEmpty(),
+            'rate_card' => $dbProfessional->services->map(fn ($service) => [
+                'id' => $service->id,
+                'service' => $service->name,
+                'price' => 'GHS '.$service->price_cedis,
+                'mode' => $service->visit_mode,
+                'duration_minutes' => $service->duration_minutes,
+            ])->values()->all(),
+            'slots' => $this->upcomingSlots($dbProfessional),
+            'booking_note' => $dbProfessional->booking_note ?? 'Appointments are confirmed after review.',
+            'rating' => (float) $dbProfessional->rating,
+            'review_count' => (int) $dbProfessional->review_count,
+            'reviews' => $dbProfessional->reviews
+                ->map(fn ($review) => $reviews->formatReviewCard($review))
+                ->values()
+                ->all(),
+            'image' => $dbProfessional->image_path
+                ? asset('storage/'.$dbProfessional->image_path)
+                : (string) ($dbProfessional->image_url ?? ''),
+        ];
 
         return Inertia::render('HealthServices/Show', [
             'professional' => $professional,

@@ -115,9 +115,25 @@ export default function HealthServicesIndex({ professionals = [] }) {
 
                     <div className="mb-5 mt-8 flex items-center justify-between gap-3 sm:mb-6">
                         <h2 className="text-xl font-bold text-stone-900 sm:text-2xl">Meet Our Providers</h2>
-                        <p className="text-sm text-stone-500">{professionals.length} available</p>
+                        {professionals.length > 0 ? (
+                            <p className="text-sm text-stone-500">{professionals.length} available</p>
+                        ) : null}
                     </div>
 
+                    {professionals.length === 0 ? (
+                        <div className="rounded-2xl border border-dashed border-stone-200 bg-white px-6 py-12 text-center sm:px-10 sm:py-16">
+                            <h3 className="text-lg font-bold text-stone-900 sm:text-xl">No providers listed yet</h3>
+                            <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-stone-600">
+                                Healthcare professionals will appear here after they sign up and are approved by Mummish.
+                            </p>
+                            <Link
+                                href={route('health-professionals.signup')}
+                                className="mt-6 inline-flex rounded-full bg-[#5c4d3d] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#4a3e32]"
+                            >
+                                Join as a healthcare professional
+                            </Link>
+                        </div>
+                    ) : (
                     <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
                         {professionals.map((professional) => (
                             <article
@@ -190,6 +206,7 @@ export default function HealthServicesIndex({ professionals = [] }) {
                             </article>
                         ))}
                     </div>
+                    )}
                 </main>
 
                 <SiteFooter />

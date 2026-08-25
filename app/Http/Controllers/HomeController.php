@@ -63,20 +63,13 @@ class HomeController extends Controller
     }
 
     /**
-     * Match HealthServiceController: prefer live DB professionals when any exist,
-     * otherwise fall back to demo config entries.
+     * Approved, active professionals shown on Health Services.
      */
     private function healthServicesListingCount(): int
     {
-        $dbCount = HealthProfessional::query()
+        return HealthProfessional::query()
             ->publiclyVisible()
             ->count();
-
-        if ($dbCount > 0) {
-            return $dbCount;
-        }
-
-        return count(config('marketplace.health_services_professionals', []));
     }
 
     /**
