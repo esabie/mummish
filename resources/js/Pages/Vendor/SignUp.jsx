@@ -195,7 +195,7 @@ export default function VendorSignUp({
         };
     }, [logoPreview, cropSrc]);
 
-    const handleLogoChange = async (e) => {
+    const handleLogoChange = (e) => {
         const file = e.target.files?.[0];
 
         if (!file) {
@@ -224,24 +224,52 @@ export default function VendorSignUp({
             return;
         }
 
+        if (cropSrc) {
+            URL.revokeObjectURL(cropSrc);
+        }
+
+        setCropFileName(file.name || 'logo.jpg');
+        setCropSrc(URL.createObjectURL(file));
+
+        if (logoInputRef.current) {
+            logoInputRef.current.value = '';
+        }
+    };
+
+    const handleCropCancel = () => {
+        if (cropSrc) {
+            URL.revokeObjectURL(cropSrc);
+        }
+        setCropSrc(null);
+    };
+
+    const handleCropSave = async (file, previewUrl) => {
+        if (cropSrc) {
+            URL.revokeObjectURL(cropSrc);
+        }
+        setCropSrc(null);
+
         try {
             const compressed = await compressImageForUpload(file, {
                 maxDimension: 1200,
                 maxBytes: 1_200_000,
             });
-            setData('logo', compressed);
 
             if (logoPreview) {
                 URL.revokeObjectURL(logoPreview);
             }
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
 
+            setData('logo', compressed);
             setLogoPreview(URL.createObjectURL(compressed));
         } catch {
             showHttpError({
                 message: 'Could not process that image. Please try a different file.',
             });
-            if (logoInputRef.current) {
-                logoInputRef.current.value = '';
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
             }
         }
     };
