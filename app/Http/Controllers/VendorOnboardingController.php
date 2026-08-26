@@ -30,6 +30,12 @@ class VendorOnboardingController extends Controller
         $user = auth()->user();
         $referralCode = strtoupper(trim((string) request()->query('ref', '')));
 
+        AppLog::info('[VendorOnboarding] Sell page requested.', [
+            'has_existing_application' => $user?->vendorApplication !== null,
+            'is_admin_account' => $user?->isAdmin() ?? false,
+            'referral_code' => $referralCode !== '' ? $referralCode : null,
+        ]);
+
         return Inertia::render('Vendor/SignUp', [
             'categories' => StoreVendorApplicationRequest::categories(),
             'existingApplication' => $user?->vendorApplication,

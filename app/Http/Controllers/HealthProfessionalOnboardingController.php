@@ -7,11 +7,12 @@ use App\Enums\UserRole;
 use App\Http\Requests\StoreHealthProfessionalRequest;
 use App\Models\HealthProfessional;
 use App\Models\User;
+use App\Support\AppLog;
+use App\Support\LogSanitizer;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -26,6 +27,10 @@ class HealthProfessionalOnboardingController extends Controller
             return redirect()->route('health-professionals.dashboard');
         }
 
+        AppLog::info('[HealthProfessionalOnboarding] Signup page requested.', [
+            'authenticated' => $user !== null,
+        ]);
+
         return Inertia::render('HealthServices/SignUp');
     }
 
@@ -39,6 +44,11 @@ class HealthProfessionalOnboardingController extends Controller
         $user = null;
         $professional = null;
 
+        AppLog::info('[HealthProfessionalOnboarding] Signup submitted.', [
+            'email_masked' => LogSanitizer::maskEmail((string) ($data['email'] ?? '')),
+            'has_image' => $request->hasFile('image'),
+        ]);
+
         DB::transaction(function () use ($request, $data, &$user, &$professional) {
             $imagePath = $request->file('image')?->store('health-professionals', 'public');
 
@@ -46,7 +56,7 @@ class HealthProfessionalOnboardingController extends Controller
                 'name' => $data['name'],
                 'email' => strtolower(trim($data['email'])),
                 'phone' => $data['phone'],
-                'password' => Hash::make($data['password']),
+                'password' => $data['password'],
                 'role' => UserRole::HealthProfessional,
             ]);
 
@@ -76,6 +86,11 @@ class HealthProfessionalOnboardingController extends Controller
 
         event(new Registered($user));
         Auth::login($user);
+
+        AppLog::info('[HealthProfessionalOnboarding] Signup completed.', [
+            'user_id' => $user->id,
+            'professional_id' => $professional->id,
+        ]);
 
         return redirect()
             ->route('health-professionals.edit', $professional)

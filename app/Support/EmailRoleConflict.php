@@ -48,6 +48,26 @@ class EmailRoleConflict
     }
 
     /**
+     * Message when an email is already taken on healthcare professional signup.
+     * Returns null when the email is available.
+     */
+    public static function healthProfessionalRegistrationMessage(string $email): ?string
+    {
+        $existing = self::findActiveOrHealDeleted($email);
+
+        if ($existing === null) {
+            return null;
+        }
+
+        return match ($existing->role) {
+            UserRole::Admin => 'This email belongs to an admin account and cannot be used for a healthcare professional signup. Use a different email.',
+            UserRole::HealthProfessional => 'A healthcare professional account with this email already exists. Please sign in instead.',
+            UserRole::Vendor => 'This email already belongs to a vendor account. Sign in with that account, or use a different email to register as a healthcare professional.',
+            default => 'This email already belongs to a customer account. Sign in with that account, or use a different email to register as a healthcare professional.',
+        };
+    }
+
+    /**
      * Soft-deleted accounts should not block reuse. If a deleted row still
      * holds the live email (legacy data), release it and treat as available.
      */
