@@ -129,13 +129,26 @@ class HealthProfessionalResource extends Resource
                     ->schema([
                         Infolists\Components\TextEntry::make('approval_status')
                             ->badge()
-                            ->color(fn (HealthProfessionalApprovalStatus $state): string => match ($state) {
-                                HealthProfessionalApprovalStatus::Pending => 'warning',
-                                HealthProfessionalApprovalStatus::Approved => 'success',
-                                HealthProfessionalApprovalStatus::Rejected => 'danger',
-                                HealthProfessionalApprovalStatus::Suspended => 'gray',
+                            ->color(function (mixed $state): string {
+                                $status = $state instanceof HealthProfessionalApprovalStatus
+                                    ? $state
+                                    : HealthProfessionalApprovalStatus::tryFrom((string) $state);
+
+                                return match ($status) {
+                                    HealthProfessionalApprovalStatus::Pending => 'warning',
+                                    HealthProfessionalApprovalStatus::Approved => 'success',
+                                    HealthProfessionalApprovalStatus::Rejected => 'danger',
+                                    HealthProfessionalApprovalStatus::Suspended => 'gray',
+                                    default => 'gray',
+                                };
                             })
-                            ->formatStateUsing(fn (HealthProfessionalApprovalStatus $state): string => $state->label()),
+                            ->formatStateUsing(function (mixed $state): string {
+                                $status = $state instanceof HealthProfessionalApprovalStatus
+                                    ? $state
+                                    : HealthProfessionalApprovalStatus::tryFrom((string) $state);
+
+                                return $status?->label() ?? '—';
+                            }),
                         Infolists\Components\TextEntry::make('rejection_reason')
                             ->label(fn (HealthProfessional $record): string => $record->approval_status === HealthProfessionalApprovalStatus::Suspended
                                 ? 'Suspension reason'
@@ -193,13 +206,26 @@ class HealthProfessionalResource extends Resource
                 Tables\Columns\TextColumn::make('approval_status')
                     ->label('Approval')
                     ->badge()
-                    ->color(fn (HealthProfessionalApprovalStatus $state): string => match ($state) {
-                        HealthProfessionalApprovalStatus::Pending => 'warning',
-                        HealthProfessionalApprovalStatus::Approved => 'success',
-                        HealthProfessionalApprovalStatus::Rejected => 'danger',
-                        HealthProfessionalApprovalStatus::Suspended => 'gray',
+                    ->color(function (mixed $state): string {
+                        $status = $state instanceof HealthProfessionalApprovalStatus
+                            ? $state
+                            : HealthProfessionalApprovalStatus::tryFrom((string) $state);
+
+                        return match ($status) {
+                            HealthProfessionalApprovalStatus::Pending => 'warning',
+                            HealthProfessionalApprovalStatus::Approved => 'success',
+                            HealthProfessionalApprovalStatus::Rejected => 'danger',
+                            HealthProfessionalApprovalStatus::Suspended => 'gray',
+                            default => 'gray',
+                        };
                     })
-                    ->formatStateUsing(fn (HealthProfessionalApprovalStatus $state): string => $state->label()),
+                    ->formatStateUsing(function (mixed $state): string {
+                        $status = $state instanceof HealthProfessionalApprovalStatus
+                            ? $state
+                            : HealthProfessionalApprovalStatus::tryFrom((string) $state);
+
+                        return $status?->label() ?? '—';
+                    }),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable(),
