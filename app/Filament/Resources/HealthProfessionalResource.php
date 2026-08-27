@@ -100,7 +100,20 @@ class HealthProfessionalResource extends Resource
                 Infolists\Components\Section::make('Listing')
                     ->schema([
                         Infolists\Components\TextEntry::make('visit_modes')
-                            ->formatStateUsing(fn (?array $state): string => $state ? implode(', ', $state) : '—'),
+                            ->formatStateUsing(function (mixed $state): string {
+                                $modes = match (true) {
+                                    is_array($state) => $state,
+                                    is_string($state) && $state !== '' => (json_decode($state, true) ?? preg_split('/\s*,\s*/', $state) ?: []),
+                                    default => [],
+                                };
+
+                                $modes = array_values(array_filter(array_map(
+                                    static fn ($mode) => is_scalar($mode) ? trim((string) $mode) : '',
+                                    $modes,
+                                )));
+
+                                return $modes !== [] ? implode(', ', $modes) : '—';
+                            }),
                         Infolists\Components\TextEntry::make('services_count')
                             ->label('Services')
                             ->state(fn (HealthProfessional $record): int => $record->services()->count()),
