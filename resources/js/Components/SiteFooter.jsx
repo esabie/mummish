@@ -80,6 +80,11 @@ export default function SiteFooter() {
                                     FAQ
                                 </Link>
                             </li>
+                            <li>
+                                <Link href={route('blogs.index')} className="hover:text-market">
+                                    Blog
+                                </Link>
+                            </li>
                         </ul>
                     </div>
 

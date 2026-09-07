@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminSetupController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HealthBookingPaymentController;
@@ -78,6 +79,9 @@ Route::get('/privacy', function () {
 Route::get('/faq', function () {
     return Inertia::render('Faq');
 })->name('faq');
+
+Route::get('/blogs', [BlogController::class, 'index'])->name('blogs.index');
+Route::get('/blogs/{slug}', [BlogController::class, 'show'])->name('blogs.show');
 
 Route::get('/contact', function () {
     return Inertia::render('Contact');

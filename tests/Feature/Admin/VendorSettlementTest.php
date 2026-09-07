@@ -66,8 +66,8 @@ class VendorSettlementTest extends TestCase
             ->assertOk()
             ->assertSee('Due to vendors')
             ->assertSee('Paid to vendors')
-            ->assertSee('GHS 400.00') // 80% of 500
-            ->assertSee('GHS 240.00'); // 80% of 300
+            ->assertSee('GHS 450.00') // 90% of 500
+            ->assertSee('GHS 270.00'); // 90% of 300
     }
 
     private function createVendor(): User

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\VendorApplicationStatus;
+use App\Models\BlogPost;
 use App\Models\Product;
 use App\Models\VendorApplication;
 use Illuminate\Http\Response;
@@ -23,7 +24,21 @@ class SitemapController extends Controller
             ['loc' => $base.'/terms', 'changefreq' => 'yearly', 'priority' => '0.3', 'lastmod' => $now],
             ['loc' => $base.'/privacy', 'changefreq' => 'yearly', 'priority' => '0.3', 'lastmod' => $now],
             ['loc' => $base.'/billing', 'changefreq' => 'yearly', 'priority' => '0.3', 'lastmod' => $now],
+            ['loc' => $base.'/blogs', 'changefreq' => 'weekly', 'priority' => '0.6', 'lastmod' => $now],
         ];
+
+        BlogPost::query()
+            ->published()
+            ->orderBy('id')
+            ->get(['slug', 'updated_at'])
+            ->each(function (BlogPost $post) use (&$urls, $base): void {
+                $urls[] = [
+                    'loc' => $base.'/blogs/'.$post->slug,
+                    'changefreq' => 'monthly',
+                    'priority' => '0.5',
+                    'lastmod' => optional($post->updated_at)->toAtomString() ?? now()->toAtomString(),
+                ];
+            });
 
         VendorApplication::query()
             ->where('status', VendorApplicationStatus::Approved)

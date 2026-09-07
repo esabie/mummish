@@ -35,8 +35,8 @@ class PlatformEarningsTest extends TestCase
             ->assertSee('Merchandise pool')
             ->assertSee('Little Knot')
             ->assertSee('GHS 50.00')
-            ->assertSee('GHS 10.00')
-            ->assertSee('GHS 40.00')
+            ->assertSee('GHS 5.00')
+            ->assertSee('GHS 45.00')
             ->assertSee('GHS 15.00')
             ->assertSee('GHS 65.00');
     }

@@ -789,21 +789,47 @@ export default function VendorSignUp({
 
                             <aside className="space-y-6">
                                 <blockquote className="rounded-2xl bg-orange-50/90 p-6 ring-1 ring-orange-100 sm:p-8">
-                                    <p className="font-serif text-lg leading-relaxed text-stone-800 sm:text-xl">
-                                        &ldquo;Switching to Mummish doubled our monthly revenue in just two months.
-                                        The platform is so intuitive for small business owners like me.&rdquo;
-                                    </p>
-                                    <footer className="mt-6 flex items-center gap-3">
-                                        <img
-                                            src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=96&h=96&q=80"
-                                            alt=""
-                                            className="h-12 w-12 rounded-full object-cover ring-2 ring-white"
-                                        />
-                                        <div>
-                                            <p className="font-semibold text-stone-900">Sarah Jenkins</p>
-                                            <p className="text-sm text-stone-600">Founder, Little Knot</p>
-                                        </div>
-                                    </footer>
+                                    <div className="space-y-4 font-serif text-base leading-relaxed text-stone-800 sm:text-lg">
+                                        <p>Dear Mama,</p>
+                                        <p>
+                                            I know firsthand how overwhelming motherhood can feel. But what if it
+                                            didn&apos;t have to be so stressful? What if motherhood could actually be
+                                            made easier?
+                                        </p>
+                                        <p>
+                                            When I was pregnant, the endless back-and-forth was exhausting. Moving
+                                            from one physical store to another just to gather basic essentials took a
+                                            heavy toll. People would say, &ldquo;Why not just shop online?&rdquo; But
+                                            jumping from one social media page to the next came with its own
+                                            headaches—unlisted prices, waiting hours or days for a simple reply, and
+                                            frustrating customer service.
+                                        </p>
+                                        <p>
+                                            That is why I created <span className="font-semibold">Mummish</span>.
+                                        </p>
+                                        <p>
+                                            I carefully designed this platform to be the ultimate marketplace for the
+                                            modern mother. No more tab-switching, no more endless messaging for
+                                            prices, and no more stressful shopping trips. Whether you need baby
+                                            clothes, toys, postpartum clothes or direct access to trusted doctors and
+                                            midwives, you will find it all here.
+                                        </p>
+                                        <p>
+                                            Search, find, pay—it is that simple. Consider us your ultimate motherhood
+                                            hack.
+                                        </p>
+                                        <p>Welcome to easier, smarter motherhood.</p>
+                                        <p>
+                                            Warmly,
+                                            <br />
+                                            <span className="mt-2 block font-sans text-sm font-bold uppercase tracking-wide text-stone-900">
+                                                Gladys Akyere Rockson
+                                            </span>
+                                            <span className="block font-sans text-sm font-semibold text-stone-600">
+                                                Founder, Mummish
+                                            </span>
+                                        </p>
+                                    </div>
                                 </blockquote>
 
                                 <div className="rounded-2xl border border-stone-200/80 bg-white p-6 shadow-sm sm:p-8">

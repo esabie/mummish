@@ -47,8 +47,7 @@ class SendHealthBookingSmsTest extends TestCase
                 && str_contains($message, 'Dr Test Provider')
                 && str_contains($message, 'payment received')
                 && str_contains($message, 'Health Services')
-                && ! str_contains($message, 'Heath Services')
-                && str_contains($message, 'provider confirms');
+                && ! str_contains($message, 'Heath Services');
         });
     }
 

@@ -116,9 +116,9 @@ class VendorProductTest extends TestCase
 
         $payload = $this->validProductPayload([
             'images' => [
-                TestProductImage::sharpJpeg('one.jpg', 400, 400),
-                TestProductImage::sharpJpeg('two.jpg', 400, 400),
-                TestProductImage::sharpJpeg('three.jpg', 400, 400),
+                TestProductImage::sharpJpeg('one.jpg', 200, 200),
+                TestProductImage::sharpJpeg('two.jpg', 1200, 1200),
+                TestProductImage::sharpJpeg('three.jpg', 1200, 1200),
             ],
         ]);
 
