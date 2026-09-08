@@ -6,6 +6,7 @@ use App\Jobs\SendHealthBookingCancelledSms;
 use App\Jobs\SendHealthBookingConfirmedSms;
 use App\Jobs\SendHealthBookingProfessionalAlertSms;
 use App\Jobs\SendHealthBookingRequestedSms;
+use App\Jobs\SendHealthBookingReviewInviteSms;
 use App\Models\HealthBooking;
 use App\Models\HealthProfessional;
 use App\Models\HealthProfessionalService;
@@ -84,7 +85,8 @@ class SendHealthBookingSmsTest extends TestCase
                 && str_contains($message, $booking->reference)
                 && str_contains($message, 'Ama Mensah')
                 && str_contains($message, 'new paid')
-                && str_contains($message, 'dashboard to confirm')
+                && str_contains($message, 'Confirm here:')
+                && str_contains($message, '/r/')
                 && str_contains($recipientList, '0240000000');
         });
     }
@@ -138,6 +140,40 @@ class SendHealthBookingSmsTest extends TestCase
         });
     }
 
+    public function test_sends_booking_confirmed_sms_for_virtual_visit_with_join_link(): void
+    {
+        config([
+            'app.name' => 'Mummish',
+            'services.mnotify.sms_api_key' => 'test-key',
+            'services.mnotify.sender_id' => 'TEST',
+        ]);
+
+        Http::fake([
+            'api.mnotify.com/*' => Http::response([
+                'status' => 'success',
+                'code' => '2000',
+            ], 200),
+        ]);
+
+        $booking = $this->createBooking('confirmed', 'Virtual');
+        $booking->forceFill([
+            'meeting_url' => 'https://meet.google.com/abc-defg-hij',
+        ])->save();
+
+        (new SendHealthBookingConfirmedSms($booking->id))->handle(app(MnotifySmsService::class));
+
+        Http::assertSent(function ($request) use ($booking) {
+            $body = $request->data();
+            $message = $body['message'] ?? '';
+
+            return str_contains($message, 'Hi Ama')
+                && str_contains($message, $booking->reference)
+                && str_contains($message, 'is confirmed')
+                && str_contains($message, 'Join your session here:')
+                && str_contains($message, '/r/');
+        });
+    }
+
     public function test_sends_booking_confirmed_sms_for_in_person_visit(): void
     {
         config([
@@ -154,6 +190,10 @@ class SendHealthBookingSmsTest extends TestCase
         ]);
 
         $booking = $this->createBooking('confirmed', 'In person');
+        $booking->forceFill([
+            'meeting_location' => 'Ridge Hospital Accra',
+            'meeting_whatsapp' => '0241112222',
+        ])->save();
 
         (new SendHealthBookingConfirmedSms($booking->id))->handle(app(MnotifySmsService::class));
 
@@ -164,7 +204,9 @@ class SendHealthBookingSmsTest extends TestCase
             return str_contains($message, 'Hi Ama')
                 && str_contains($message, $booking->reference)
                 && str_contains($message, 'is confirmed')
-                && str_contains($message, 'report at least 30 minutes');
+                && str_contains($message, 'report at least 30 minutes')
+                && str_contains($message, 'Ridge Hospital Accra')
+                && str_contains($message, '0241112222');
         });
     }
 
@@ -212,6 +254,41 @@ class SendHealthBookingSmsTest extends TestCase
                 && str_contains($message, $booking->reference)
                 && str_contains($message, 'cancelled')
                 && str_contains($message, 'Provider unavailable');
+        });
+    }
+
+    public function test_sends_review_invite_sms_with_short_link(): void
+    {
+        config([
+            'app.name' => 'Mummish',
+            'services.mnotify.sms_api_key' => 'test-key',
+            'services.mnotify.sender_id' => 'TEST',
+        ]);
+
+        Http::fake([
+            'api.mnotify.com/*' => Http::response([
+                'status' => 'success',
+                'code' => '2000',
+            ], 200),
+        ]);
+
+        $booking = $this->createBooking('completed');
+        $booking->forceFill([
+            'payment_status' => 'paid',
+            'paid_at' => now(),
+        ])->save();
+
+        (new SendHealthBookingReviewInviteSms($booking->id))->handle(app(MnotifySmsService::class));
+
+        Http::assertSent(function ($request) use ($booking) {
+            $body = $request->data();
+            $message = $body['message'] ?? '';
+
+            return str_contains($message, 'Hi Ama')
+                && str_contains($message, 'Share your experience:')
+                && str_contains($message, '/r/')
+                && str_contains($message, $booking->reference)
+                && ! str_contains($message, '/health-services/bookings/review');
         });
     }
 

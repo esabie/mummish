@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\HealthBooking;
 use App\Services\MnotifySmsService;
+use App\Services\ShortLinkService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -69,7 +70,10 @@ class SendHealthBookingReviewInviteSms implements ShouldQueue
             'email' => $booking->patient_email,
         ], absolute: true);
 
-        $message = "Hi {$firstName}, thanks for visiting {$provider} via ".config('app.name', 'Mummish').". Share your experience: {$reviewUrl} (ref {$booking->reference})";
+        // Give patients time to leave a review after the visit.
+        $shortUrl = app(ShortLinkService::class)->create($reviewUrl, 60 * 24 * 30);
+
+        $message = "Hi {$firstName}, thanks for visiting {$provider} via ".config('app.name', 'Mummish').". Share your experience: {$shortUrl} (ref {$booking->reference})";
 
         $sent = $mnotifySms->send($phone, $message);
 

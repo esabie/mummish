@@ -33,6 +33,10 @@ class HealthBooking extends Model
         'confirmed_at',
         'cancelled_at',
         'cancellation_reason',
+        'meeting_url',
+        'meeting_location',
+        'meeting_whatsapp',
+        'logistics_notes',
         'professional_paid_at',
     ];
 
@@ -139,5 +143,63 @@ class HealthBooking extends Model
     public static function paymentHoldMinutes(): int
     {
         return max(5, (int) config('marketplace.health_booking_payment_hold_minutes', 20));
+    }
+
+    public function isVirtual(): bool
+    {
+        return strcasecmp((string) $this->visit_mode, 'Virtual') === 0;
+    }
+
+    public function isInPerson(): bool
+    {
+        return strcasecmp((string) $this->visit_mode, 'In person') === 0;
+    }
+
+    public function sessionJoinUrl(): ?string
+    {
+        return filled($this->meeting_url) ? $this->meeting_url : null;
+    }
+
+    /**
+     * Patients/pros may join from 15 minutes before the appointment until
+     * service duration (+ 30 min buffer) after the start time.
+     */
+    public function canJoinSession(?\DateTimeInterface $now = null): bool
+    {
+        if (! $this->isVirtual() || ! filled($this->meeting_url)) {
+            return false;
+        }
+
+        if (! in_array($this->status, ['confirmed', 'completed'], true)) {
+            return false;
+        }
+
+        $now = \Carbon\Carbon::parse($now ?? now());
+        $startsAt = $this->appointmentStartsAt();
+
+        if ($startsAt === null) {
+            return false;
+        }
+
+        $durationMinutes = max(15, (int) ($this->service?->duration_minutes ?? 30));
+        $windowStart = $startsAt->copy()->subMinutes(15);
+        $windowEnd = $startsAt->copy()->addMinutes($durationMinutes + 30);
+
+        return $now->betweenIncluded($windowStart, $windowEnd);
+    }
+
+    public function appointmentStartsAt(): ?\Carbon\Carbon
+    {
+        if ($this->appointment_date === null || ! filled($this->appointment_time)) {
+            return null;
+        }
+
+        $date = $this->appointment_date instanceof \Carbon\Carbon
+            ? $this->appointment_date->toDateString()
+            : (string) $this->appointment_date;
+
+        $time = substr((string) $this->appointment_time, 0, 8);
+
+        return \Carbon\Carbon::parse($date.' '.$time);
     }
 }

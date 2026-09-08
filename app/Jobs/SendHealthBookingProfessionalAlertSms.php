@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\HealthBooking;
 use App\Services\MnotifySmsService;
+use App\Services\ShortLinkService;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -69,7 +70,10 @@ class SendHealthBookingProfessionalAlertSms implements ShouldQueue
         $serviceName = trim((string) ($booking->service?->name ?? ''));
         $serviceBit = $serviceName !== '' ? " {$serviceName}," : '';
 
-        $message = "Hi {$firstName}, new paid {$appName} Health Services booking {$booking->reference}:{$serviceBit} {$patient} on {$when} ({$visitMode}). Open your dashboard to confirm.";
+        $dashboardUrl = route('health-professionals.dashboard', absolute: true);
+        $shortDashboardUrl = app(ShortLinkService::class)->create($dashboardUrl, 60 * 24 * 7);
+
+        $message = "Hi {$firstName}, new paid {$appName} Health Services booking {$booking->reference}:{$serviceBit} {$patient} on {$when} ({$visitMode}). Confirm here: {$shortDashboardUrl}";
 
         $sent = $mnotifySms->send($phone, $message);
 

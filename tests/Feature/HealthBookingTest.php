@@ -224,7 +224,9 @@ class HealthBookingTest extends TestCase
 
         $this->actingAs($user)
             ->from(route('health-professionals.dashboard'))
-            ->post(route('health-professionals.bookings.confirm', [$professional, $booking]))
+            ->post(route('health-professionals.bookings.confirm', [$professional, $booking]), [
+                'meeting_url' => 'https://meet.google.com/abc-defg-hij',
+            ])
             ->assertRedirect(route('health-professionals.dashboard'))
             ->assertSessionHas('success');
 
@@ -232,6 +234,7 @@ class HealthBookingTest extends TestCase
 
         $this->assertSame('confirmed', $booking->status);
         $this->assertNotNull($booking->confirmed_at);
+        $this->assertSame('https://meet.google.com/abc-defg-hij', $booking->meeting_url);
 
         Bus::assertDispatched(
             SendHealthBookingConfirmedSms::class,

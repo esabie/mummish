@@ -9,10 +9,12 @@ use App\Jobs\SendHealthBookingConfirmedSms;
 use App\Jobs\SendHealthBookingReviewInviteSms;
 use App\Models\HealthBooking;
 use App\Models\HealthProfessional;
+use App\Services\HealthBookingLookupService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -172,6 +174,45 @@ class HealthProfessionalDashboardController extends Controller
         ]);
     }
 
+    public function bookingLookupForm(Request $request): Response
+    {
+        $professional = $this->ownedProfessional($request);
+
+        return Inertia::render('HealthServices/BookingLookup', [
+            'professional' => $this->professionalSummary($professional),
+            'result' => null,
+        ]);
+    }
+
+    public function bookingLookup(
+        Request $request,
+        HealthBookingLookupService $lookups,
+    ): Response|RedirectResponse {
+        $professional = $this->ownedProfessional($request);
+
+        $validated = $request->validate([
+            'reference' => ['required', 'string', 'max:40'],
+            'patient_email' => ['required', 'email', 'max:255'],
+        ]);
+
+        $booking = $lookups->findByReferenceAndEmail(
+            $validated['reference'],
+            $validated['patient_email'],
+            $professional->id,
+        );
+
+        if ($booking === null) {
+            return back()
+                ->withInput()
+                ->with('error', 'No booking of yours matched that reference and email.');
+        }
+
+        return Inertia::render('HealthServices/BookingLookup', [
+            'professional' => $this->professionalSummary($professional),
+            'result' => $lookups->toProfessionalArray($booking),
+        ]);
+    }
+
     public function confirmBooking(
         Request $request,
         HealthProfessional $professional,
@@ -191,10 +232,18 @@ class HealthProfessionalDashboardController extends Controller
             return back()->with('error', 'This booking has not been paid yet.');
         }
 
-        $booking->update([
-            'status' => 'confirmed',
-            'confirmed_at' => now(),
-        ]);
+        $logistics = $this->validatedConfirmLogistics($request, $booking);
+
+        DB::transaction(function () use ($booking, $logistics): void {
+            $booking->update([
+                'status' => 'confirmed',
+                'confirmed_at' => now(),
+                'meeting_url' => $logistics['meeting_url'],
+                'meeting_location' => $logistics['meeting_location'],
+                'meeting_whatsapp' => $logistics['meeting_whatsapp'],
+                'logistics_notes' => $logistics['logistics_notes'],
+            ]);
+        });
 
         SendHealthBookingConfirmedSms::dispatch($booking->id);
 
@@ -202,6 +251,40 @@ class HealthProfessionalDashboardController extends Controller
             'success',
             "Booking {$booking->reference} confirmed. The patient has been notified by SMS."
         );
+    }
+
+    public function updateMeetingUrl(
+        Request $request,
+        HealthProfessional $professional,
+        HealthBooking $booking,
+    ): RedirectResponse {
+        $this->ensureOwnsBooking($request, $professional, $booking);
+
+        if (! $booking->isVirtual()) {
+            return back()->with('error', 'Google Meet links are only used for virtual visits.');
+        }
+
+        if (! in_array($booking->status, ['confirmed', 'completed'], true)) {
+            return back()->with('error', 'Confirm the booking before adding a Google Meet link.');
+        }
+
+        $validated = $request->validate([
+            'meeting_url' => ['required', 'url', 'max:500'],
+        ]);
+
+        $meetingUrl = trim((string) $validated['meeting_url']);
+
+        if ($meetingUrl === '' || ! $this->isGoogleMeetUrl($meetingUrl)) {
+            throw ValidationException::withMessages([
+                'meeting_url' => 'Paste a Google Meet link (https://meet.google.com/...).',
+            ]);
+        }
+
+        $booking->update([
+            'meeting_url' => $meetingUrl,
+        ]);
+
+        return back()->with('success', "Google Meet link saved for {$booking->reference}.");
     }
 
     public function declineBooking(
@@ -460,11 +543,74 @@ class HealthProfessionalDashboardController extends Controller
             'appointment_time' => $timeLabel,
             'notes' => $booking->notes,
             'cancellation_reason' => $booking->cancellation_reason,
+            'meeting_url' => $booking->meeting_url,
+            'meeting_location' => $booking->meeting_location,
+            'meeting_whatsapp' => $booking->meeting_whatsapp,
+            'logistics_notes' => $booking->logistics_notes,
+            'join_url' => $booking->sessionJoinUrl(),
+            'can_join_session' => $booking->canJoinSession(),
+            'can_add_meeting_url' => $booking->isVirtual()
+                && in_array($booking->status, ['confirmed', 'completed'], true)
+                && ! filled($booking->meeting_url),
             'can_confirm' => $booking->status === 'pending',
             'can_decline' => $booking->status === 'pending',
             'can_cancel' => $booking->status === 'confirmed',
             'can_complete' => $booking->status === 'confirmed',
         ];
+    }
+
+    /**
+     * @return array{meeting_url: ?string, meeting_location: ?string, meeting_whatsapp: ?string, logistics_notes: ?string}
+     */
+    private function validatedConfirmLogistics(Request $request, HealthBooking $booking): array
+    {
+        $rules = [
+            'meeting_whatsapp' => ['nullable', 'string', 'max:30'],
+            'logistics_notes' => ['nullable', 'string', 'max:500'],
+        ];
+
+        if ($booking->isInPerson()) {
+            $rules['meeting_location'] = ['required', 'string', 'max:255'];
+            $rules['meeting_url'] = ['nullable', 'string', 'max:500'];
+        } else {
+            $rules['meeting_location'] = ['nullable', 'string', 'max:255'];
+            $rules['meeting_url'] = ['required', 'url', 'max:500'];
+        }
+
+        $validated = $request->validate($rules);
+
+        $location = trim((string) ($validated['meeting_location'] ?? ''));
+        $whatsapp = trim((string) ($validated['meeting_whatsapp'] ?? ''));
+        $notes = trim((string) ($validated['logistics_notes'] ?? ''));
+        $meetingUrl = trim((string) ($validated['meeting_url'] ?? ''));
+
+        if ($booking->isInPerson() && $location === '') {
+            throw ValidationException::withMessages([
+                'meeting_location' => 'Add the meeting location for in-person visits.',
+            ]);
+        }
+
+        if ($booking->isVirtual()) {
+            if ($meetingUrl === '' || ! $this->isGoogleMeetUrl($meetingUrl)) {
+                throw ValidationException::withMessages([
+                    'meeting_url' => 'Paste a Google Meet link (https://meet.google.com/...).',
+                ]);
+            }
+        }
+
+        return [
+            'meeting_url' => $booking->isVirtual() ? $meetingUrl : null,
+            'meeting_location' => $location !== '' ? $location : null,
+            'meeting_whatsapp' => $whatsapp !== '' ? $whatsapp : null,
+            'logistics_notes' => $notes !== '' ? $notes : null,
+        ];
+    }
+
+    private function isGoogleMeetUrl(string $url): bool
+    {
+        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+
+        return in_array($host, ['meet.google.com', 'www.meet.google.com'], true);
     }
 
     private function greeting(): string

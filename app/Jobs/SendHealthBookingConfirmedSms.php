@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\HealthBooking;
 use App\Services\MnotifySmsService;
+use App\Services\ShortLinkService;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -67,7 +68,7 @@ class SendHealthBookingConfirmedSms implements ShouldQueue
         $serviceName = $booking->service?->name;
 
         $serviceBit = $serviceName ? " {$serviceName}" : '';
-        $prepNote = $this->prepNoteForVisitMode($visitMode);
+        $prepNote = $this->prepNoteForBooking($booking);
 
         $message = "Hi {$firstName}, your {$appName} booking {$booking->reference} with {$provider} is confirmed:{$serviceBit} on {$when} ({$visitMode}). {$prepNote}";
 
@@ -103,12 +104,45 @@ class SendHealthBookingConfirmedSms implements ShouldQueue
         return $date->format('D, j M').' at '.$time;
     }
 
-    private function prepNoteForVisitMode(string $visitMode): string
+    private function prepNoteForBooking(HealthBooking $booking): string
     {
-        if (strcasecmp($visitMode, 'In person') === 0) {
-            return 'Please report at least 30 minutes before your booking time.';
+        if ($booking->isInPerson()) {
+            $parts = ['Please report at least 30 minutes before your booking time.'];
+
+            if (filled($booking->meeting_location)) {
+                $parts[] = 'Location: '.$booking->meeting_location;
+            }
+
+            if (filled($booking->meeting_whatsapp)) {
+                $parts[] = 'WhatsApp: '.$booking->meeting_whatsapp;
+            }
+
+            if (filled($booking->logistics_notes)) {
+                $parts[] = $booking->logistics_notes;
+            }
+
+            return implode(' ', $parts);
         }
 
-        return 'Please ensure you have a stable internet connection and are in a quiet environment for the session.';
+        $joinUrl = $booking->sessionJoinUrl();
+        if ($joinUrl) {
+            $expiresAt = ($booking->appointmentStartsAt() ?? now())->copy()->addHours(4);
+            $ttlMinutes = max(120, (int) ceil(max(0, $expiresAt->getTimestamp() - now()->getTimestamp()) / 60));
+            $shortUrl = app(ShortLinkService::class)->create($joinUrl, $ttlMinutes);
+
+            $note = "Join your session here: {$shortUrl}. Please use a stable internet connection and a quiet space.";
+        } else {
+            $note = 'Please ensure you have a stable internet connection and are in a quiet environment for the session.';
+        }
+
+        if (filled($booking->meeting_whatsapp)) {
+            $note .= ' WhatsApp: '.$booking->meeting_whatsapp.'.';
+        }
+
+        if (filled($booking->logistics_notes)) {
+            $note .= ' '.$booking->logistics_notes;
+        }
+
+        return $note;
     }
 }

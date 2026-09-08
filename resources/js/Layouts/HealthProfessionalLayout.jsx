@@ -18,6 +18,13 @@ function NavIcon({ name, className = 'h-5 w-5' }) {
                 d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
             />
         ),
+        search: (
+            <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+            />
+        ),
         settings: (
             <>
                 <path
@@ -81,6 +88,7 @@ export default function HealthProfessionalLayout({ title, professional = null, c
     const navItems = [
         { label: 'Dashboard', href: route('health-professionals.dashboard'), routeName: 'health-professionals.dashboard', icon: 'dashboard' },
         { label: 'Schedule', href: route('health-professionals.schedule'), routeName: 'health-professionals.schedule', icon: 'schedule' },
+        { label: 'Find booking', href: route('health-professionals.bookings.lookup'), routeName: 'health-professionals.bookings.lookup', icon: 'search' },
         { label: 'Settings', href: settingsHref, routeName: 'health-professionals.edit', icon: 'settings' },
     ];
 
@@ -89,6 +97,9 @@ export default function HealthProfessionalLayout({ title, professional = null, c
     const isActive = (routeName) => {
         if (routeName === 'health-professionals.dashboard') {
             return current === 'health-professionals.dashboard';
+        }
+        if (routeName === 'health-professionals.bookings.lookup') {
+            return current.startsWith('health-professionals.bookings.lookup');
         }
         return current === routeName;
     };

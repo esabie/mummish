@@ -90,6 +90,6 @@ class HealthBookingReviewController extends Controller
 
         return redirect()
             ->route('health-services.bookings.review.show', $booking)
-            ->with('status', 'Thanks — your review has been published.');
+            ->with('status', 'Thanks! Your review is much appreciated.');
     }
 }

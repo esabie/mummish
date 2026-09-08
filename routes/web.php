@@ -112,12 +112,19 @@ Route::middleware(['auth', 'health_professional'])->group(function () {
         ->name('health-professionals.payment-details.update');
     Route::get('/health-services/professionals/schedule', [HealthProfessionalDashboardController::class, 'schedule'])
         ->name('health-professionals.schedule');
+    Route::get('/health-services/professionals/bookings/lookup', [HealthProfessionalDashboardController::class, 'bookingLookupForm'])
+        ->name('health-professionals.bookings.lookup');
+    Route::post('/health-services/professionals/bookings/lookup', [HealthProfessionalDashboardController::class, 'bookingLookup'])
+        ->middleware('throttle:20,1')
+        ->name('health-professionals.bookings.lookup.submit');
     Route::get('/health-services/professionals/{professional}/edit', [HealthProfessionalDashboardController::class, 'edit'])
         ->name('health-professionals.edit');
     Route::put('/health-services/professionals/{professional}', [HealthProfessionalDashboardController::class, 'update'])
         ->name('health-professionals.update');
     Route::post('/health-services/professionals/{professional}/bookings/{booking}/confirm', [HealthProfessionalDashboardController::class, 'confirmBooking'])
         ->name('health-professionals.bookings.confirm');
+    Route::post('/health-services/professionals/{professional}/bookings/{booking}/meeting-url', [HealthProfessionalDashboardController::class, 'updateMeetingUrl'])
+        ->name('health-professionals.bookings.meeting-url');
     Route::post('/health-services/professionals/{professional}/bookings/{booking}/decline', [HealthProfessionalDashboardController::class, 'declineBooking'])
         ->name('health-professionals.bookings.decline');
     Route::post('/health-services/professionals/{professional}/bookings/{booking}/cancel', [HealthProfessionalDashboardController::class, 'cancelBooking'])
