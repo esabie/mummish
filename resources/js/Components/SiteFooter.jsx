@@ -180,6 +180,27 @@ export default function SiteFooter() {
                         </Link>
                     )}
                 </div>
+                <div className="mt-5 flex items-center justify-center gap-2.5">
+                    <span
+                        className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-950 shadow-sm shadow-black/40 ring-1 ring-white/15"
+                        aria-hidden="true"
+                    >
+                        <svg viewBox="0 0 16 16" className="h-3 w-3 text-white" fill="currentColor">
+                            <path d="M9.2 1.2 3.6 8.4c-.25.32-.02.8.4.8h3.05l-.85 5.1c-.08.5.55.8.88.42l5.9-7.05c.27-.32.04-.82-.39-.82H9.95l.95-4.85c.1-.5-.55-.82-.9-.4Z" />
+                        </svg>
+                    </span>
+                    <p className="text-sm text-neutral-400">
+                        Built by{' '}
+                        <a
+                            href="https://esabie.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-semibold text-[#e8590c] hover:text-[#ff6b1a] hover:underline"
+                        >
+                            SABS
+                        </a>
+                    </p>
+                </div>
             </div>
         </footer>
     );
