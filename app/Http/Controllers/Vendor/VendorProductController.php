@@ -205,7 +205,7 @@ class VendorProductController extends Controller
                 'id' => $product->id,
                 'title' => $product->title,
                 'description' => $product->description !== null
-                    ? trim(preg_replace('/\p{N}/u', '', strip_tags($product->description)) ?? '')
+                    ? trim(strip_tags($product->description))
                     : '',
                 'sku' => $product->sku,
                 'category' => $product->category,

@@ -63,8 +63,8 @@ class HomePageTest extends TestCase
                 ->where('categories.0.href', '/health-services')
                 ->where('categories.1.id', 'feeding_nursing')
                 ->where('categories.1.count', 1)
-                ->where('categories.8.id', 'toys_development')
-                ->where('categories.8.count', 1)
+                ->where('categories.9.id', 'toys_development')
+                ->where('categories.9.count', 1)
                 ->has('featured_stores', 1)
                 ->where('featured_stores.0.slug', 'oak-and-acorn')
                 ->where('featured_stores.0.name', 'Oak & Acorn')
@@ -153,7 +153,7 @@ class HomePageTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->has('featured_stores', 0)
                 ->has('categories', count(config('marketplace.categories')) + 1)
-                ->where('categories.8.count', 1)
+                ->where('categories.9.count', 1)
                 ->has('popular_products', 1)
             );
     }

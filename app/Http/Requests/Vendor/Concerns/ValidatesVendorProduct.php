@@ -117,8 +117,8 @@ trait ValidatesVendorProduct
                 return;
             }
 
-            if (preg_match('/\p{N}/u', $text)) {
-                $fail('The product description must not contain numbers.');
+            if (preg_match('/\p{N}{4,}/u', $text)) {
+                $fail('Numbers in the product description may be at most 3 digits (e.g. 500ml).');
 
                 return;
             }

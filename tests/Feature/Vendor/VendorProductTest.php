@@ -255,12 +255,27 @@ class VendorProductTest extends TestCase
         ]);
     }
 
-    public function test_create_product_rejects_numeric_description(): void
+    public function test_create_product_allows_short_numbers_in_description(): void
     {
         $user = $this->vendorWithApplication();
 
         $response = $this->actingAs($user)->post(route('vendor.inventory.store'), $this->validProductPayload([
-            'description' => 'This product has 12 colorful pieces for everyday play.',
+            'description' => 'Gentle cough syrup for kids, 500ml bottle for everyday use.',
+        ]));
+
+        $response->assertRedirect(route('vendor.inventory.index'));
+        $this->assertDatabaseHas('products', [
+            'user_id' => $user->id,
+            'description' => 'Gentle cough syrup for kids, 500ml bottle for everyday use.',
+        ]);
+    }
+
+    public function test_create_product_rejects_long_numbers_in_description(): void
+    {
+        $user = $this->vendorWithApplication();
+
+        $response = $this->actingAs($user)->post(route('vendor.inventory.store'), $this->validProductPayload([
+            'description' => 'This product has 1200 colorful pieces for everyday play.',
         ]));
 
         $response->assertSessionHasErrors('description');

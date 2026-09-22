@@ -25,8 +25,14 @@ function categoryHasBrand(categoryBrands, category, brand) {
     return (categoryBrands[category] ?? []).some((option) => option.value === brand);
 }
 
-function stripDigits(value) {
-    return value.replace(/[0-9\u0660-\u0669\u06F0-\u06F9\u0966-\u096F\uFF10-\uFF19]/g, '');
+function limitDigitRuns(value, maxDigits = 3) {
+    return value.replace(/[0-9\u0660-\u0669\u06F0-\u06F9\u0966-\u096F\uFF10-\uFF19]+/g, (run) =>
+        run.slice(0, maxDigits)
+    );
+}
+
+function isDigitChar(char) {
+    return Boolean(char && /\d/.test(char));
 }
 
 function isDigitInput(key, code) {
@@ -35,6 +41,20 @@ function isDigitInput(key, code) {
     }
 
     return Boolean(code && /^(?:Digit|Numpad)\d$/.test(code));
+}
+
+function digitRunLengthAt(value, index) {
+    let start = index;
+    while (start > 0 && isDigitChar(value[start - 1])) {
+        start -= 1;
+    }
+
+    let end = index;
+    while (end < value.length && isDigitChar(value[end])) {
+        end += 1;
+    }
+
+    return end - start;
 }
 
 function RequiredMark() {
@@ -375,6 +395,9 @@ export default function VendorProductForm({
         }
         if (data.description.trim().length < 20) {
             return 'Product description is required (at least 20 characters).';
+        }
+        if (/\d{4,}/.test(data.description)) {
+            return 'Numbers in the description may be at most 3 digits (e.g. 500ml).';
         }
         if (!data.material_tags?.length) {
             return 'Select at least one material tag.';
@@ -729,22 +752,38 @@ export default function VendorProductForm({
                             inputMode="text"
                             autoComplete="off"
                             onBeforeInput={(e) => {
-                                if (e.data && /\d/.test(e.data)) {
+                                if (!e.data || !/\d/.test(e.data)) {
+                                    return;
+                                }
+                                const el = e.target;
+                                const start = el.selectionStart ?? 0;
+                                const end = el.selectionEnd ?? 0;
+                                const next = data.description.slice(0, start) + e.data + data.description.slice(end);
+                                if (/\d{4,}/.test(next)) {
                                     e.preventDefault();
                                 }
                             }}
-                            onChange={(e) => setData('description', stripDigits(e.target.value))}
+                            onChange={(e) => setData('description', limitDigitRuns(e.target.value))}
                             onKeyDown={(e) => {
                                 if (e.ctrlKey || e.metaKey || e.altKey) {
                                     return;
                                 }
-                                if (isDigitInput(e.key, e.code)) {
+                                if (!isDigitInput(e.key, e.code)) {
+                                    return;
+                                }
+                                const el = e.target;
+                                const start = el.selectionStart ?? 0;
+                                const end = el.selectionEnd ?? 0;
+                                // Replacing a selection that already includes digits is fine if the resulting run stays ≤ 3.
+                                const next =
+                                    data.description.slice(0, start) + e.key + data.description.slice(end);
+                                if (/\d{4,}/.test(next) || digitRunLengthAt(next, start + 1) > 3) {
                                     e.preventDefault();
                                 }
                             }}
                             onPaste={(e) => {
                                 e.preventDefault();
-                                const pasted = stripDigits(e.clipboardData.getData('text/plain'));
+                                const pasted = e.clipboardData.getData('text/plain');
                                 if (!pasted) {
                                     return;
                                 }
@@ -753,7 +792,9 @@ export default function VendorProductForm({
                                 const end = el.selectionEnd ?? 0;
                                 setData(
                                     'description',
-                                    stripDigits(data.description.slice(0, start) + pasted + data.description.slice(end))
+                                    limitDigitRuns(
+                                        data.description.slice(0, start) + pasted + data.description.slice(end)
+                                    )
                                 );
                             }}
                             rows={6}
@@ -761,7 +802,9 @@ export default function VendorProductForm({
                             placeholder="Tell the story of how this product was made and why it's special..."
                             required
                         />
-                        <p className="mt-1.5 text-xs text-stone-500">Letters and punctuation only — numbers are not allowed.</p>
+                        <p className="mt-1.5 text-xs text-stone-500">
+                            Numbers are allowed up to 3 digits in a row (e.g. 500ml). Longer numbers are blocked.
+                        </p>
                         <InputError message={errors.description} className="mt-1" />
                     </SectionCard>
 
