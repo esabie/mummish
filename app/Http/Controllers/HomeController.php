@@ -40,6 +40,8 @@ class HomeController extends Controller
         $placeholder = (string) config('marketplace.product_placeholder_image');
 
         $productCategories = collect(StoreVendorApplicationRequest::categories())
+            // Health Services is a directory of professionals, not a product category tile.
+            ->except('health_services')
             ->map(fn (string $label, string $id) => [
                 'id' => $id,
                 'label' => $label,
