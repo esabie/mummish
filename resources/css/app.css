@@ -27,3 +27,46 @@
     border-top-color: #0f766e !important;
     border-left-color: #0f766e !important;
 }
+
+/* Mummish logo navigation loader */
+@keyframes mummish-loader-orbit {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes mummish-loader-pulse {
+    0%,
+    100% {
+        transform: scale(0.94);
+        opacity: 0.78;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+}
+
+@keyframes mummish-loader-halo {
+    0%,
+    100% {
+        transform: scale(0.78);
+        opacity: 0.7;
+    }
+    50% {
+        transform: scale(1.35);
+        opacity: 0.12;
+    }
+}
+
+.mummish-loader-orbit {
+    animation: mummish-loader-orbit 1.1s linear infinite;
+}
+
+.mummish-loader-logo {
+    animation: mummish-loader-pulse 1.35s ease-in-out infinite;
+}
+
+.mummish-loader-halo {
+    animation: mummish-loader-halo 1.35s ease-in-out infinite;
+}

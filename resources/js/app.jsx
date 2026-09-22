@@ -68,10 +68,10 @@ createInertiaApp({
         );
     },
     progress: {
-        delay: 0,
+        delay: 120,
         color: '#0f766e',
         includeCSS: true,
-        showSpinner: true,
+        showSpinner: false,
     },
 });
 
