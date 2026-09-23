@@ -106,6 +106,9 @@ class OrderResource extends Resource
                         Infolists\Components\TextEntry::make('shipping_cents')
                             ->label('Shipping')
                             ->formatStateUsing(fn (int $state): string => 'GHS '.number_format($state / 100, 2)),
+                        Infolists\Components\TextEntry::make('buyer_fee_cents')
+                            ->label('Buyer service fee')
+                            ->formatStateUsing(fn (int $state): string => 'GHS '.number_format($state / 100, 2)),
                         Infolists\Components\TextEntry::make('courier_paid_at')
                             ->label('Courier settlement')
                             ->formatStateUsing(function (?\Illuminate\Support\Carbon $state, Order $record): string {

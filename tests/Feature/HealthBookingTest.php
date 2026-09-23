@@ -29,7 +29,8 @@ class HealthBookingTest extends TestCase
         config([
             'services.paystack.secret_key' => 'sk_test_dummy',
             'services.paystack.public_key' => 'pk_test_dummy',
-            'marketplace.vendor_commission_bps' => 1000,
+            'marketplace.vendor_commission_bps' => 500,
+            'marketplace.buyer_fee_bps' => 500,
             'marketplace.health_booking_payment_hold_minutes' => 20,
         ]);
     }
@@ -71,8 +72,9 @@ class HealthBookingTest extends TestCase
         $this->assertSame('awaiting_payment', $booking->status);
         $this->assertSame('pending', $booking->payment_status);
         $this->assertSame(25000, $booking->amount_cents);
-        $this->assertSame(2500, $booking->commission_cents);
-        $this->assertSame(22500, $booking->professional_payout_cents);
+        $this->assertSame(1250, $booking->buyer_fee_cents);
+        $this->assertSame(1250, $booking->commission_cents);
+        $this->assertSame(23750, $booking->professional_payout_cents);
         $this->assertNotNull($booking->payment_expires_at);
         $this->assertStringStartsWith('HB-', $booking->reference);
 
@@ -94,7 +96,7 @@ class HealthBookingTest extends TestCase
                 'status' => true,
                 'data' => [
                     'status' => 'success',
-                    'amount' => $booking->amount_cents,
+                    'amount' => $booking->amount_cents + $booking->buyer_fee_cents,
                     'id' => 'txn_health_1',
                     'reference' => $booking->paystack_reference,
                 ],
@@ -165,8 +167,9 @@ class HealthBookingTest extends TestCase
             'status' => 'pending',
             'payment_status' => 'paid',
             'amount_cents' => 25000,
-            'commission_cents' => 2500,
-            'professional_payout_cents' => 22500,
+            'buyer_fee_cents' => 1250,
+            'commission_cents' => 1250,
+            'professional_payout_cents' => 23750,
             'paid_at' => now(),
         ]);
 
@@ -354,8 +357,9 @@ class HealthBookingTest extends TestCase
             'status' => 'pending',
             'payment_status' => 'paid',
             'amount_cents' => 25000,
-            'commission_cents' => 2500,
-            'professional_payout_cents' => 22500,
+            'buyer_fee_cents' => 1250,
+            'commission_cents' => 1250,
+            'professional_payout_cents' => 23750,
             'paid_at' => now(),
         ]);
 
@@ -400,8 +404,9 @@ class HealthBookingTest extends TestCase
             'status' => 'awaiting_payment',
             'payment_status' => 'pending',
             'amount_cents' => 25000,
-            'commission_cents' => 2500,
-            'professional_payout_cents' => 22500,
+            'buyer_fee_cents' => 1250,
+            'commission_cents' => 1250,
+            'professional_payout_cents' => 23750,
             'paystack_reference' => 'HB-PAY001',
             'payment_expires_at' => now()->addMinutes(20),
         ]);
@@ -427,8 +432,9 @@ class HealthBookingTest extends TestCase
             'status' => $status,
             'payment_status' => 'paid',
             'amount_cents' => 25000,
-            'commission_cents' => 2500,
-            'professional_payout_cents' => 22500,
+            'buyer_fee_cents' => 1250,
+            'commission_cents' => 1250,
+            'professional_payout_cents' => 23750,
             'paid_at' => now(),
             'confirmed_at' => $status === 'confirmed' ? now() : null,
         ]);

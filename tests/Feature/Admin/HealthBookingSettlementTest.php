@@ -109,8 +109,9 @@ class HealthBookingSettlementTest extends TestCase
             'status' => $status,
             'payment_status' => $paymentStatus,
             'amount_cents' => 25000,
-            'commission_cents' => 2500,
-            'professional_payout_cents' => 22500,
+            'buyer_fee_cents' => 1250,
+            'commission_cents' => 1250,
+            'professional_payout_cents' => 23750,
             'paid_at' => $paymentStatus === 'paid' ? now() : null,
             'confirmed_at' => in_array($status, ['confirmed', 'completed'], true) ? now() : null,
         ]);

@@ -22,23 +22,33 @@ class VendorEarningsServiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_split_amount_applies_ten_percent_commission(): void
+    public function test_split_amount_applies_five_percent_vendor_commission(): void
     {
         $service = new VendorEarningsService;
 
         $split = $service->splitAmount(50000);
 
         $this->assertSame(50000, $split['gross_cents']);
-        $this->assertSame(5000, $split['commission_cents']);
-        $this->assertSame(45000, $split['payout_cents']);
+        $this->assertSame(2500, $split['commission_cents']);
+        $this->assertSame(47500, $split['payout_cents']);
         $this->assertSame(0, $split['discount_cents']);
+    }
+
+    public function test_buyer_fee_is_five_percent_of_net_merchandise(): void
+    {
+        $service = new VendorEarningsService;
+
+        $this->assertSame(500, $service->buyerFeeBps());
+        $this->assertSame(5, $service->buyerFeePercent());
+        $this->assertSame(2500, $service->buyerFeeCents(50000));
+        $this->assertSame(2250, $service->buyerFeeCents(45000));
     }
 
     public function test_split_amount_mummish_absorbs_promo_discount(): void
     {
         $service = new VendorEarningsService;
 
-        // GHS 500 gross, GHS 50 discount, 10% commission (GHS 50) — discount uses full commission then spills to payout
+        // GHS 500 gross, GHS 50 discount, 5% commission (GHS 25) — remainder spills to payout
         $split = $service->splitAmount(50000, 5000, PromoCostBearer::Mummish);
 
         $this->assertSame(50000, $split['gross_cents']);
@@ -54,8 +64,8 @@ class VendorEarningsServiceTest extends TestCase
 
         $split = $service->splitAmount(50000, 5000, PromoCostBearer::Vendor);
 
-        $this->assertSame(5000, $split['commission_cents']);
-        $this->assertSame(40000, $split['payout_cents']);
+        $this->assertSame(2500, $split['commission_cents']);
+        $this->assertSame(42500, $split['payout_cents']);
         $this->assertSame(45000, $split['commission_cents'] + $split['payout_cents']);
     }
 
@@ -65,8 +75,8 @@ class VendorEarningsServiceTest extends TestCase
 
         $split = $service->splitAmount(50000, 5000, PromoCostBearer::Both);
 
-        $this->assertSame(2500, $split['commission_cents']);
-        $this->assertSame(42500, $split['payout_cents']);
+        $this->assertSame(0, $split['commission_cents']);
+        $this->assertSame(45000, $split['payout_cents']);
         $this->assertSame(45000, $split['commission_cents'] + $split['payout_cents']);
     }
 
@@ -88,8 +98,8 @@ class VendorEarningsServiceTest extends TestCase
         $summary = (new VendorEarningsService)->dashboardSummary($vendor);
 
         $this->assertSame(50000, $summary['totals']['gross_cents']);
-        $this->assertSame(5000, $summary['totals']['commission_cents']);
-        $this->assertSame(40000, $summary['totals']['payout_cents']);
+        $this->assertSame(2500, $summary['totals']['commission_cents']);
+        $this->assertSame(42500, $summary['totals']['payout_cents']);
     }
 
     public function test_dashboard_summary_segregates_commission_and_payout(): void
@@ -97,23 +107,23 @@ class VendorEarningsServiceTest extends TestCase
         $vendor = $this->createVendor();
         $product = $this->createProduct($vendor, 50000);
 
-        $order = $this->createPaidOrder($vendor, $product, 50000);
+        $this->createPaidOrder($vendor, $product, 50000);
 
         $summary = (new VendorEarningsService)->dashboardSummary($vendor);
 
-        $this->assertSame(10, $summary['commission_percent']);
+        $this->assertSame(5, $summary['commission_percent']);
         $this->assertSame(50000, $summary['totals']['gross_cents']);
-        $this->assertSame(5000, $summary['totals']['commission_cents']);
-        $this->assertSame(45000, $summary['totals']['payout_cents']);
+        $this->assertSame(2500, $summary['totals']['commission_cents']);
+        $this->assertSame(47500, $summary['totals']['payout_cents']);
         $this->assertSame('GHS 500.00', $summary['totals']['formatted_gross']);
-        $this->assertSame('GHS 50.00', $summary['totals']['formatted_commission']);
-        $this->assertSame('GHS 450.00', $summary['totals']['formatted_payout']);
+        $this->assertSame('GHS 25.00', $summary['totals']['formatted_commission']);
+        $this->assertSame('GHS 475.00', $summary['totals']['formatted_payout']);
         $this->assertSame(50000, $summary['escrow']['gross_cents']);
         $this->assertSame(0, $summary['wallet']['gross_cents']);
         $this->assertSame('escrow', $summary['recent_sales'][0]['status']);
     }
 
-    public function test_platform_summary_aggregates_commission_across_vendors(): void
+    public function test_platform_summary_aggregates_commission_and_buyer_fees(): void
     {
         $vendorA = $this->createVendor('Shop Alpha');
         $vendorB = $this->createVendor('Shop Beta');
@@ -127,21 +137,23 @@ class VendorEarningsServiceTest extends TestCase
         $summary = (new VendorEarningsService)->platformSummary($items);
 
         $this->assertSame(80000, $summary['totals']['gross_cents']);
-        $this->assertSame(8000, $summary['totals']['commission_cents']);
-        $this->assertSame(72000, $summary['totals']['payout_cents']);
+        $this->assertSame(4000, $summary['totals']['commission_cents']);
+        $this->assertSame(76000, $summary['totals']['payout_cents']);
+        $this->assertSame(4000, $summary['buyer_fees']['buyer_fee_cents']);
+        $this->assertSame(8000, $summary['platform_earnings']['total_cents']);
         $this->assertSame(8000, $summary['delivery']['shipping_cents']);
         $this->assertSame(2, $summary['delivery']['order_count']);
         $this->assertSame(8000, $summary['delivery']['due_cents']);
         $this->assertSame(2, $summary['delivery']['due_order_count']);
         $this->assertSame(0, $summary['delivery']['paid_cents']);
-        $this->assertSame(88000, $summary['collected']['total_cents']);
+        $this->assertSame(92000, $summary['collected']['total_cents']);
         $this->assertSame('GHS 80.00', $summary['delivery']['formatted_shipping']);
         $this->assertSame('GHS 80.00', $summary['delivery']['formatted_due']);
         $this->assertSame('GHS 0.00', $summary['delivery']['formatted_paid']);
         $this->assertCount(2, $summary['vendor_breakdown']);
         $this->assertSame('Shop Alpha', $summary['vendor_breakdown'][0]['shop_name']);
-        $this->assertSame(5000, $summary['vendor_breakdown'][0]['commission_cents']);
-        $this->assertSame(45000, $summary['vendor_breakdown'][0]['payout_cents']);
+        $this->assertSame(2500, $summary['vendor_breakdown'][0]['commission_cents']);
+        $this->assertSame(47500, $summary['vendor_breakdown'][0]['payout_cents']);
     }
 
     public function test_dashboard_moves_earnings_to_wallet_after_delivery(): void
@@ -163,8 +175,8 @@ class VendorEarningsServiceTest extends TestCase
 
         $this->assertSame(0, $summary['escrow']['gross_cents']);
         $this->assertSame(50000, $summary['wallet']['gross_cents']);
-        $this->assertSame(45000, $summary['wallet']['payout_cents']);
-        $this->assertSame(45000, $summary['wallet_due']['payout_cents']);
+        $this->assertSame(47500, $summary['wallet']['payout_cents']);
+        $this->assertSame(47500, $summary['wallet_due']['payout_cents']);
         $this->assertSame(0, $summary['wallet_settled']['payout_cents']);
         $this->assertSame('released', $summary['recent_sales'][0]['status']);
     }
@@ -217,6 +229,9 @@ class VendorEarningsServiceTest extends TestCase
         int $discountCents = 0,
         ?PromoCostBearer $promoCostBearer = null,
     ): Order {
+        $netCents = max(0, $lineTotalCents - $discountCents);
+        $buyerFeeCents = (int) floor($netCents * 500 / 10000);
+
         $order = Order::create([
             'order_number' => $orderNumber,
             'status' => OrderStatus::Paid,
@@ -231,9 +246,10 @@ class VendorEarningsServiceTest extends TestCase
             'subtotal_cents' => $lineTotalCents,
             'shipping_cents' => $shippingCents,
             'discount_cents' => $discountCents,
+            'buyer_fee_cents' => $buyerFeeCents,
             'promo_code' => $discountCents > 0 ? 'TESTPROMO' : null,
             'promo_cost_bearer' => $promoCostBearer,
-            'total_cents' => $lineTotalCents - $discountCents + $shippingCents,
+            'total_cents' => $netCents + $shippingCents + $buyerFeeCents,
             'currency' => 'GHS',
             'paid_at' => now(),
         ]);

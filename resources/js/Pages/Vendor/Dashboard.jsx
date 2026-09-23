@@ -13,7 +13,7 @@ function PayoutHero({ payout, gross, orderCount, commissionPercent }) {
                 From {gross} in sales across {orderCount} {orderCount === 1 ? 'order' : 'orders'}
             </p>
             <p className="mt-3 text-xs text-stone-500">
-                After the {commissionPercent}% platform fee.{' '}
+                After your {commissionPercent}% seller fee (buyers pay a matching fee).{' '}
                 <Link href={route('billing')} className="font-medium text-[#5c4d3d] hover:underline">
                     How payouts work
                 </Link>
@@ -470,8 +470,8 @@ export default function VendorDashboard({
                     <div className="mt-6 rounded-xl border border-dashed border-stone-300 bg-stone-50/80 px-5 py-8 text-center">
                         <p className="text-sm font-medium text-stone-800">No paid sales yet</p>
                         <p className="mt-1 text-sm text-stone-600">
-                            When orders come in, your earnings will show up here after the {earnings.commission_percent}%
-                            platform fee.
+                            When orders come in, your earnings will show up here after your{' '}
+                            {earnings.commission_percent}% seller fee.
                         </p>
                     </div>
                 )}

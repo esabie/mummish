@@ -131,8 +131,13 @@ class PaymentLookupService
                     'local_status_label' => ucfirst(str_replace('_', ' ', $paymentStatus)),
                     'lifecycle_status' => $booking->status,
                     'lifecycle_status_label' => ucfirst(str_replace('_', ' ', (string) $booking->status)),
-                    'amount_cents' => (int) $booking->amount_cents,
-                    'amount_label' => 'GHS '.number_format(((int) $booking->amount_cents) / 100, 2),
+                    'amount_cents' => (int) $booking->amount_cents + (int) ($booking->buyer_fee_cents ?? 0),
+                    'amount_label' => 'GHS '.number_format(
+                        ((int) $booking->amount_cents + (int) ($booking->buyer_fee_cents ?? 0)) / 100,
+                        2
+                    ),
+                    'service_amount_cents' => (int) $booking->amount_cents,
+                    'buyer_fee_cents' => (int) ($booking->buyer_fee_cents ?? 0),
                     'customer_name' => $booking->patient_name,
                     'customer_email' => $booking->patient_email,
                     'customer_phone' => $booking->patient_phone,

@@ -40,7 +40,7 @@ function toTime24(label) {
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }
 
-export default function HealthServicesShow({ professional }) {
+export default function HealthServicesShow({ professional, buyerFeePercent = 5 }) {
     const { flash } = usePage().props;
     const rateCard = useMemo(() => professional.rate_card ?? [], [professional.rate_card]);
     const visitModes = useMemo(() => {
@@ -805,9 +805,17 @@ export default function HealthServicesShow({ professional }) {
                             disabled={processing}
                             className="inline-flex items-center justify-center rounded-lg bg-[#5c4d3d] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4a3e32] disabled:opacity-50"
                         >
-                            {processing ? 'Redirecting to payment…' : `Pay ${selectedService?.price || ''} & reserve`}
+                            {processing
+                                ? 'Redirecting to payment…'
+                                : `Pay ${selectedService?.charge_label || selectedService?.price || ''} & reserve`}
                         </button>
                     </div>
+                    {selectedService?.buyer_fee_cedis > 0 ? (
+                        <p className="mt-3 text-center text-xs text-stone-500">
+                            Includes a {buyerFeePercent}% service fee (GHS{' '}
+                            {Number(selectedService.buyer_fee_cedis).toFixed(2)}) on top of the listed consultation price.
+                        </p>
+                    ) : null}
                 </form>
             </Modal>
         </>

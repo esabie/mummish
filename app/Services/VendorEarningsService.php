@@ -15,12 +15,32 @@ class VendorEarningsService
 {
     public function commissionBps(): int
     {
-        return max(0, (int) config('marketplace.vendor_commission_bps', 1000));
+        return max(0, (int) config('marketplace.vendor_commission_bps', 500));
     }
 
     public function commissionPercent(): int
     {
         return (int) round($this->commissionBps() / 100);
+    }
+
+    public function buyerFeeBps(): int
+    {
+        return max(0, (int) config('marketplace.buyer_fee_bps', 500));
+    }
+
+    public function buyerFeePercent(): int
+    {
+        return (int) round($this->buyerFeeBps() / 100);
+    }
+
+    /**
+     * Customer service fee on net merchandise (after promo; shipping excluded).
+     */
+    public function buyerFeeCents(int $netMerchandiseCents): int
+    {
+        $netMerchandiseCents = max(0, $netMerchandiseCents);
+
+        return (int) floor($netMerchandiseCents * $this->buyerFeeBps() / 10000);
     }
 
     /**
@@ -212,15 +232,34 @@ class VendorEarningsService
 
         $summary['delivery'] = $this->deliveryTotals($items);
         $discountCents = $this->totalDiscountCents($items);
+        $buyerFeeCents = $this->totalBuyerFeeCents($items);
         $collectedMerchandise = $summary['totals']['gross_cents'] - $discountCents;
+        $vendorCommissionCents = $summary['totals']['commission_cents'];
+        $platformEarningsCents = $vendorCommissionCents + $buyerFeeCents;
+
+        $summary['buyer_fees'] = [
+            'buyer_fee_cents' => $buyerFeeCents,
+            'formatted_buyer_fee' => $this->formatCents($buyerFeeCents),
+            'buyer_fee_percent' => $this->buyerFeePercent(),
+        ];
+        $summary['platform_earnings'] = [
+            'vendor_commission_cents' => $vendorCommissionCents,
+            'buyer_fee_cents' => $buyerFeeCents,
+            'total_cents' => $platformEarningsCents,
+            'formatted_vendor_commission' => $this->formatCents($vendorCommissionCents),
+            'formatted_buyer_fee' => $this->formatCents($buyerFeeCents),
+            'formatted_total' => $this->formatCents($platformEarningsCents),
+        ];
         $summary['collected'] = [
             'merchandise_cents' => $collectedMerchandise,
+            'buyer_fee_cents' => $buyerFeeCents,
             'shipping_cents' => $summary['delivery']['shipping_cents'],
-            'total_cents' => $collectedMerchandise + $summary['delivery']['shipping_cents'],
+            'total_cents' => $collectedMerchandise + $buyerFeeCents + $summary['delivery']['shipping_cents'],
             'formatted_merchandise' => $this->formatCents($collectedMerchandise),
+            'formatted_buyer_fee' => $this->formatCents($buyerFeeCents),
             'formatted_shipping' => $summary['delivery']['formatted_shipping'],
             'formatted_total' => $this->formatCents(
-                $collectedMerchandise + $summary['delivery']['shipping_cents']
+                $collectedMerchandise + $buyerFeeCents + $summary['delivery']['shipping_cents']
             ),
         ];
 
@@ -282,6 +321,18 @@ class VendorEarningsService
             ->filter()
             ->unique('id')
             ->sum(fn (Order $order) => (int) $order->discount_cents);
+    }
+
+    /**
+     * @param  Collection<int, OrderItem>  $items
+     */
+    private function totalBuyerFeeCents(Collection $items): int
+    {
+        return (int) $items
+            ->pluck('order')
+            ->filter()
+            ->unique('id')
+            ->sum(fn (Order $order) => (int) ($order->buyer_fee_cents ?? 0));
     }
 
     /**

@@ -199,8 +199,9 @@ export default function Terms() {
                                     <p className="mt-2">
                                         For providing the platform, matching audience, security escrow, and customer
                                         support, Mummish applies a flat 10% service fee on the final sale price of
-                                        every successfully completed transaction. This fee is automatically deducted
-                                        from the payout balance transferred to the vendor.
+                                        every successfully completed transaction. That fee is split evenly: 5% is
+                                        deducted from the vendor&apos;s payout, and 5% is charged to the buyer as a
+                                        service fee at checkout (after any promo discount; delivery fees excluded).
                                     </p>
                                 </div>
                             </Section>

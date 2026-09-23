@@ -55,8 +55,12 @@ return [
     // Days a sold-out product stays on the shop before being hidden.
     'sold_out_hidden_after_days' => (int) env('SOLD_OUT_HIDDEN_AFTER_DAYS', 10),
 
-    // Mummish commission on vendor sales (basis points: 1000 = 10%).
-    'vendor_commission_bps' => (int) env('VENDOR_COMMISSION_BPS', 1000),
+    // Vendor-side Mummish commission on sales (basis points: 500 = 5%).
+    // Paired with buyer_fee_bps so the platform still receives ~10% total.
+    'vendor_commission_bps' => (int) env('VENDOR_COMMISSION_BPS', 500),
+
+    // Customer-side service fee on net merchandise (after promo; shipping excluded).
+    'buyer_fee_bps' => (int) env('BUYER_FEE_BPS', 500),
 
     // Soft-hold window while a patient completes Paystack for a health booking.
     'health_booking_payment_hold_minutes' => (int) env('HEALTH_BOOKING_PAYMENT_HOLD_MINUTES', 20),

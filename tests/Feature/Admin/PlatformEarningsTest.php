@@ -28,17 +28,18 @@ class PlatformEarningsTest extends TestCase
             ->get('/admin/platform-earnings')
             ->assertOk()
             ->assertSee('Platform earnings')
-            ->assertSee('Mummish commission')
+            ->assertSee('Vendor commission')
+            ->assertSee('Buyer service fee')
             ->assertSee('Delivery fees')
             ->assertSee('Due to courier')
             ->assertSee('Paid to courier')
             ->assertSee('Merchandise pool')
             ->assertSee('Little Knot')
             ->assertSee('GHS 50.00')
-            ->assertSee('GHS 5.00')
-            ->assertSee('GHS 45.00')
+            ->assertSee('GHS 2.50')
+            ->assertSee('GHS 47.50')
             ->assertSee('GHS 15.00')
-            ->assertSee('GHS 65.00');
+            ->assertSee('GHS 67.50');
     }
 
     public function test_non_admin_cannot_access_platform_earnings_page(): void
@@ -105,7 +106,8 @@ class PlatformEarningsTest extends TestCase
             'shipping_region' => 'Greater Accra',
             'subtotal_cents' => 5000,
             'shipping_cents' => 1500,
-            'total_cents' => 6500,
+            'buyer_fee_cents' => 250,
+            'total_cents' => 6750,
             'paid_at' => $paidAt,
         ]);
     }

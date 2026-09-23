@@ -23,6 +23,7 @@ class HealthBooking extends Model
         'status',
         'notes',
         'amount_cents',
+        'buyer_fee_cents',
         'commission_cents',
         'professional_payout_cents',
         'payment_status',
@@ -43,6 +44,7 @@ class HealthBooking extends Model
     protected $casts = [
         'appointment_date' => 'date',
         'amount_cents' => 'integer',
+        'buyer_fee_cents' => 'integer',
         'commission_cents' => 'integer',
         'professional_payout_cents' => 'integer',
         'paid_at' => 'datetime',

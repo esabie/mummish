@@ -134,7 +134,12 @@ class HealthBookingResource extends Resource
                                 ? ucfirst($state)
                                 : '—'),
                         Infolists\Components\TextEntry::make('amount_cents')
-                            ->label('Amount')
+                            ->label('Service amount')
+                            ->formatStateUsing(fn (?int $state): string => $state !== null
+                                ? 'GHS '.number_format($state / 100, 2)
+                                : '—'),
+                        Infolists\Components\TextEntry::make('buyer_fee_cents')
+                            ->label('Buyer service fee')
                             ->formatStateUsing(fn (?int $state): string => $state !== null
                                 ? 'GHS '.number_format($state / 100, 2)
                                 : '—'),

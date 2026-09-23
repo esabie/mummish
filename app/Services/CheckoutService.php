@@ -32,6 +32,7 @@ class CheckoutService
         private readonly ShippingCalculator $shippingCalculator,
         private readonly PromoCodeService $promoCodes,
         private readonly VendorReferralRewardService $referralRewards,
+        private readonly VendorEarningsService $earnings,
     ) {}
 
     /**
@@ -55,12 +56,15 @@ class CheckoutService
         $promoResult = $this->promoCodes->apply($promoCode, $subtotalCents);
         $discountCents = $promoResult['discount_cents'];
         $appliedPromo = $promoResult['promo'];
-        $totalCents = max(0, $subtotalCents - $discountCents) + $shippingCents;
+        $netMerchandiseCents = max(0, $subtotalCents - $discountCents);
+        $buyerFeeCents = $this->earnings->buyerFeeCents($netMerchandiseCents);
+        $totalCents = $netMerchandiseCents + $shippingCents + $buyerFeeCents;
 
         Log::debug('CheckoutService: cart totals calculated.', [
             'line_count' => $lines->count(),
             'subtotal_cents' => $subtotalCents,
             'discount_cents' => $discountCents,
+            'buyer_fee_cents' => $buyerFeeCents,
             'promo_code' => $appliedPromo?->code,
             'shipping_cents' => $shippingCents,
             'shipping_region' => $shipping['shipping_region'] ?? null,
@@ -78,7 +82,7 @@ class CheckoutService
             ]);
         }
 
-        return DB::transaction(function () use ($lines, $shipping, $user, $shippingCents, $subtotalCents, $discountCents, $appliedPromo, $totalCents) {
+        return DB::transaction(function () use ($lines, $shipping, $user, $shippingCents, $subtotalCents, $discountCents, $buyerFeeCents, $appliedPromo, $totalCents) {
             $orderNumber = $this->generateOrderNumber();
 
             Log::debug('CheckoutService: persisting order.', [
@@ -109,6 +113,7 @@ class CheckoutService
                 'shipping_cents' => $shippingCents,
                 'promo_code' => $appliedPromo?->code,
                 'discount_cents' => $discountCents,
+                'buyer_fee_cents' => $buyerFeeCents,
                 'promo_cost_bearer' => $appliedPromo?->cost_bearer,
                 'total_cents' => $totalCents,
                 'currency' => 'GHS',

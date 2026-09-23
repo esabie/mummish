@@ -173,7 +173,10 @@ const categories = [
             {
                 question: 'Is there a fee to sell on Mummish?',
                 answer: (
-                    <p>Mummish charges a 10% service fee on the final sale price.</p>
+                    <p>
+                        Mummish charges a 10% service fee on the final sale price, split evenly: 5% from the seller and
+                        5% from the buyer at checkout.
+                    </p>
                 ),
             },
         ],

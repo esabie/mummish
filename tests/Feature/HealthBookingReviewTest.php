@@ -200,8 +200,9 @@ class HealthBookingReviewTest extends TestCase
             'status' => $status,
             'payment_status' => 'paid',
             'amount_cents' => 25000,
-            'commission_cents' => 2500,
-            'professional_payout_cents' => 22500,
+            'buyer_fee_cents' => 1250,
+            'commission_cents' => 1250,
+            'professional_payout_cents' => 23750,
             'paid_at' => now(),
             'confirmed_at' => now(),
         ]);

@@ -75,7 +75,14 @@ class HealthBookingLookupService
             'appointment_time' => $timeLabel,
             'notes' => $booking->notes,
             'cancellation_reason' => $booking->cancellation_reason,
-            'amount_label' => 'GHS '.number_format(((int) $booking->amount_cents) / 100, 2),
+            'amount_label' => 'GHS '.number_format(
+                ((int) $booking->amount_cents + (int) ($booking->buyer_fee_cents ?? 0)) / 100,
+                2
+            ),
+            'service_amount_label' => 'GHS '.number_format(((int) $booking->amount_cents) / 100, 2),
+            'buyer_fee_label' => ((int) ($booking->buyer_fee_cents ?? 0)) > 0
+                ? 'GHS '.number_format(((int) $booking->buyer_fee_cents) / 100, 2)
+                : null,
             'paystack_reference' => $booking->paystack_reference,
             'paystack_transaction_id' => $booking->paystack_transaction_id,
             'paid_at' => optional($booking->paid_at)?->format('M j, Y g:i A'),

@@ -173,14 +173,16 @@ export default function Billing() {
                             <Section id="commission" number="2" title="The 10% Commission Breakdown">
                                 <p>
                                     The service charge covers the administrative and operational costs of running the
-                                    marketplace securely.
+                                    marketplace securely. Mummish still receives 10% in total: 5% from the vendor and
+                                    5% from the buyer.
                                 </p>
                                 <div className="rounded-xl border border-[#5c4d3d]/20 bg-[#5c4d3d]/5 p-5">
                                     <p className="font-semibold text-stone-900">Example</p>
                                     <p className="mt-2">
-                                        If a vendor sells a Fairly New stroller for GHS 500, Mummish&apos;s 10%
-                                        commission equals GHS 50. The remaining balance of GHS 450 is released to the
-                                        seller&apos;s wallet.
+                                        If a vendor sells a Fairly New stroller for GHS 500, the buyer pays GHS 525
+                                        (GHS 500 + a GHS 25 service fee). Mummish receives GHS 50 in total (GHS 25 from
+                                        the buyer fee and GHS 25 deducted from the vendor). The remaining GHS 475 is
+                                        released to the seller&apos;s wallet.
                                     </p>
                                 </div>
                                 <p>
@@ -197,7 +199,8 @@ export default function Billing() {
                                     </li>
                                     <li>
                                         Once delivery is confirmed by the buyer or tracked as successfully delivered,
-                                        the funds (minus our 10% service fee) are released to the vendor&apos;s wallet.
+                                        the funds (minus the vendor&apos;s 5% share of the service fee) are released to
+                                        the vendor&apos;s wallet.
                                     </li>
                                     <li>
                                         Vendors can withdraw their wallet balances directly to their linked Mobile Money

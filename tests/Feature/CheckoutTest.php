@@ -28,12 +28,13 @@ class CheckoutTest extends TestCase
         $response = $this->get(route('checkout.index'));
 
         $response->assertOk();
-        $response->assertInertia(fn ($page) => $page
-            ->component('Checkout/Index')
-            ->has('paystackPublicKey')
-            ->has('ghanaRegions')
-            ->has('ghanaCitiesByRegion')
-            ->has('shippingRatesByRegion'));
+        $response            ->assertInertia(fn ($page) => $page
+                ->component('Checkout/Index')
+                ->has('paystackPublicKey')
+                ->has('ghanaRegions')
+                ->has('ghanaCitiesByRegion')
+                ->has('shippingRatesByRegion')
+                ->where('buyerFeeBps', 500));
     }
 
     public function test_checkout_creates_order_and_redirects_to_paystack(): void
@@ -65,7 +66,8 @@ class CheckoutTest extends TestCase
             'status' => OrderStatus::PendingPayment->value,
             'subtotal_cents' => 2500,
             'shipping_cents' => 6500,
-            'total_cents' => 9000,
+            'buyer_fee_cents' => 125,
+            'total_cents' => 9125,
             'shipping_city' => 'Tema',
             'shipping_region' => 'Greater Accra',
         ]);
@@ -112,7 +114,8 @@ class CheckoutTest extends TestCase
         $this->assertDatabaseHas('orders', [
             'shipping_city' => 'Afienya',
             'shipping_cents' => 6500,
-            'total_cents' => 9000,
+            'buyer_fee_cents' => 125,
+            'total_cents' => 9125,
         ]);
     }
 
@@ -293,8 +296,9 @@ class CheckoutTest extends TestCase
             'customer_email' => 'buyer@example.com',
             'subtotal_cents' => 2500,
             'discount_cents' => 250,
+            'buyer_fee_cents' => 112,
             'shipping_cents' => 6500,
-            'total_cents' => 8750,
+            'total_cents' => 8862,
             'promo_code' => 'WELCOME10',
             'promo_cost_bearer' => 'mummish',
         ]);

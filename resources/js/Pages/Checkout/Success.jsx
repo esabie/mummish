@@ -77,6 +77,11 @@ export default function CheckoutSuccess({ order }) {
                                         Includes {order.formatted_discount} off with {order.promo_code}
                                     </p>
                                 ) : null}
+                                {order.formatted_buyer_fee ? (
+                                    <p className="mt-1 text-sm text-stone-500">
+                                        Includes {order.formatted_buyer_fee} service fee
+                                    </p>
+                                ) : null}
                             </div>
                         </div>
 

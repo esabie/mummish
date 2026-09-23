@@ -37,6 +37,7 @@ export default function CheckoutIndex({
     paystackPublicKey,
     shippingRatesByRegion,
     shippingRatesByCity,
+    buyerFeeBps = 500,
     ghanaRegions,
     ghanaCitiesByRegion,
     customer,
@@ -112,7 +113,9 @@ export default function CheckoutIndex({
 
     const shippingAmount = shippingCents == null ? null : shippingCents / 100;
     const discountAmount = (appliedPromo?.discount_cents ?? 0) / 100;
-    const total = Math.max(0, subtotal - discountAmount) + (shippingAmount ?? 0);
+    const netMerchandise = Math.max(0, subtotal - discountAmount);
+    const buyerFeeAmount = Math.floor(netMerchandise * 100 * (buyerFeeBps / 10000)) / 100;
+    const total = netMerchandise + buyerFeeAmount + (shippingAmount ?? 0);
 
     const applyPromoCode = async () => {
         const code = promoInput.trim();
@@ -467,6 +470,19 @@ export default function CheckoutIndex({
                                                       : 'Free'}
                                             </dd>
                                         </div>
+                                        {buyerFeeAmount > 0 && (
+                                            <div className="flex justify-between">
+                                                <dt className="text-stone-600">
+                                                    Service fee
+                                                    <span className="mt-0.5 block text-xs font-normal text-stone-500">
+                                                        {Math.round(buyerFeeBps / 100)}% of merchandise
+                                                    </span>
+                                                </dt>
+                                                <dd className="font-semibold text-stone-900">
+                                                    {formatGhs(buyerFeeAmount)}
+                                                </dd>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between border-t border-stone-100 pt-3 text-base">
                                             <dt className="font-bold text-stone-900">Total</dt>
                                             <dd className="font-bold text-stone-900">{formatGhs(total)}</dd>

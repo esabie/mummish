@@ -1029,8 +1029,8 @@ export default function VendorProductForm({
                                     <p className="min-w-0 flex-1 text-sm leading-relaxed text-amber-900">
                                         <span className="font-semibold">Service fee notice:</span> Mummish applies a flat
                                         10% service fee on the final sale price of every successfully completed
-                                        transaction. This fee is automatically deducted from the payout balance
-                                        transferred to the vendor.
+                                        transaction. Of that, 5% is deducted from your payout and 5% is charged to the
+                                        buyer as a service fee at checkout.
                                     </p>
                                     <button
                                         type="button"
@@ -1165,8 +1165,9 @@ export default function VendorProductForm({
                 <div className="px-6 py-6">
                     <h2 className="text-lg font-bold text-stone-900">Example</h2>
                     <p className="mt-3 text-sm leading-relaxed text-stone-600">
-                        If a vendor sells a Fairly New stroller for GHS 500, Mummish&apos;s 10% commission equals GHS
-                        50. The remaining balance of GHS 450 is released to the seller&apos;s wallet.
+                        If a vendor sells a Fairly New stroller for GHS 500, the buyer pays GHS 525 (including a GHS 25
+                        service fee). Mummish receives GHS 50 in total, and GHS 475 is released to the seller&apos;s
+                        wallet.
                     </p>
                     <div className="mt-6 flex justify-end">
                         <button

@@ -22,7 +22,9 @@ class HealthBookingPaymentService
      */
     public function startPaystackPayment(HealthBooking $booking): array
     {
-        if ($booking->amount_cents < 1) {
+        $chargeCents = $this->chargeCents($booking);
+
+        if ($chargeCents < 1) {
             throw new RuntimeException('Booking amount is invalid.');
         }
 
@@ -34,7 +36,7 @@ class HealthBookingPaymentService
 
         return $this->paystack->initializeTransaction(
             email: (string) $booking->patient_email,
-            amountCents: (int) $booking->amount_cents,
+            amountCents: $chargeCents,
             reference: $reference,
             callbackUrl: route('health-services.bookings.callback'),
             metadata: [
@@ -72,10 +74,12 @@ class HealthBookingPaymentService
             throw new RuntimeException('Paystack payment was not successful.');
         }
 
-        if ($amount !== (int) $booking->amount_cents) {
+        if ($amount !== $this->chargeCents($booking)) {
             Log::warning('Health booking payment: amount mismatch.', [
                 'booking_id' => $booking->id,
-                'expected' => $booking->amount_cents,
+                'expected' => $this->chargeCents($booking),
+                'amount_cents' => $booking->amount_cents,
+                'buyer_fee_cents' => $booking->buyer_fee_cents,
                 'received' => $amount,
             ]);
 
@@ -131,6 +135,16 @@ class HealthBookingPaymentService
             'commission_cents' => $split['commission_cents'],
             'payout_cents' => $split['payout_cents'],
         ];
+    }
+
+    public function buyerFeeCents(int $amountCents): int
+    {
+        return $this->earnings->buyerFeeCents($amountCents);
+    }
+
+    public function chargeCents(HealthBooking $booking): int
+    {
+        return (int) $booking->amount_cents + (int) ($booking->buyer_fee_cents ?? 0);
     }
 
     public function expireUnpaidHolds(): int

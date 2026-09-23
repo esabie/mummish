@@ -94,13 +94,22 @@ class HealthServiceController extends Controller
             'about' => $dbProfessional->about ?? '',
             'highlights' => $dbProfessional->highlights ?? [],
             'bookable' => $dbProfessional->services->isNotEmpty() && $dbProfessional->availability->isNotEmpty(),
-            'rate_card' => $dbProfessional->services->map(fn ($service) => [
-                'id' => $service->id,
-                'service' => $service->name,
-                'price' => 'GHS '.$service->price_cedis,
-                'mode' => $service->visit_mode,
-                'duration_minutes' => $service->duration_minutes,
-            ])->values()->all(),
+            'rate_card' => $dbProfessional->services->map(function ($service) {
+                $amountCents = (int) $service->price_cedis * 100;
+                $buyerFeeCents = app(HealthBookingPaymentService::class)->buyerFeeCents($amountCents);
+                $chargeCents = $amountCents + $buyerFeeCents;
+
+                return [
+                    'id' => $service->id,
+                    'service' => $service->name,
+                    'price' => 'GHS '.$service->price_cedis,
+                    'price_cedis' => (int) $service->price_cedis,
+                    'buyer_fee_cedis' => $buyerFeeCents / 100,
+                    'charge_label' => 'GHS '.number_format($chargeCents / 100, 2),
+                    'mode' => $service->visit_mode,
+                    'duration_minutes' => $service->duration_minutes,
+                ];
+            })->values()->all(),
             'slots' => $this->upcomingSlots($dbProfessional),
             'booking_note' => $dbProfessional->booking_note ?? 'Appointments are confirmed after review.',
             'rating' => (float) $dbProfessional->rating,
@@ -116,6 +125,7 @@ class HealthServiceController extends Controller
 
         return Inertia::render('HealthServices/Show', [
             'professional' => $professional,
+            'buyerFeePercent' => app(\App\Services\VendorEarningsService::class)->buyerFeePercent(),
         ]);
     }
 
@@ -181,6 +191,7 @@ class HealthServiceController extends Controller
 
         $amountCents = (int) $service->price_cedis * 100;
         $split = $payments->splitForAmount($amountCents);
+        $buyerFeeCents = $payments->buyerFeeCents($amountCents);
         $reference = HealthBooking::generateReference();
 
         $booking = DB::transaction(function () use (
@@ -190,6 +201,7 @@ class HealthServiceController extends Controller
             $appointmentDate,
             $appointmentTime,
             $amountCents,
+            $buyerFeeCents,
             $split,
             $reference,
         ) {
@@ -206,6 +218,7 @@ class HealthServiceController extends Controller
                 'status' => 'awaiting_payment',
                 'notes' => $data['notes'] ?? null,
                 'amount_cents' => $amountCents,
+                'buyer_fee_cents' => $buyerFeeCents,
                 'commission_cents' => $split['commission_cents'],
                 'professional_payout_cents' => $split['payout_cents'],
                 'payment_status' => 'pending',

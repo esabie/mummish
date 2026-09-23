@@ -52,6 +52,7 @@ class CheckoutController extends Controller
             'paystackPublicKey' => $paystack->publicKey(),
             'shippingRatesByRegion' => $shipping->regionRates(),
             'shippingRatesByCity' => $shipping->cityRates(),
+            'buyerFeeBps' => app(\App\Services\VendorEarningsService::class)->buyerFeeBps(),
             'ghanaRegions' => config('marketplace.ghana_regions', []),
             'ghanaCitiesByRegion' => config('ghana_cities.by_region', []),
             'customer' => $user ? [
@@ -298,6 +299,10 @@ class CheckoutController extends Controller
             'discount_cents' => $order->discount_cents,
             'formatted_discount' => $order->discount_cents > 0
                 ? 'GHS '.number_format($order->discount_cents / 100, 2)
+                : null,
+            'buyer_fee_cents' => $order->buyer_fee_cents,
+            'formatted_buyer_fee' => $order->buyer_fee_cents > 0
+                ? 'GHS '.number_format($order->buyer_fee_cents / 100, 2)
                 : null,
             'customer_name' => $order->customer_name,
             'customer_email' => $order->customer_email,

@@ -8,8 +8,9 @@
     @if ($hasSales)
         <div class="mb-6 space-y-6">
             <p class="text-sm text-gray-500 dark:text-gray-400">
-                Totals for the current filters (paid orders only). Merchandise is split between Mummish and vendors.
-                Delivery fees are tracked separately for the courier and are never part of the commission pool.
+                Totals for the current filters (paid orders only). Merchandise is split between Mummish (vendor commission)
+                and vendors; buyers also pay a separate service fee. Delivery fees are tracked separately for the courier
+                and are never part of the commission pool.
             </p>
 
             <div class="grid gap-4 sm:grid-cols-3">
@@ -18,6 +19,7 @@
                     <p class="mt-2 text-2xl font-bold text-gray-950 dark:text-white">{{ $summary['collected']['formatted_total'] }}</p>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         Merchandise {{ $summary['collected']['formatted_merchandise'] }}
+                        + service fee {{ $summary['collected']['formatted_buyer_fee'] ?? 'GHS 0.00' }}
                         + delivery {{ $summary['collected']['formatted_shipping'] }}
                     </p>
                 </x-filament::section>
@@ -57,15 +59,22 @@
 
             <x-filament::section heading="Merchandise pool">
                 <p class="mb-4 text-xs text-gray-500 dark:text-gray-400">
-                    Split of item sales only — excludes delivery fees.
+                    Split of item sales only — excludes delivery fees and the buyer service fee.
                 </p>
 
-                <div class="grid gap-4 sm:grid-cols-2">
+                <div class="grid gap-4 sm:grid-cols-3">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">Mummish commission</p>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">Vendor commission</p>
                         <p class="mt-2 text-2xl font-bold text-amber-800 dark:text-amber-300">{{ $summary['totals']['formatted_commission'] }}</p>
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            {{ $summary['commission_percent'] }}% platform fee
+                            {{ $summary['commission_percent'] }}% from vendors
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-400">Buyer service fee</p>
+                        <p class="mt-2 text-2xl font-bold text-violet-800 dark:text-violet-300">{{ $summary['platform_earnings']['formatted_buyer_fee'] ?? ($summary['buyer_fees']['formatted_buyer_fee'] ?? 'GHS 0.00') }}</p>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            {{ $summary['buyer_fees']['buyer_fee_percent'] ?? 5 }}% from buyers
                         </p>
                     </div>
                     <div>
@@ -77,11 +86,19 @@
                     </div>
                 </div>
 
+                @if (! empty($summary['platform_earnings']))
+                    <p class="mt-4 text-sm text-gray-600 dark:text-gray-400">
+                        Platform total:
+                        <span class="font-semibold text-gray-950 dark:text-white">{{ $summary['platform_earnings']['formatted_total'] }}</span>
+                        (vendor commission + buyer fee)
+                    </p>
+                @endif
+
                 <div class="mt-6 flex h-3 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
                     <div
                         class="bg-amber-500"
                         style="width: {{ $summary['commission_share_percent'] }}%"
-                        title="Mummish commission"
+                        title="Vendor commission"
                     ></div>
                     <div
                         class="bg-emerald-500"
@@ -92,7 +109,7 @@
                 <div class="mt-3 flex flex-wrap gap-4 text-xs text-gray-600 dark:text-gray-400">
                     <span class="flex items-center gap-2">
                         <span class="inline-block h-2.5 w-2.5 rounded-full bg-amber-500"></span>
-                        Mummish {{ $summary['commission_share_percent'] }}% ({{ $summary['totals']['formatted_commission'] }})
+                        Vendor commission {{ $summary['commission_share_percent'] }}% ({{ $summary['totals']['formatted_commission'] }})
                     </span>
                     <span class="flex items-center gap-2">
                         <span class="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
